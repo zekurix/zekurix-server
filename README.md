@@ -2,18 +2,44 @@
 
 **Zero-Knowledge Hierarchical Collaboration Platform - Server Component**
 
-## Overview
+> [!WARNING]
+> This project is in an early prototype stage.
+> Core functionality is still under development and many planned features are not yet implemented.
 
-Zekurix Server is the backend component of the Zekurix platform. It provides encrypted blob storage, permission validation, and synchronization coordination while maintaining zero-knowledge guarantees. The server never accesses plaintext user data.
+## Project Scope
 
-## Key Features
+Zekurix Server is one component of the broader Zekurix ecosystem.
+
+The project is intended to evolve into a larger ecosystem that may include:
+- Zekurix Server
+- Cross-platform SDK
+- Web client
+- Mobile clients
+- Desktop clients
+
+This repository contains only the backend server component.
+
+## Planned Features
 
 - Zero-knowledge encryption architecture
-- Permission validation at API boundary without decryption capability
-- User and nested group hierarchy support for flexible permission management
-- Vector clock-based synchronization with conflict detection
-- Deterministic deletion via key shredding
-- Per-user quota enforcement and session management
+- Hierarchical permission model
+- Group-based collaboration
+- Vector clock-based synchronization
+- Deterministic deletion through key shredding
+
+## Getting Started
+
+```bash
+git clone https://github.com/zekurix/zekurix-server.git
+cd zekurix-server
+cargo build
+cargo test
+```
+
+## Security Notice
+
+> [!WARNING]
+> Zekurix Server has not yet undergone an independent security audit. All security-related functionality should currently be considered experimental.
 
 ## Contributing
 
