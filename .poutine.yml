@@ -1,0 +1,26 @@
+# Poutine security scanner configuration
+
+skip:
+# Accepted risk:
+# - Widely adopted and trusted Rust community action.
+# - Maintained by a highly respected contributor within the Rust ecosystem.
+# - Required to provision and manage Rust toolchains in CI pipelines.
+- rule: github_action_from_unverified_creator_used
+  purl:
+    - pkg:githubactions/dtolnay/rust-toolchain
+
+# Accepted risk:
+# - Widely used Rust ecosystem action for Cargo dependency caching.
+# - Well established and trusted by the Rust open-source community.
+# - Improves CI performance and reduces unnecessary build times.
+- rule: github_action_from_unverified_creator_used
+  purl:
+    - pkg:githubactions/Swatinem/rust-cache
+
+# Accepted risk:
+# - Official action maintained by the Zizmor project authors.
+# - Provides automated security analysis for GitHub Actions workflows.
+# - Considered a trusted dependency for CI security validation.
+- rule: github_action_from_unverified_creator_used
+  purl:
+    - pkg:githubactions/zizmorcore/zizmor-action
