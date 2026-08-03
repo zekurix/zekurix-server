@@ -1,5 +1,6 @@
 # Pipeline security audit with Poutine
 name: Poutine
+
 on:
   push:
     branches: [main]
