@@ -12,10 +12,15 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   zizmor:
     name: Zizmor security scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       security-events: write
 
