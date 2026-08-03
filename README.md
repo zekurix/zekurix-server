@@ -1,5 +1,7 @@
 # Zekurix Server
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/zekurix/zekurix-server/badge)](https://scorecard.dev/viewer/?uri=github.com/zekurix/zekurix-server)
+
 **Zero-Knowledge Hierarchical Collaboration Platform - Server Component**
 
 > [!WARNING]
