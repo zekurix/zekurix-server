@@ -1,9 +1,6 @@
 use clap::Parser;
 
-use zekurix_server::{
-    application::Application,
-    cli::Cli,
-};
+use zekurix_server::{application::Application, cli::Cli};
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
