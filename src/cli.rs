@@ -13,7 +13,7 @@ const DEFAULT_CONFIG_PATH: &str = "/etc/zekurix.toml";
 /// permission enforcement for privacy-preserving applications.
 /// Sensitive data remains end-to-end encrypted, ensuring that the
 /// server never has access to plaintext content.
-#[derive(Debug, Parser)]
+#[derive(Parser)]
 #[command(version, propagate_version = true, about, long_about)]
 pub struct Cli {
     /// Path to the configuration file.
