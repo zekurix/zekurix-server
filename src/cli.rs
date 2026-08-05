@@ -40,6 +40,17 @@ pub struct Cli {
     pub quiet: bool,
 }
 
+impl Default for Cli {
+    fn default() -> Self {
+        Self {
+            config: DEFAULT_CONFIG_PATH.into(),
+            bind: None,
+            verbose: false,
+            quiet: false,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

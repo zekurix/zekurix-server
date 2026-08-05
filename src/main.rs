@@ -1,12 +1,11 @@
-mod cli;
-
 use clap::Parser;
 
-use crate::cli::Cli;
+use zekurix_server::{application::Application, cli::Cli};
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    println!("config: {}", cli.config.display());
+    let application = Application::build(&cli)?;
+    println!("{:?}", application.settings);
 
     Ok(())
 }
