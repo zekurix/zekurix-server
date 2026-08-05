@@ -3,7 +3,14 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-const DEFAULT_CONFIG_PATH: &str = "/etc/zekurix.toml";
+#[cfg(target_os = "linux")]
+const DEFAULT_CONFIG_PATH: &str = "/etc/zekurix/zekurix.toml";
+
+#[cfg(target_os = "macos")]
+const DEFAULT_CONFIG_PATH: &str = "/usr/local/etc/zekurix.toml";
+
+#[cfg(target_os = "windows")]
+const DEFAULT_CONFIG_PATH: &str = r"C:\ProgramData\Zekurix\zekurix.toml";
 
 /// Zekurix server.
 ///
