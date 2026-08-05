@@ -1,3 +1,5 @@
+use std::net::SocketAddr;
+
 use figment::{
     Figment,
     providers::{Env, Format, Serialized, Toml},
@@ -20,6 +22,12 @@ impl Default for ServerSettings {
             host: "127.0.0.1".to_string(),
             port: 8080,
         }
+    }
+}
+
+impl ServerSettings {
+    pub fn socket_addr(&self) -> anyhow::Result<SocketAddr> {
+        Ok(format!("{}:{}", self.host, self.port).parse()?)
     }
 }
 
@@ -66,5 +74,26 @@ mod tests {
 
         assert_eq!(settings.server.host, "127.0.0.1");
         assert_eq!(settings.server.port, 8080);
+    }
+
+    #[test]
+    fn should_build_socket_addr() {
+        let settings = ServerSettings {
+            host: "127.0.0.1".into(),
+            port: 8080,
+        };
+        let addr = settings.socket_addr().unwrap();
+
+        assert_eq!(addr, "127.0.0.1:8080".parse::<SocketAddr>().unwrap());
+    }
+
+    #[test]
+    fn should_reject_invalid_host() {
+        let settings = ServerSettings {
+            host: "invalid host".into(),
+            port: 8080,
+        };
+
+        assert!(settings.socket_addr().is_err());
     }
 }
