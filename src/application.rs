@@ -1,3 +1,4 @@
+use anyhow::Result;
 use tracing::{debug, info};
 
 use crate::cli::Cli;
@@ -9,13 +10,13 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn build(cli: &Cli) -> anyhow::Result<Self> {
+    pub fn build(cli: &Cli) -> Result<Self> {
         let settings = Settings::load(cli)?;
 
         Ok(Self { settings })
     }
 
-    pub async fn run(self) -> anyhow::Result<()> {
+    pub async fn run(self) -> Result<()> {
         info!(
             version = env!("CARGO_PKG_VERSION"),
             "Starting Zekurix Server"
