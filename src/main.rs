@@ -1,10 +1,12 @@
 use clap::Parser;
 
-use zekurix_server::{application::Application, cli::Cli};
+use zekurix_server::{application::Application, cli::Cli, telemetry};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
+    let application = Application::build(&cli)?;
 
-    Application::build(&cli)?.run().await
+    telemetry::init(&application);
+    application.run().await
 }

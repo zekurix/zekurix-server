@@ -1,37 +1,48 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 use crate::cli::Cli;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum Level {
     Trace,
     Debug,
+    #[default]
     Info,
     Warn,
     Error,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl fmt::Display for Level {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let value = match self {
+            Self::Trace => "trace",
+            Self::Debug => "debug",
+            Self::Info => "info",
+            Self::Warn => "warn",
+            Self::Error => "error",
+        };
+
+        write!(f, "{value}")
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum Format {
+    #[default]
     Full,
     Compact,
     Pretty,
     Json,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Settings {
     pub level: Level,
     pub format: Format,
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            level: Level::Info,
-            format: Format::Full,
-        }
-    }
 }
 
 impl Settings {
@@ -47,13 +58,32 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cli::Cli;
+
+    #[test]
+    fn test_default_enum_defaults() {
+        let level = Level::default();
+        let format = Format::default();
+
+        assert_eq!(level, Level::Info);
+        assert_eq!(format, Format::Full);
+    }
 
     #[test]
     fn test_default_settings() {
         let settings = Settings::default();
 
-        assert!(matches!(settings.level, Level::Info));
-        assert!(matches!(settings.format, Format::Full));
+        assert_eq!(settings.level, Level::Info);
+        assert_eq!(settings.format, Format::Full);
+    }
+
+    #[test]
+    fn test_level_to_string_all_variants() {
+        assert_eq!(Level::Trace.to_string(), "trace");
+        assert_eq!(Level::Debug.to_string(), "debug");
+        assert_eq!(Level::Info.to_string(), "info");
+        assert_eq!(Level::Warn.to_string(), "warn");
+        assert_eq!(Level::Error.to_string(), "error");
     }
 
     #[test]
@@ -67,8 +97,8 @@ mod tests {
 
         settings.merge(&cli);
 
-        assert!(matches!(settings.level, Level::Debug));
-        assert!(matches!(settings.format, Format::Full));
+        assert_eq!(settings.level, Level::Debug);
+        assert_eq!(settings.format, Format::Full);
     }
 
     #[test]
@@ -82,8 +112,8 @@ mod tests {
 
         settings.merge(&cli);
 
-        assert!(matches!(settings.level, Level::Warn));
-        assert!(matches!(settings.format, Format::Full));
+        assert_eq!(settings.level, Level::Warn);
+        assert_eq!(settings.format, Format::Full);
     }
 
     #[test]
@@ -97,7 +127,25 @@ mod tests {
 
         settings.merge(&cli);
 
-        assert!(matches!(settings.level, Level::Info));
-        assert!(matches!(settings.format, Format::Full));
+        assert_eq!(settings.level, Level::Info);
+        assert_eq!(settings.format, Format::Full);
+    }
+
+    #[test]
+    fn test_merge_preserves_format() {
+        let mut settings = Settings {
+            level: Level::Info,
+            format: Format::Pretty,
+        };
+        let cli = Cli {
+            verbose: true,
+            quiet: false,
+            ..Default::default()
+        };
+
+        settings.merge(&cli);
+
+        assert_eq!(settings.level, Level::Debug);
+        assert_eq!(settings.format, Format::Pretty);
     }
 }
