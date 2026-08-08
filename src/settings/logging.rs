@@ -1,5 +1,7 @@
 use std::fmt;
 
+use anyhow::Result;
+
 use serde::{Deserialize, Serialize};
 
 use crate::cli::Cli;
@@ -52,6 +54,10 @@ impl Settings {
         } else if cli.quiet {
             self.level = Level::Warn;
         }
+    }
+
+    pub fn validate(&self) -> Result<()> {
+        Ok(())
     }
 }
 
@@ -147,5 +153,11 @@ mod tests {
 
         assert_eq!(settings.level, Level::Debug);
         assert_eq!(settings.format, Format::Pretty);
+    }
+
+    #[test]
+    fn test_validate_default_settings() {
+        let settings = Settings::default();
+        assert!(settings.validate().is_ok());
     }
 }

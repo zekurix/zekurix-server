@@ -1,6 +1,7 @@
 pub mod logging;
 pub mod server;
 
+use anyhow::Result;
 use crate::cli::Cli;
 
 use figment::{
@@ -23,8 +24,14 @@ impl Settings {
         self.server.merge(cli);
     }
 
+    fn validate(&self) -> Result<()> {
+        self.logging.validate()?;
+        self.server.validate()?;
+        Ok(())
+    }
+
     #[allow(clippy::result_large_err)]
-    pub fn load(cli: &Cli) -> Result<Self, figment::Error> {
+    pub fn load(cli: &Cli) -> Result<Self> {
         // Merge settings in the following order:
         // Defaults < TOML < Environment Variables < CLI Overrides
         let mut settings: Self = Figment::new()
@@ -34,6 +41,7 @@ impl Settings {
             .extract()?;
 
         settings.merge(cli);
+        settings.validate()?;
         Ok(settings)
     }
 }

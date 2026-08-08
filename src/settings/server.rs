@@ -9,6 +9,7 @@ use crate::cli::Cli;
 pub struct Settings {
     pub host: String,
     pub port: u16,
+    pub timeout: u16,
 }
 
 impl Default for Settings {
@@ -16,6 +17,7 @@ impl Default for Settings {
         Self {
             host: "127.0.0.1".to_string(),
             port: 8080,
+            timeout: 10,
         }
     }
 }
@@ -26,6 +28,14 @@ impl Settings {
             self.host = bind.ip().to_string();
             self.port = bind.port();
         }
+    }
+
+    pub fn validate(&self) -> Result<()> {
+        ensure!(
+                (1..=360).contains(&self.timeout),
+                "Server timeout must be between 1 and 360 seconds"
+               );
+        Ok(())
     }
 
     pub fn socket_addr(&self) -> Result<SocketAddr> {
@@ -68,6 +78,7 @@ mod tests {
         let settings = Settings {
             host: "127.0.0.1".into(),
             port: 8080,
+            ..Default::default()
         };
         let addr = settings.socket_addr().unwrap();
 
@@ -79,6 +90,7 @@ mod tests {
         let settings = Settings {
             host: "::1".into(),
             port: 8080,
+            ..Default::default()
         };
         let addr = settings.socket_addr().unwrap();
 
@@ -90,6 +102,7 @@ mod tests {
         let settings = Settings {
             host: "".into(),
             port: 8080,
+            ..Default::default()
         };
 
         assert!(settings.socket_addr().is_err());
@@ -100,6 +113,7 @@ mod tests {
         let settings = Settings {
             host: "invalid host".into(),
             port: 8080,
+            ..Default::default()
         };
 
         assert!(settings.socket_addr().is_err());
@@ -110,6 +124,7 @@ mod tests {
         let settings = Settings {
             host: "127.0.0.1:8080".into(),
             port: 8080,
+            ..Default::default()
         };
 
         assert!(settings.socket_addr().is_err());
@@ -120,10 +135,12 @@ mod tests {
         let s0 = Settings {
             host: "127.0.0.1".into(),
             port: 0,
+            ..Default::default()
         };
         let smax = Settings {
             host: "127.0.0.1".into(),
             port: 65535,
+            ..Default::default()
         };
 
         assert!(s0.socket_addr().is_ok());
@@ -157,5 +174,59 @@ mod tests {
 
         assert_eq!(settings.host, original.host);
         assert_eq!(settings.port, original.port);
+    }
+
+    #[test]
+    fn test_validate_default_settings() {
+        let settings = Settings::default();
+
+        assert!(settings.validate().is_ok());
+    }
+
+    #[test]
+    fn should_validate_default_settings() {
+        let settings = Settings::default();
+
+        assert!(settings.validate().is_ok());
+    }
+
+    #[test]
+    fn should_accept_minimum_timeout() {
+        let settings = Settings {
+            timeout: 1,
+            ..Default::default()
+        };
+
+        assert!(settings.validate().is_ok());
+    }
+
+    #[test]
+    fn should_accept_maximum_timeout() {
+        let settings = Settings {
+            timeout: 360,
+            ..Default::default()
+        };
+
+        assert!(settings.validate().is_ok());
+    }
+
+    #[test]
+    fn should_reject_timeout_below_minimum() {
+        let settings = Settings {
+            timeout: 0,
+            ..Default::default()
+        };
+
+        assert!(settings.validate().is_err());
+    }
+
+    #[test]
+    fn should_reject_timeout_above_maximum() {
+        let settings = Settings {
+            timeout: 361,
+            ..Default::default()
+        };
+
+        assert!(settings.validate().is_err());
     }
 }
