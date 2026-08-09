@@ -1,9 +1,36 @@
 use anyhow::Result;
 use tracing::{debug, info};
+use tokio::signal;
 
 use crate::cli::Cli;
 use crate::router::build_router;
 use crate::settings::Settings;
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    debug!("Waiting for shutdown signal (Ctrl+C or SIGTERM)");
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+    info!("Shutdown signal received");
+}
 
 pub struct Application {
     pub settings: Settings,
@@ -16,7 +43,7 @@ impl Application {
         Ok(Self { settings })
     }
 
-    pub async fn run(self) -> Result<()> {
+    pub async fn run(&self) -> Result<()> {
         info!(
             version = env!("CARGO_PKG_VERSION"),
             "Starting Zekurix Server"
@@ -26,8 +53,15 @@ impl Application {
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
         info!(address = %listener.local_addr()?, "Server listening");
 
-        axum::serve(listener, build_router(&self)).await?;
+        axum::serve(listener, build_router(&self))
+            .with_graceful_shutdown(shutdown_signal())
+            .await?;
 
+        Ok(())
+    }
+
+    pub async fn shutdown(&self) -> Result<()> {
+        info!("Shutting down Zekurix Server");
         Ok(())
     }
 }
