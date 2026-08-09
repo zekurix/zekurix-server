@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use axum::{Router, http::StatusCode, routing::get};
-use tower_http::timeout::TimeoutLayer;
+use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 
 use crate::application::Application;
 use crate::handlers::health::health;
@@ -16,7 +16,7 @@ fn build_timeout_layer(application: &Application) -> TimeoutLayer {
 pub fn build_router(application: &Application) -> Router {
     Router::new()
         .route("/health", get(health))
-        .layer(build_timeout_layer(application))
+        .layer((TraceLayer::new_for_http(), build_timeout_layer(application)))
 }
 
 #[cfg(test)]
