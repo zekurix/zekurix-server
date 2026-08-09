@@ -5,11 +5,13 @@ use axum::{
 use http_body_util::BodyExt;
 use tower::ServiceExt;
 
-use zekurix_server::router::build_router;
+use zekurix_server::{application::Application, cli::Cli, router::build_router};
 
 #[tokio::test]
 async fn should_return_ok_for_health_endpoint() {
-    let router = build_router();
+    let cli = Cli::build().unwrap();
+    let application = Application::build(&cli).unwrap();
+    let router = build_router(&application);
 
     let response = router
         .oneshot(
@@ -30,7 +32,9 @@ async fn should_return_ok_for_health_endpoint() {
 
 #[tokio::test]
 async fn should_return_not_found_for_unknown_route() {
-    let router = build_router();
+    let cli = Cli::build().unwrap();
+    let application = Application::build(&cli).unwrap();
+    let router = build_router(&application);
 
     let response = router
         .oneshot(

@@ -1,13 +1,14 @@
 pub mod logging;
 pub mod server;
 
-use crate::cli::Cli;
-
+use anyhow::Result;
 use figment::{
     Figment,
     providers::{Env, Format, Serialized, Toml},
 };
 use serde::{Deserialize, Serialize};
+
+use crate::cli::Cli;
 
 const ENV_PREFIX: &str = "ZEKURIX_";
 
@@ -24,7 +25,7 @@ impl Settings {
     }
 
     #[allow(clippy::result_large_err)]
-    pub fn load(cli: &Cli) -> Result<Self, figment::Error> {
+    pub fn load(cli: &Cli) -> Result<Self> {
         // Merge settings in the following order:
         // Defaults < TOML < Environment Variables < CLI Overrides
         let mut settings: Self = Figment::new()

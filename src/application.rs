@@ -26,7 +26,7 @@ impl Application {
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
         info!(address = %listener.local_addr()?, "Server listening");
 
-        axum::serve(listener, build_router()).await?;
+        axum::serve(listener, build_router(&self)).await?;
 
         Ok(())
     }

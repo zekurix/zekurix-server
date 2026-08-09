@@ -9,6 +9,7 @@ use crate::cli::Cli;
 pub struct Settings {
     pub host: String,
     pub port: u16,
+    pub timeout: u64,
 }
 
 impl Default for Settings {
@@ -16,6 +17,7 @@ impl Default for Settings {
         Self {
             host: "127.0.0.1".to_string(),
             port: 8080,
+            timeout: 10,
         }
     }
 }
@@ -61,6 +63,7 @@ mod tests {
 
         assert_eq!(settings.host, "127.0.0.1");
         assert_eq!(settings.port, 8080);
+        assert_eq!(settings.timeout, 10);
     }
 
     #[test]
@@ -68,6 +71,7 @@ mod tests {
         let settings = Settings {
             host: "127.0.0.1".into(),
             port: 8080,
+            ..Default::default()
         };
         let addr = settings.socket_addr().unwrap();
 
@@ -79,6 +83,7 @@ mod tests {
         let settings = Settings {
             host: "::1".into(),
             port: 8080,
+            ..Default::default()
         };
         let addr = settings.socket_addr().unwrap();
 
@@ -90,6 +95,7 @@ mod tests {
         let settings = Settings {
             host: "".into(),
             port: 8080,
+            ..Default::default()
         };
 
         assert!(settings.socket_addr().is_err());
@@ -100,6 +106,7 @@ mod tests {
         let settings = Settings {
             host: "invalid host".into(),
             port: 8080,
+            ..Default::default()
         };
 
         assert!(settings.socket_addr().is_err());
@@ -110,6 +117,7 @@ mod tests {
         let settings = Settings {
             host: "127.0.0.1:8080".into(),
             port: 8080,
+            ..Default::default()
         };
 
         assert!(settings.socket_addr().is_err());
@@ -120,10 +128,12 @@ mod tests {
         let s0 = Settings {
             host: "127.0.0.1".into(),
             port: 0,
+            ..Default::default()
         };
         let smax = Settings {
             host: "127.0.0.1".into(),
             port: 65535,
+            ..Default::default()
         };
 
         assert!(s0.socket_addr().is_ok());
