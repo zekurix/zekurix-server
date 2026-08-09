@@ -9,7 +9,7 @@ use crate::cli::Cli;
 pub struct Settings {
     pub host: String,
     pub port: u16,
-    pub timeout: u16,
+    pub timeout: u64,
 }
 
 impl Default for Settings {
@@ -28,14 +28,6 @@ impl Settings {
             self.host = bind.ip().to_string();
             self.port = bind.port();
         }
-    }
-
-    pub fn validate(&self) -> Result<()> {
-        ensure!(
-                (1..=360).contains(&self.timeout),
-                "Server timeout must be between 1 and 360 seconds"
-               );
-        Ok(())
     }
 
     pub fn socket_addr(&self) -> Result<SocketAddr> {
@@ -71,6 +63,7 @@ mod tests {
 
         assert_eq!(settings.host, "127.0.0.1");
         assert_eq!(settings.port, 8080);
+        assert_eq!(settings.timeout, 10);
     }
 
     #[test]
@@ -174,59 +167,5 @@ mod tests {
 
         assert_eq!(settings.host, original.host);
         assert_eq!(settings.port, original.port);
-    }
-
-    #[test]
-    fn test_validate_default_settings() {
-        let settings = Settings::default();
-
-        assert!(settings.validate().is_ok());
-    }
-
-    #[test]
-    fn should_validate_default_settings() {
-        let settings = Settings::default();
-
-        assert!(settings.validate().is_ok());
-    }
-
-    #[test]
-    fn should_accept_minimum_timeout() {
-        let settings = Settings {
-            timeout: 1,
-            ..Default::default()
-        };
-
-        assert!(settings.validate().is_ok());
-    }
-
-    #[test]
-    fn should_accept_maximum_timeout() {
-        let settings = Settings {
-            timeout: 360,
-            ..Default::default()
-        };
-
-        assert!(settings.validate().is_ok());
-    }
-
-    #[test]
-    fn should_reject_timeout_below_minimum() {
-        let settings = Settings {
-            timeout: 0,
-            ..Default::default()
-        };
-
-        assert!(settings.validate().is_err());
-    }
-
-    #[test]
-    fn should_reject_timeout_above_maximum() {
-        let settings = Settings {
-            timeout: 361,
-            ..Default::default()
-        };
-
-        assert!(settings.validate().is_err());
     }
 }

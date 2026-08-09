@@ -2,13 +2,13 @@ pub mod logging;
 pub mod server;
 
 use anyhow::Result;
-use crate::cli::Cli;
-
 use figment::{
     Figment,
     providers::{Env, Format, Serialized, Toml},
 };
 use serde::{Deserialize, Serialize};
+
+use crate::cli::Cli;
 
 const ENV_PREFIX: &str = "ZEKURIX_";
 
@@ -24,12 +24,6 @@ impl Settings {
         self.server.merge(cli);
     }
 
-    fn validate(&self) -> Result<()> {
-        self.logging.validate()?;
-        self.server.validate()?;
-        Ok(())
-    }
-
     #[allow(clippy::result_large_err)]
     pub fn load(cli: &Cli) -> Result<Self> {
         // Merge settings in the following order:
@@ -41,7 +35,6 @@ impl Settings {
             .extract()?;
 
         settings.merge(cli);
-        settings.validate()?;
         Ok(settings)
     }
 }
