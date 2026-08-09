@@ -22,10 +22,10 @@ pub fn build_router(application: &Application) -> Router {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{application::Application, cli::Cli};
     use axum::body::Body;
     use axum::http::Request;
     use tower::ServiceExt;
-    use crate::{application::Application, cli::Cli};
 
     #[tokio::test]
     async fn should_return_timeout_for_slow_route() {
@@ -42,12 +42,7 @@ mod tests {
             .layer(build_timeout_layer(&application));
 
         let response = router
-            .oneshot(
-                Request::builder()
-                    .uri("/slow")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
+            .oneshot(Request::builder().uri("/slow").body(Body::empty()).unwrap())
             .await
             .unwrap();
 
