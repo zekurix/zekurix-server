@@ -1,6 +1,6 @@
 use anyhow::Result;
-use tracing::{debug, info};
 use tokio::signal;
+use tracing::{debug, info};
 
 use crate::cli::Cli;
 use crate::router::build_router;
@@ -53,7 +53,7 @@ impl Application {
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
         info!(address = %listener.local_addr()?, "Server listening");
 
-        axum::serve(listener, build_router(&self))
+        axum::serve(listener, build_router(self))
             .with_graceful_shutdown(shutdown_signal())
             .await?;
 
