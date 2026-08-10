@@ -4,14 +4,8 @@ use crate::application::Application;
 use crate::settings::logging::Format;
 
 pub fn init(application: &Application) {
-    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-        format!(
-            "{}={}",
-            env!("CARGO_CRATE_NAME"),
-            application.settings.logging.level,
-        )
-        .into()
-    });
+    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| format!("{}", application.settings.logging.level).into());
 
     match application.settings.logging.format {
         Format::Full => {

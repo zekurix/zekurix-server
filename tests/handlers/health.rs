@@ -3,12 +3,19 @@ use axum::{
     http::{Request, StatusCode},
 };
 use http_body_util::BodyExt;
+use serde::Deserialize;
 use tower::ServiceExt;
 
 use zekurix_server::{application::Application, cli::Cli, router::build_router};
 
+#[derive(Deserialize)]
+struct HealthResponse {
+    status: String,
+    version: String,
+}
+
 #[tokio::test]
-async fn should_return_ok_for_health_endpoint() {
+async fn should_return_health_response() {
     let cli = Cli::build().unwrap();
     let application = Application::build(&cli).unwrap();
     let router = build_router(&application);
@@ -26,8 +33,10 @@ async fn should_return_ok_for_health_endpoint() {
     assert_eq!(response.status(), StatusCode::OK);
 
     let body = response.into_body().collect().await.unwrap().to_bytes();
+    let health: HealthResponse = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(&body[..], b"OK");
+    assert_eq!(health.status, "ok");
+    assert_eq!(health.version, env!("CARGO_PKG_VERSION"));
 }
 
 #[tokio::test]
