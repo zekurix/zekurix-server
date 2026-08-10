@@ -18,7 +18,7 @@ struct HealthResponse {
 async fn should_return_health_response() {
     let cli = Cli::build().unwrap();
     let application = Application::build(&cli).unwrap();
-    let router = build_router(&application);
+    let router = build_router(application);
 
     let response = router
         .oneshot(
@@ -43,7 +43,7 @@ async fn should_return_health_response() {
 async fn should_return_not_found_for_unknown_route() {
     let cli = Cli::build().unwrap();
     let application = Application::build(&cli).unwrap();
-    let router = build_router(&application);
+    let router = build_router(application);
 
     let response = router
         .oneshot(

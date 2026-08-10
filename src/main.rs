@@ -8,6 +8,5 @@ async fn main() -> Result<()> {
     let application = Application::build(&cli)?;
 
     telemetry::init(&application);
-    application.run().await?;
-    application.shutdown().await
+    application.run().await
 }
