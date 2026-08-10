@@ -19,11 +19,6 @@ pub struct Settings {
 }
 
 impl Settings {
-    fn merge(&mut self, cli: &Cli) {
-        self.logging.merge(cli);
-        self.server.merge(cli);
-    }
-
     #[allow(clippy::result_large_err)]
     pub fn load(cli: &Cli) -> Result<Self> {
         // Merge settings in the following order:
@@ -36,5 +31,10 @@ impl Settings {
 
         settings.merge(cli);
         Ok(settings)
+    }
+
+    fn merge(&mut self, cli: &Cli) {
+        self.logging.merge(cli);
+        self.server.merge(cli);
     }
 }

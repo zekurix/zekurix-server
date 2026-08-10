@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use tokio::signal;
 use tracing::{debug, info};
@@ -37,13 +39,14 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn build(cli: &Cli) -> Result<Self> {
+    pub fn build(cli: &Cli) -> Result<Arc<Self>> {
         let settings = Settings::load(cli)?;
+        let application = Self { settings };
 
-        Ok(Self { settings })
+        Ok(Arc::new(application))
     }
 
-    pub async fn run(&self) -> Result<()> {
+    pub async fn run(self: Arc<Self>) -> Result<()> {
         info!(
             version = env!("CARGO_PKG_VERSION"),
             "Starting Zekurix Server"
@@ -53,14 +56,14 @@ impl Application {
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
         info!(address = %listener.local_addr()?, "Server listening");
 
-        axum::serve(listener, build_router(self))
+        axum::serve(listener, build_router(self.clone()))
             .with_graceful_shutdown(shutdown_signal())
             .await?;
 
-        Ok(())
+        self.shutdown().await
     }
 
-    pub async fn shutdown(&self) -> Result<()> {
+    async fn shutdown(self: Arc<Self>) -> Result<()> {
         info!("Shutting down Zekurix Server");
         Ok(())
     }
