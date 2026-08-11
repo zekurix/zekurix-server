@@ -7,6 +7,7 @@ use tracing::{debug, info};
 use crate::cli::Cli;
 use crate::router::build_router;
 use crate::settings::Settings;
+use crate::users::Users;
 
 async fn shutdown_signal() {
     let ctrl_c = async {
@@ -34,14 +35,19 @@ async fn shutdown_signal() {
     info!("Shutdown signal received");
 }
 
+#[derive(Default)]
 pub struct Application {
     pub settings: Settings,
+    pub users: Users,
 }
 
 impl Application {
     pub fn build(cli: &Cli) -> Result<Arc<Self>> {
         let settings = Settings::load(cli)?;
-        let application = Self { settings };
+        let application = Self {
+            settings,
+            ..Default::default()
+        };
 
         Ok(Arc::new(application))
     }
