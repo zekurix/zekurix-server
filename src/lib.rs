@@ -4,3 +4,5 @@ pub mod handlers;
 pub mod router;
 pub mod settings;
 pub mod telemetry;
+pub mod user;
+pub mod users;

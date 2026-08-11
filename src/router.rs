@@ -1,11 +1,16 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use axum::{Router, http::StatusCode, routing::get};
+use axum::{
+    Router,
+    http::StatusCode,
+    routing::{get, post},
+};
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 
 use crate::application::Application;
 use crate::handlers::health::health;
+use crate::handlers::users::{create_user, get_user};
 
 fn build_timeout_layer(timeout: u64) -> TimeoutLayer {
     TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(timeout))
@@ -14,6 +19,8 @@ fn build_timeout_layer(timeout: u64) -> TimeoutLayer {
 pub fn build_router(application: Arc<Application>) -> Router {
     Router::new()
         .route("/health", get(health))
+        .route("/users", post(create_user))
+        .route("/users/{id}", get(get_user))
         .layer((
             TraceLayer::new_for_http(),
             build_timeout_layer(application.settings.server.timeout),
