@@ -1,18 +1,9 @@
 use anyhow::Result;
-use sqlx::PgPool;
 
-#[derive(Default)]
-pub struct Database {
-    pub pool: PgPool,
-}
+pub struct Database {}
 
 impl Database {
-    pub async fn connect(&self) -> Result<(Self)> {
-        let pool = PgPoolOptions::new()
-            .max_connections(5)
-            .connect("postgres://postgres:password@localhost/test")
-            .await?;
-
-        Ok(Self { pool })
+    pub async fn connect() -> Result<Self> {
+        Ok(Self {})
     }
 }

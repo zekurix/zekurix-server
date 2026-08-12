@@ -8,7 +8,9 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{application::Application, error::Result, user::User};
+use crate::application::Application;
+use crate::error::Result;
+use crate::user::User;
 
 #[derive(Deserialize)]
 pub struct UserParams {
