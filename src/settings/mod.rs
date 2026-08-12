@@ -1,3 +1,4 @@
+pub mod database;
 pub mod logging;
 pub mod server;
 
@@ -17,6 +18,7 @@ const ENV_PREFIX: &str = "ZEKURIX_";
 pub struct Settings {
     pub logging: logging::Settings,
     pub server: server::Settings,
+    pub database: database::Settings,
 }
 
 impl Settings {

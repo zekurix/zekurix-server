@@ -6,6 +6,7 @@ use tracing::{debug, info};
 
 use crate::database::Database;
 use crate::router::build_router;
+use crate::secrets::Secrets;
 use crate::settings::Settings;
 use crate::users::Users;
 
@@ -37,6 +38,7 @@ async fn shutdown_signal() {
 
 pub struct Application {
     pub settings: Settings,
+    pub secrets: Secrets,
     pub database: Database,
     pub users: Users,
 }
@@ -45,9 +47,13 @@ impl Application {
     pub async fn new(settings: Settings) -> Result<Arc<Self>> {
         debug!(settings = ?settings, "Configuration loaded");
 
+        let secrets = Secrets::load()?;
+        let database = Database::connect(&settings.database, &secrets.database).await?;
+
         let application = Self {
             settings,
-            database: Database::connect().await?,
+            secrets,
+            database,
             users: Users::default(),
         };
 

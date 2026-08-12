@@ -4,6 +4,7 @@ pub mod database;
 pub mod error;
 pub mod handlers;
 pub mod router;
+pub mod secrets;
 pub mod settings;
 pub mod telemetry;
 pub mod user;
