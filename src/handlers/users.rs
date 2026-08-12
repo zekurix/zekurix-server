@@ -6,10 +6,9 @@ use axum::{
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
-use tracing::debug;
 use uuid::Uuid;
 
-use crate::{application::Application, user::User};
+use crate::{application::Application, error::Result, user::User};
 
 #[derive(Deserialize)]
 pub struct UserParams {
@@ -34,30 +33,19 @@ impl From<User> for UserResponse {
 pub async fn get_user(
     State(application): State<Arc<Application>>,
     Path(id): Path<Uuid>,
-) -> Result<(StatusCode, Json<UserResponse>), StatusCode> {
-    let user = application.users.find(id).ok_or(StatusCode::NOT_FOUND)?;
+) -> Result<Json<UserResponse>> {
+    let user = application.users.find(id)?;
 
-    let status = StatusCode::OK;
-    let response = Json(user.into());
-
-    debug!(status = ?status, response = ?response);
-    Ok((status, response))
+    Ok(Json(user.into()))
 }
 
 pub async fn create_user(
     State(application): State<Arc<Application>>,
     Json(params): Json<UserParams>,
-) -> Result<(StatusCode, Json<UserResponse>), StatusCode> {
+) -> Result<(StatusCode, Json<UserResponse>)> {
     let user = User::new(params.username);
 
-    application
-        .users
-        .create(user.clone())
-        .map_err(|_| StatusCode::CONFLICT)?;
+    application.users.create(user.clone())?;
 
-    let status = StatusCode::CREATED;
-    let response = Json(user.into());
-
-    debug!(status = ?status, response = ?response);
-    Ok((status, response))
+    Ok((StatusCode::CREATED, Json(user.into())))
 }
