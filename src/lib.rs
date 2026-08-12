@@ -1,5 +1,6 @@
 pub mod application;
 pub mod cli;
+pub mod database;
 pub mod error;
 pub mod handlers;
 pub mod router;
