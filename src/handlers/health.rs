@@ -1,6 +1,5 @@
-use axum::{Json, http::StatusCode};
+use axum::Json;
 use serde::Serialize;
-use tracing::debug;
 
 #[derive(Debug, Serialize)]
 pub struct HealthResponse {
@@ -15,10 +14,6 @@ fn build_health_response() -> HealthResponse {
     }
 }
 
-pub async fn health() -> (StatusCode, Json<HealthResponse>) {
-    let status = StatusCode::OK;
-    let response = Json(build_health_response());
-
-    debug!(status = ?status, response = ?response);
-    (status, response)
+pub async fn health() -> Json<HealthResponse> {
+    Json(build_health_response())
 }

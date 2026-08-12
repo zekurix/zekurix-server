@@ -3,12 +3,10 @@ use std::sync::Mutex;
 
 use uuid::Uuid;
 
-use crate::user::User;
-
-#[derive(Debug, PartialEq)]
-pub enum CreateUserError {
-    UsernameAlreadyExists,
-}
+use crate::{
+    error::{Error, Result},
+    user::User,
+};
 
 #[derive(Default)]
 pub struct Users {
@@ -16,15 +14,19 @@ pub struct Users {
 }
 
 impl Users {
-    pub fn find(&self, id: Uuid) -> Option<User> {
+    fn get(&self, id: Uuid) -> Option<User> {
         self.map.lock().unwrap().get(&id).cloned()
     }
 
-    pub fn create(&self, user: User) -> Result<(), CreateUserError> {
+    pub fn find(&self, id: Uuid) -> Result<User> {
+        self.get(id).ok_or(Error::UserNotFound(id.to_string()))
+    }
+
+    pub fn create(&self, user: User) -> Result<()> {
         let mut map = self.map.lock().unwrap();
 
         if map.values().any(|u| u.username == user.username) {
-            return Err(CreateUserError::UsernameAlreadyExists);
+            return Err(Error::UserAlreadyExists(user.username));
         }
 
         map.insert(user.id, user);
@@ -38,11 +40,33 @@ mod tests {
     use super::*;
 
     #[test]
-    fn should_return_none_when_user_does_not_exist() {
+    fn should_get_return_none_when_user_does_not_exist() {
+        let users = Users::default();
+        let result = users.get(Uuid::now_v7());
+
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn should_find_return_user_not_found_when_user_does_not_exist() {
         let users = Users::default();
         let result = users.find(Uuid::now_v7());
 
-        assert!(result.is_none());
+        assert!(matches!(result, Err(Error::UserNotFound(_))));
+    }
+
+    #[test]
+    fn should_get_created_user() {
+        let users = Users::default();
+        let user = User::new("Alice".to_string());
+        let id = user.id;
+
+        users.create(user).unwrap();
+
+        let found = users.get(id);
+
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().id, id);
     }
 
     #[test]
@@ -55,7 +79,6 @@ mod tests {
 
         let found = users.find(id);
 
-        assert!(found.is_some());
         assert_eq!(found.unwrap().id, id);
     }
 
@@ -95,6 +118,6 @@ mod tests {
 
         let result = users.create(alice2);
 
-        assert_eq!(result, Err(CreateUserError::UsernameAlreadyExists));
+        assert!(matches!(result, Err(Error::UserAlreadyExists(_))));
     }
 }
