@@ -4,7 +4,7 @@ use anyhow::Result;
 use tokio::signal;
 use tracing::{debug, info};
 
-use crate::cli::Cli;
+use crate::database::Database;
 use crate::router::build_router;
 use crate::settings::Settings;
 use crate::users::Users;
@@ -35,18 +35,20 @@ async fn shutdown_signal() {
     info!("Shutdown signal received");
 }
 
-#[derive(Default)]
 pub struct Application {
     pub settings: Settings,
+    pub database: Database,
     pub users: Users,
 }
 
 impl Application {
-    pub fn build(cli: &Cli) -> Result<Arc<Self>> {
-        let settings = Settings::load(cli)?;
+    pub async fn new(settings: Settings) -> Result<Arc<Self>> {
+        debug!(settings = ?settings, "Configuration loaded");
+
         let application = Self {
             settings,
-            ..Default::default()
+            database: Database::connect().await?,
+            users: Users::default(),
         };
 
         Ok(Arc::new(application))
@@ -57,7 +59,6 @@ impl Application {
             version = env!("CARGO_PKG_VERSION"),
             "Starting Zekurix Server"
         );
-        debug!(settings = ?self.settings, "Configuration loaded");
 
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
         info!(address = %listener.local_addr()?, "Server listening");

@@ -2,7 +2,8 @@ use std::fs;
 
 use tempfile::NamedTempFile;
 
-use zekurix_server::{cli::Cli, settings::Settings};
+use zekurix_server::cli::Cli;
+use zekurix_server::settings::Settings;
 
 #[test]
 fn should_load_settings_from_default() {

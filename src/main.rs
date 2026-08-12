@@ -1,12 +1,15 @@
 use anyhow::Result;
 
-use zekurix_server::{application::Application, cli::Cli, telemetry};
+use zekurix_server::application::Application;
+use zekurix_server::cli::Cli;
+use zekurix_server::settings::Settings;
+use zekurix_server::telemetry;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::build()?;
-    let application = Application::build(&cli)?;
+    let settings = Settings::load(&cli)?;
 
-    telemetry::init(&application);
-    application.run().await
+    telemetry::init(&settings.logging);
+    Application::new(settings).await?.run().await
 }

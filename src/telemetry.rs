@@ -1,13 +1,12 @@
 use tracing_subscriber::prelude::*;
 
-use crate::application::Application;
-use crate::settings::logging::Format;
+use crate::settings::logging::*;
 
-pub fn init(application: &Application) {
+pub fn init(settings: &Settings) {
     let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| format!("{}", application.settings.logging.level).into());
+        .unwrap_or_else(|_| format!("{}", settings.level).into());
 
-    match application.settings.logging.format {
+    match settings.format {
         Format::Full => {
             tracing_subscriber::registry()
                 .with(env_filter)

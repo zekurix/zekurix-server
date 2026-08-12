@@ -7,7 +7,9 @@ use serde::Deserialize;
 use tower::ServiceExt;
 use uuid::Uuid;
 
-use zekurix_server::{application::Application, cli::Cli, router::build_router};
+use zekurix_server::application::Application;
+use zekurix_server::router::build_router;
+use zekurix_server::settings::Settings;
 
 #[derive(Deserialize)]
 struct UserResponse {
@@ -38,8 +40,7 @@ fn get_users(id: Uuid) -> Request<Body> {
 
 #[tokio::test]
 async fn should_create_user() {
-    let cli = Cli::build().unwrap();
-    let application = Application::build(&cli).unwrap();
+    let application = Application::new(Settings::default()).await.unwrap();
     let router = build_router(application);
 
     let response = router.oneshot(post_users("Alice")).await.unwrap();
@@ -52,8 +53,7 @@ async fn should_create_user() {
 
 #[tokio::test]
 async fn should_get_user() {
-    let cli = Cli::build().unwrap();
-    let application = Application::build(&cli).unwrap();
+    let application = Application::new(Settings::default()).await.unwrap();
     let router = build_router(application);
 
     let response = router.clone().oneshot(post_users("Alice")).await.unwrap();
@@ -76,8 +76,7 @@ async fn should_get_user() {
 
 #[tokio::test]
 async fn should_create_and_get_multiple_users() {
-    let cli = Cli::build().unwrap();
-    let application = Application::build(&cli).unwrap();
+    let application = Application::new(Settings::default()).await.unwrap();
     let router = build_router(application);
 
     let usernames = ["Alice", "Bob", "Charlie"];
@@ -104,8 +103,7 @@ async fn should_create_and_get_multiple_users() {
 
 #[tokio::test]
 async fn should_return_conflict_for_existing_user() {
-    let cli = Cli::build().unwrap();
-    let application = Application::build(&cli).unwrap();
+    let application = Application::new(Settings::default()).await.unwrap();
     let router = build_router(application);
 
     let response = router.clone().oneshot(post_users("Alice")).await.unwrap();
@@ -117,8 +115,7 @@ async fn should_return_conflict_for_existing_user() {
 
 #[tokio::test]
 async fn should_return_not_found_for_invalid_user_id() {
-    let cli = Cli::build().unwrap();
-    let application = Application::build(&cli).unwrap();
+    let application = Application::new(Settings::default()).await.unwrap();
     let router = build_router(application);
 
     let response = router.oneshot(get_users(Uuid::now_v7())).await.unwrap();

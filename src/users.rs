@@ -3,10 +3,8 @@ use std::sync::Mutex;
 
 use uuid::Uuid;
 
-use crate::{
-    error::{Error, Result},
-    user::User,
-};
+use crate::error::{Error, Result};
+use crate::user::User;
 
 #[derive(Default)]
 pub struct Users {

@@ -6,7 +6,9 @@ use http_body_util::BodyExt;
 use serde::Deserialize;
 use tower::ServiceExt;
 
-use zekurix_server::{application::Application, cli::Cli, router::build_router};
+use zekurix_server::application::Application;
+use zekurix_server::router::build_router;
+use zekurix_server::settings::Settings;
 
 #[derive(Deserialize)]
 struct HealthResponse {
@@ -16,8 +18,7 @@ struct HealthResponse {
 
 #[tokio::test]
 async fn should_return_health_response() {
-    let cli = Cli::build().unwrap();
-    let application = Application::build(&cli).unwrap();
+    let application = Application::new(Settings::default()).await.unwrap();
     let router = build_router(application);
 
     let response = router
@@ -41,8 +42,7 @@ async fn should_return_health_response() {
 
 #[tokio::test]
 async fn should_return_not_found_for_unknown_route() {
-    let cli = Cli::build().unwrap();
-    let application = Application::build(&cli).unwrap();
+    let application = Application::new(Settings::default()).await.unwrap();
     let router = build_router(application);
 
     let response = router
