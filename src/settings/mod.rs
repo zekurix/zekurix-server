@@ -13,6 +13,7 @@ use crate::cli::Cli;
 const ENV_PREFIX: &str = "ZEKURIX_";
 
 #[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Settings {
     pub logging: logging::Settings,
     pub server: server::Settings,

@@ -84,3 +84,65 @@ fn should_return_error_for_invalid_toml() {
 
     assert!(Settings::load(&cli).is_err());
 }
+
+#[test]
+fn should_return_error_for_unknown_fields_settings() {
+    let file = NamedTempFile::new().unwrap();
+
+    fs::write(
+        file.path(),
+        r#"
+        [foo]
+        "#,
+    )
+    .unwrap();
+
+    let cli = Cli {
+        config: file.path().to_path_buf(),
+        ..Default::default()
+    };
+
+    assert!(Settings::load(&cli).is_err());
+}
+
+#[test]
+fn should_return_error_for_unknown_fields_settings_logging() {
+    let file = NamedTempFile::new().unwrap();
+
+    fs::write(
+        file.path(),
+        r#"
+        [logging]
+        foo = "bar"
+        "#,
+    )
+    .unwrap();
+
+    let cli = Cli {
+        config: file.path().to_path_buf(),
+        ..Default::default()
+    };
+
+    assert!(Settings::load(&cli).is_err());
+}
+
+#[test]
+fn should_return_error_for_unknown_fields_settings_server() {
+    let file = NamedTempFile::new().unwrap();
+
+    fs::write(
+        file.path(),
+        r#"
+        [server]
+        foo = "bar"
+        "#,
+    )
+    .unwrap();
+
+    let cli = Cli {
+        config: file.path().to_path_buf(),
+        ..Default::default()
+    };
+
+    assert!(Settings::load(&cli).is_err());
+}

@@ -40,6 +40,7 @@ pub enum Format {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Settings {
     pub level: Level,
     pub format: Format,
