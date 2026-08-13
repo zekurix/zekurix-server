@@ -74,6 +74,7 @@ impl Application {
 
     async fn shutdown(self: Arc<Self>) -> Result<()> {
         info!("Shutting down Zekurix server");
+        self.database.close().await;
         Ok(())
     }
 }
