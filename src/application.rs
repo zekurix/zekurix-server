@@ -6,6 +6,7 @@ use tracing::{debug, info};
 
 use crate::database::Database;
 use crate::router::build_router;
+use crate::secrets::Secrets;
 use crate::settings::Settings;
 use crate::users::Users;
 
@@ -37,17 +38,23 @@ async fn shutdown_signal() {
 
 pub struct Application {
     pub settings: Settings,
+    pub secrets: Secrets,
     pub database: Database,
     pub users: Users,
 }
 
 impl Application {
     pub async fn new(settings: Settings) -> Result<Arc<Self>> {
+        info!(version = env!("CARGO_PKG_VERSION"), "Zekurix server");
         debug!(settings = ?settings, "Configuration loaded");
+
+        let secrets = Secrets::load();
+        let database = Database::connect(&settings.database, &secrets.database).await?;
 
         let application = Self {
             settings,
-            database: Database::connect().await?,
+            secrets,
+            database,
             users: Users::default(),
         };
 
@@ -55,11 +62,6 @@ impl Application {
     }
 
     pub async fn run(self: Arc<Self>) -> Result<()> {
-        info!(
-            version = env!("CARGO_PKG_VERSION"),
-            "Starting Zekurix Server"
-        );
-
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
         info!(address = %listener.local_addr()?, "Server listening");
 
@@ -71,7 +73,7 @@ impl Application {
     }
 
     async fn shutdown(self: Arc<Self>) -> Result<()> {
-        info!("Shutting down Zekurix Server");
+        info!("Shutting down Zekurix server");
         Ok(())
     }
 }
