@@ -45,9 +45,10 @@ pub struct Application {
 
 impl Application {
     pub async fn new(settings: Settings) -> Result<Arc<Self>> {
+        info!(version = env!("CARGO_PKG_VERSION"), "Zekurix server");
         debug!(settings = ?settings, "Configuration loaded");
 
-        let secrets = Secrets::load()?;
+        let secrets = Secrets::load();
         let database = Database::connect(&settings.database, &secrets.database).await?;
 
         let application = Self {
@@ -61,11 +62,6 @@ impl Application {
     }
 
     pub async fn run(self: Arc<Self>) -> Result<()> {
-        info!(
-            version = env!("CARGO_PKG_VERSION"),
-            "Starting Zekurix Server"
-        );
-
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
         info!(address = %listener.local_addr()?, "Server listening");
 
@@ -77,7 +73,7 @@ impl Application {
     }
 
     async fn shutdown(self: Arc<Self>) -> Result<()> {
-        info!("Shutting down Zekurix Server");
+        info!("Shutting down Zekurix server");
         Ok(())
     }
 }

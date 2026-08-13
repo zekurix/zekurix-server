@@ -7,8 +7,15 @@ use crate::settings::database::*;
 pub struct Database {}
 
 impl Database {
-    pub async fn connect(_settings: &Settings, _secrets: &Secrets) -> Result<Self> {
-        let url = "postgres://postgres:password@localhost/test";
+    pub async fn connect(settings: &Settings, secrets: &Secrets) -> Result<Self> {
+        let url = format!(
+            "postgres://{}:{}@{}:{}/{}",
+            settings.username.as_deref().unwrap_or(""),
+            secrets.password().map(|_| "***").unwrap_or(""),
+            settings.host,
+            settings.port,
+            settings.database
+        );
         info!(url = %url, "Connecting to the database...");
         info!("Database connection established");
         Ok(Self {})
