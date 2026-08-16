@@ -1,22 +1,20 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use uuid::Uuid;
-
 use crate::error::{Error, Result};
-use crate::user::User;
+use crate::user::{User, UserId};
 
 #[derive(Default)]
 pub struct Users {
-    map: Mutex<HashMap<Uuid, User>>,
+    map: Mutex<HashMap<UserId, User>>,
 }
 
 impl Users {
-    fn get(&self, id: Uuid) -> Option<User> {
+    fn get(&self, id: UserId) -> Option<User> {
         self.map.lock().unwrap().get(&id).cloned()
     }
 
-    pub fn find(&self, id: Uuid) -> Result<User> {
+    pub fn find(&self, id: UserId) -> Result<User> {
         self.get(id).ok_or(Error::UserNotFound(id.to_string()))
     }
 
@@ -40,7 +38,7 @@ mod tests {
     #[test]
     fn should_get_return_none_when_user_does_not_exist() {
         let users = Users::default();
-        let result = users.get(Uuid::now_v7());
+        let result = users.get(UserId::new());
 
         assert!(result.is_none());
     }
@@ -48,7 +46,7 @@ mod tests {
     #[test]
     fn should_find_return_user_not_found_when_user_does_not_exist() {
         let users = Users::default();
-        let result = users.find(Uuid::now_v7());
+        let result = users.find(UserId::new());
 
         assert!(matches!(result, Err(Error::UserNotFound(_))));
     }
