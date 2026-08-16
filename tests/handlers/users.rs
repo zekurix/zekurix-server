@@ -2,15 +2,12 @@ use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
-use dotenv::dotenv;
 use http_body_util::BodyExt;
 use serde::Deserialize;
-use tower::ServiceExt;
 
-use zekurix_server::application::Application;
-use zekurix_server::router::build_router;
-use zekurix_server::settings::Settings;
 use zekurix_server::user::UserId;
+
+use crate::helpers::TestApp;
 
 #[derive(Deserialize)]
 struct UserResponse {
@@ -41,13 +38,10 @@ fn get_users(id: UserId) -> Request<Body> {
 
 #[tokio::test]
 async fn should_create_user() {
-    dotenv().ok();
-    let mut settings = Settings::default();
-    settings.database.username = Some("postgres".to_string());
-    let application = Application::new(settings).await.unwrap();
-    let router = build_router(application);
+    let testapp = TestApp::new().await;
+    let request = post_users("Alice");
+    let response = testapp.request(request).await;
 
-    let response = router.oneshot(post_users("Alice")).await.unwrap();
     assert_eq!(response.status(), StatusCode::CREATED);
 
     let body = response.into_body().collect().await.unwrap().to_bytes();
@@ -57,22 +51,17 @@ async fn should_create_user() {
 
 #[tokio::test]
 async fn should_get_user() {
-    dotenv().ok();
-    let mut settings = Settings::default();
-    settings.database.username = Some("postgres".to_string());
-    let application = Application::new(settings).await.unwrap();
-    let router = build_router(application);
+    let testapp = TestApp::new().await;
+    let request = post_users("Alice");
+    let response = testapp.request(request).await;
 
-    let response = router.clone().oneshot(post_users("Alice")).await.unwrap();
     assert_eq!(response.status(), StatusCode::CREATED);
 
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let user_post: UserResponse = serde_json::from_slice(&body).unwrap();
-    let response = router
-        .clone()
-        .oneshot(get_users(user_post.id))
-        .await
-        .unwrap();
+    let request = get_users(user_post.id);
+    let response = testapp.request(request).await;
+
     assert_eq!(response.status(), StatusCode::OK);
 
     let body = response.into_body().collect().await.unwrap().to_bytes();
@@ -83,29 +72,24 @@ async fn should_get_user() {
 
 #[tokio::test]
 async fn should_create_and_get_multiple_users() {
-    dotenv().ok();
-    let mut settings = Settings::default();
-    settings.database.username = Some("postgres".to_string());
-    let application = Application::new(settings).await.unwrap();
-    let router = build_router(application);
-
+    let testapp = TestApp::new().await;
     let usernames = ["Alice", "Bob", "Charlie"];
 
     for username in usernames {
-        let response = router.clone().oneshot(post_users(username)).await.unwrap();
+        let request = post_users(username);
+        let response = testapp.request(request).await;
         assert_eq!(response.status(), StatusCode::CREATED);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let user_post: UserResponse = serde_json::from_slice(&body).unwrap();
-        let response = router
-            .clone()
-            .oneshot(get_users(user_post.id))
-            .await
-            .unwrap();
+        let request = get_users(user_post.id);
+        let response = testapp.request(request).await;
+
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let user_get: UserResponse = serde_json::from_slice(&body).unwrap();
+
         assert_eq!(user_get.id, user_post.id);
         assert_eq!(user_get.username, *username);
     }
@@ -113,27 +97,23 @@ async fn should_create_and_get_multiple_users() {
 
 #[tokio::test]
 async fn should_return_conflict_for_existing_user() {
-    dotenv().ok();
-    let mut settings = Settings::default();
-    settings.database.username = Some("postgres".to_string());
-    let application = Application::new(settings).await.unwrap();
-    let router = build_router(application);
+    let testapp = TestApp::new().await;
+    let request = post_users("Alice");
+    let response = testapp.request(request).await;
 
-    let response = router.clone().oneshot(post_users("Alice")).await.unwrap();
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    let response = router.clone().oneshot(post_users("Alice")).await.unwrap();
+    let request = post_users("Alice");
+    let response = testapp.request(request).await;
+
     assert_eq!(response.status(), StatusCode::CONFLICT);
 }
 
 #[tokio::test]
 async fn should_return_not_found_for_invalid_user_id() {
-    dotenv().ok();
-    let mut settings = Settings::default();
-    settings.database.username = Some("postgres".to_string());
-    let application = Application::new(settings).await.unwrap();
-    let router = build_router(application);
+    let testapp = TestApp::new().await;
+    let request = get_users(UserId::new());
+    let response = testapp.request(request).await;
 
-    let response = router.oneshot(get_users(UserId::new())).await.unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }

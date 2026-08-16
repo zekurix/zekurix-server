@@ -1,3 +1,5 @@
+mod helpers;
+
 #[path = "handlers/health.rs"]
 mod health;
 
