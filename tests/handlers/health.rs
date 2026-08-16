@@ -2,14 +2,10 @@ use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
-use dotenv::dotenv;
 use http_body_util::BodyExt;
 use serde::Deserialize;
-use tower::ServiceExt;
 
-use zekurix_server::application::Application;
-use zekurix_server::router::build_router;
-use zekurix_server::settings::Settings;
+use crate::helpers::TestApp;
 
 #[derive(Deserialize)]
 struct HealthResponse {
@@ -19,21 +15,12 @@ struct HealthResponse {
 
 #[tokio::test]
 async fn should_return_health_response() {
-    dotenv().ok();
-    let mut settings = Settings::default();
-    settings.database.username = Some("postgres".to_string());
-    let application = Application::new(settings).await.unwrap();
-    let router = build_router(application);
-
-    let response = router
-        .oneshot(
-            Request::builder()
-                .uri("/health")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
+    let testapp = TestApp::new().await;
+    let request = Request::builder()
+        .uri("/health")
+        .body(Body::empty())
         .unwrap();
+    let response = testapp.request(request).await;
 
     assert_eq!(response.status(), StatusCode::OK);
 
@@ -46,21 +33,12 @@ async fn should_return_health_response() {
 
 #[tokio::test]
 async fn should_return_not_found_for_unknown_route() {
-    dotenv().ok();
-    let mut settings = Settings::default();
-    settings.database.username = Some("postgres".to_string());
-    let application = Application::new(settings).await.unwrap();
-    let router = build_router(application);
-
-    let response = router
-        .oneshot(
-            Request::builder()
-                .uri("/foobar")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
+    let testapp = TestApp::new().await;
+    let request = Request::builder()
+        .uri("/foobar")
+        .body(Body::empty())
         .unwrap();
+    let response = testapp.request(request).await;
 
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
