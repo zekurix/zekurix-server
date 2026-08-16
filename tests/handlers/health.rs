@@ -2,6 +2,7 @@ use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
+use dotenv::dotenv;
 use http_body_util::BodyExt;
 use serde::Deserialize;
 use tower::ServiceExt;
@@ -18,7 +19,10 @@ struct HealthResponse {
 
 #[tokio::test]
 async fn should_return_health_response() {
-    let application = Application::new(Settings::default()).await.unwrap();
+    dotenv().ok();
+    let mut settings = Settings::default();
+    settings.database.username = Some("postgres".to_string());
+    let application = Application::new(settings).await.unwrap();
     let router = build_router(application);
 
     let response = router
@@ -42,7 +46,10 @@ async fn should_return_health_response() {
 
 #[tokio::test]
 async fn should_return_not_found_for_unknown_route() {
-    let application = Application::new(Settings::default()).await.unwrap();
+    dotenv().ok();
+    let mut settings = Settings::default();
+    settings.database.username = Some("postgres".to_string());
+    let application = Application::new(settings).await.unwrap();
     let router = build_router(application);
 
     let response = router

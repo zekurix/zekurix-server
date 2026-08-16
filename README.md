@@ -34,6 +34,9 @@ This repository contains only the backend server component.
 ```bash
 git clone https://github.com/zekurix/zekurix-server.git
 cd zekurix-server
+cp .env.example .env
+# Edit the .env file with your credentials
+docker run --name zekurix-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=zekurix -p 5432:5432 -d postgres:18
 cargo build
 cargo test
 ```

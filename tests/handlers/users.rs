@@ -2,6 +2,7 @@ use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
+use dotenv::dotenv;
 use http_body_util::BodyExt;
 use serde::Deserialize;
 use tower::ServiceExt;
@@ -40,7 +41,10 @@ fn get_users(id: Uuid) -> Request<Body> {
 
 #[tokio::test]
 async fn should_create_user() {
-    let application = Application::new(Settings::default()).await.unwrap();
+    dotenv().ok();
+    let mut settings = Settings::default();
+    settings.database.username = Some("postgres".to_string());
+    let application = Application::new(settings).await.unwrap();
     let router = build_router(application);
 
     let response = router.oneshot(post_users("Alice")).await.unwrap();
@@ -53,7 +57,10 @@ async fn should_create_user() {
 
 #[tokio::test]
 async fn should_get_user() {
-    let application = Application::new(Settings::default()).await.unwrap();
+    dotenv().ok();
+    let mut settings = Settings::default();
+    settings.database.username = Some("postgres".to_string());
+    let application = Application::new(settings).await.unwrap();
     let router = build_router(application);
 
     let response = router.clone().oneshot(post_users("Alice")).await.unwrap();
@@ -76,7 +83,10 @@ async fn should_get_user() {
 
 #[tokio::test]
 async fn should_create_and_get_multiple_users() {
-    let application = Application::new(Settings::default()).await.unwrap();
+    dotenv().ok();
+    let mut settings = Settings::default();
+    settings.database.username = Some("postgres".to_string());
+    let application = Application::new(settings).await.unwrap();
     let router = build_router(application);
 
     let usernames = ["Alice", "Bob", "Charlie"];
@@ -103,7 +113,10 @@ async fn should_create_and_get_multiple_users() {
 
 #[tokio::test]
 async fn should_return_conflict_for_existing_user() {
-    let application = Application::new(Settings::default()).await.unwrap();
+    dotenv().ok();
+    let mut settings = Settings::default();
+    settings.database.username = Some("postgres".to_string());
+    let application = Application::new(settings).await.unwrap();
     let router = build_router(application);
 
     let response = router.clone().oneshot(post_users("Alice")).await.unwrap();
@@ -115,7 +128,10 @@ async fn should_return_conflict_for_existing_user() {
 
 #[tokio::test]
 async fn should_return_not_found_for_invalid_user_id() {
-    let application = Application::new(Settings::default()).await.unwrap();
+    dotenv().ok();
+    let mut settings = Settings::default();
+    settings.database.username = Some("postgres".to_string());
+    let application = Application::new(settings).await.unwrap();
     let router = build_router(application);
 
     let response = router.oneshot(get_users(Uuid::now_v7())).await.unwrap();
