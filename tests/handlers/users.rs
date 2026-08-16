@@ -6,15 +6,15 @@ use dotenv::dotenv;
 use http_body_util::BodyExt;
 use serde::Deserialize;
 use tower::ServiceExt;
-use uuid::Uuid;
 
 use zekurix_server::application::Application;
 use zekurix_server::router::build_router;
 use zekurix_server::settings::Settings;
+use zekurix_server::user::UserId;
 
 #[derive(Deserialize)]
 struct UserResponse {
-    id: Uuid,
+    id: UserId,
     username: String,
 }
 
@@ -31,7 +31,7 @@ fn post_users(username: &str) -> Request<Body> {
         .unwrap()
 }
 
-fn get_users(id: Uuid) -> Request<Body> {
+fn get_users(id: UserId) -> Request<Body> {
     Request::builder()
         .method("GET")
         .uri(format!("/users/{}", id))
@@ -134,6 +134,6 @@ async fn should_return_not_found_for_invalid_user_id() {
     let application = Application::new(settings).await.unwrap();
     let router = build_router(application);
 
-    let response = router.oneshot(get_users(Uuid::now_v7())).await.unwrap();
+    let response = router.oneshot(get_users(UserId::new())).await.unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }

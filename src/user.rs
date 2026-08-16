@@ -1,15 +1,37 @@
+use std::fmt;
+
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct UserId(Uuid);
+
+impl UserId {
+    pub fn new() -> Self {
+        Self(Uuid::now_v7())
+    }
+
+    pub fn nil() -> Self {
+        Self(Uuid::nil())
+    }
+}
+
+impl fmt::Display for UserId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 #[derive(Clone)]
 pub struct User {
-    pub id: Uuid,
+    pub id: UserId,
     pub username: String,
 }
 
 impl User {
     pub fn new(username: String) -> Self {
         Self {
-            id: Uuid::now_v7(),
+            id: UserId::new(),
             username,
         }
     }
@@ -30,7 +52,7 @@ mod tests {
     fn should_generate_non_nil_uuid() {
         let user = User::new("Alice".to_string());
 
-        assert_ne!(user.id, Uuid::nil());
+        assert_ne!(user.id, UserId::nil());
     }
 
     #[test]

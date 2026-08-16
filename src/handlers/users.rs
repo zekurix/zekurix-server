@@ -6,11 +6,10 @@ use axum::{
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::application::Application;
 use crate::error::Result;
-use crate::user::User;
+use crate::user::{User, UserId};
 
 #[derive(Deserialize)]
 pub struct UserParams {
@@ -19,7 +18,7 @@ pub struct UserParams {
 
 #[derive(Debug, Serialize)]
 pub struct UserResponse {
-    id: Uuid,
+    id: UserId,
     username: String,
 }
 
@@ -34,7 +33,7 @@ impl From<User> for UserResponse {
 
 pub async fn get_user(
     State(application): State<Arc<Application>>,
-    Path(id): Path<Uuid>,
+    Path(id): Path<UserId>,
 ) -> Result<Json<UserResponse>> {
     let user = application.users.find(id)?;
 
