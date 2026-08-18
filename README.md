@@ -31,14 +31,34 @@ This repository contains only the backend server component.
 
 ## Getting Started
 
+Clone the repository:
+
 ```bash
 git clone https://github.com/zekurix/zekurix-server.git
 cd zekurix-server
+```
+
+Set your environment variables:
+
+```bash
 cp .env.example .env
 # Edit the .env file with your credentials
+```
+
+Setup the PostgreSQL database:
+
+```bash
 docker run --name zekurix-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=zekurix -p 5432:5432 -d postgres:18
+cargo install sqlx-cli --no-default-features --features postgres
+sqlx migrate run
+```
+
+Build, test and run:
+
+```bash
 cargo build
 cargo test
+cargo run
 ```
 
 ## Security Notice
