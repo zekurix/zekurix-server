@@ -20,6 +20,7 @@ impl TestApp {
 
         let mut settings = Settings::default();
         settings.database.username = Some("postgres".to_string());
+        settings.database.migrate = true;
 
         let application = Application::new(settings).await.unwrap();
         let router = build_router(application);

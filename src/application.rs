@@ -28,12 +28,12 @@ async fn shutdown_signal() {
     #[cfg(not(unix))]
     let terminate = std::future::pending::<()>();
 
-    debug!("Waiting for shutdown signal (Ctrl+C or SIGTERM)");
+    debug!("waiting for shutdown signal (Ctrl+C or SIGTERM)");
     tokio::select! {
         _ = ctrl_c => {},
         _ = terminate => {},
     }
-    info!("Shutdown signal received");
+    info!("shutdown signal received");
 }
 
 pub struct Application {
@@ -46,10 +46,10 @@ pub struct Application {
 impl Application {
     pub async fn new(settings: Settings) -> Result<Arc<Self>> {
         info!(version = env!("CARGO_PKG_VERSION"), "Zekurix server");
-        debug!(settings = ?settings, "Configuration loaded");
+        debug!(settings = ?settings, "configuration loaded");
 
         let secrets = Secrets::load();
-        let database = Database::connect(&settings.database, &secrets.database).await?;
+        let database = Database::init(&settings.database, &secrets.database).await?;
 
         let application = Self {
             settings,
@@ -63,7 +63,7 @@ impl Application {
 
     pub async fn run(self: Arc<Self>) -> Result<()> {
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
-        info!(address = %listener.local_addr()?, "Server listening");
+        info!(address = %listener.local_addr()?, "server listening");
 
         axum::serve(listener, build_router(self.clone()))
             .with_graceful_shutdown(shutdown_signal())
@@ -73,7 +73,7 @@ impl Application {
     }
 
     async fn shutdown(self: Arc<Self>) -> Result<()> {
-        info!("Shutting down Zekurix server");
+        info!("shutting down Zekurix server");
         self.database.close().await;
         Ok(())
     }
