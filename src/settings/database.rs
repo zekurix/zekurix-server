@@ -8,6 +8,7 @@ pub struct Settings {
     pub host: String,
     pub database: String,
     pub max_connections: u32,
+    pub migrate: bool,
 }
 
 impl Default for Settings {
@@ -18,6 +19,7 @@ impl Default for Settings {
             port: 5432,
             database: "zekurix".to_string(),
             max_connections: 8,
+            migrate: false,
         }
     }
 }
