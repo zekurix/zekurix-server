@@ -25,7 +25,7 @@ pub struct TestApp {
 impl TestApp {
     async fn get_postgres_container(
         settings: &Settings,
-        secrets: &Secrets
+        secrets: &Secrets,
     ) -> &'static ContainerAsync<Postgres> {
         POSTGRES_CONTAINER
             .get_or_init(|| async {
