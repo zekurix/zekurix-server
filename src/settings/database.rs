@@ -8,7 +8,7 @@ pub struct Settings {
     pub host: String,
     pub database: String,
     pub max_connections: u32,
-    pub migrate: bool
+    pub migrate: bool,
 }
 
 impl Default for Settings {
