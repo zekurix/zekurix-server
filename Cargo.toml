@@ -26,4 +26,7 @@ assert_cmd = "2.2.2"
 http-body-util = "0.1.4"
 predicates = "3.1.4"
 tempfile = "3.27.0"
+testcontainers = "0.27"
+testcontainers-modules = { version = "0.15.0", features = ["postgres"] }
+tokio = { version = "1.53.1", features = ["sync"] }
 tower = { version = "0.5.3", features = ["util"] }
