@@ -8,4 +8,3 @@ pub mod secrets;
 pub mod settings;
 pub mod telemetry;
 pub mod user;
-pub mod users;

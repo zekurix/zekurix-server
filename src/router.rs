@@ -9,8 +9,8 @@ use axum::{
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 
 use crate::application::Application;
-use crate::handlers::health::health;
-use crate::handlers::users::{create_user, get_user};
+use crate::handlers::health::*;
+use crate::user::handlers::*;
 
 fn build_timeout_layer(timeout: u64) -> TimeoutLayer {
     TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(timeout))

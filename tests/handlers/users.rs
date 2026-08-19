@@ -15,6 +15,11 @@ struct UserResponse {
     username: String,
 }
 
+#[derive(Deserialize)]
+struct ErrorResponse {
+    code: String,
+}
+
 fn post_users(username: &str) -> Request<Body> {
     let body = serde_json::json!({
         "username": username,
@@ -107,6 +112,10 @@ async fn should_return_conflict_for_existing_user() {
     let response = testapp.request(request).await;
 
     assert_eq!(response.status(), StatusCode::CONFLICT);
+
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let error: ErrorResponse = serde_json::from_slice(&body).unwrap();
+    assert_eq!(error.code, "USER_ALREADY_EXISTS");
 }
 
 #[tokio::test]
@@ -116,4 +125,23 @@ async fn should_return_not_found_for_invalid_user_id() {
     let response = testapp.request(request).await;
 
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let error: ErrorResponse = serde_json::from_slice(&body).unwrap();
+    assert_eq!(error.code, "USER_NOT_FOUND");
+}
+
+#[tokio::test]
+async fn should_return_unprocessable_entity_for_invalid_payload() {
+    let testapp = TestApp::new().await;
+    let request = Request::builder()
+        .method("POST")
+        .uri("/users")
+        .header("content-type", "application/json")
+        .body(Body::from("{}"))
+        .unwrap();
+
+    let response = testapp.request(request).await;
+
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
 }

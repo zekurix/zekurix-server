@@ -7,9 +7,9 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
+use super::{User, UserId, repository::UserRepository};
 use crate::application::Application;
 use crate::error::Result;
-use crate::user::{User, UserId};
 
 #[derive(Deserialize)]
 pub struct UserParams {
@@ -35,7 +35,7 @@ pub async fn get_user(
     State(application): State<Arc<Application>>,
     Path(id): Path<UserId>,
 ) -> Result<Json<UserResponse>> {
-    let user = application.users.find(id)?;
+    let user = application.postgres_user_repository.find(id).await?;
 
     Ok(Json(user.into()))
 }
@@ -46,7 +46,10 @@ pub async fn create_user(
 ) -> Result<(StatusCode, Json<UserResponse>)> {
     let user = User::new(params.username);
 
-    application.users.create(user.clone())?;
+    application
+        .postgres_user_repository
+        .create(user.clone())
+        .await?;
 
     Ok((StatusCode::CREATED, Json(user.into())))
 }
