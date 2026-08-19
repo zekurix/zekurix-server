@@ -71,6 +71,39 @@ jobs:
       - name: Lint
         run: cargo clippy --all-targets --all-features -- -D warnings
 
+  build:
+    name: Build on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      - name: Build
+        run: cargo build --all-targets --all-features
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -80,6 +113,7 @@ jobs:
     needs:
       - clippy
       - fmt
+      - build
 
     services:
       postgres:
