@@ -8,7 +8,7 @@ use crate::database::Database;
 use crate::router::build_router;
 use crate::secrets::Secrets;
 use crate::settings::Settings;
-use crate::users::Users;
+use crate::user::postgres_repository::PostgresUserRepository;
 
 async fn shutdown_signal() {
     let ctrl_c = async {
@@ -40,7 +40,7 @@ pub struct Application {
     pub settings: Settings,
     pub secrets: Secrets,
     pub database: Database,
-    pub users: Users,
+    pub postgres_user_repository: PostgresUserRepository,
 }
 
 impl Application {
@@ -50,12 +50,13 @@ impl Application {
 
         let secrets = Secrets::load();
         let database = Database::init(&settings.database, &secrets.database).await?;
+        let postgres_user_repository = PostgresUserRepository::new(database.pool.clone());
 
         let application = Self {
             settings,
             secrets,
             database,
-            users: Users::default(),
+            postgres_user_repository,
         };
 
         Ok(Arc::new(application))

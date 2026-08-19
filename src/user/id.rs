@@ -3,7 +3,8 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 pub struct UserId(Uuid);
 
 impl UserId {
@@ -25,21 +26,6 @@ impl Default for UserId {
 impl fmt::Display for UserId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-#[derive(Clone)]
-pub struct User {
-    pub id: UserId,
-    pub username: String,
-}
-
-impl User {
-    pub fn new(username: String) -> Self {
-        Self {
-            id: UserId::new(),
-            username,
-        }
     }
 }
 
@@ -79,27 +65,5 @@ mod tests {
         let id2 = id1;
 
         assert_eq!(id1, id2);
-    }
-
-    #[test]
-    fn should_create_user_with_given_name() {
-        let user = User::new("Alice".to_string());
-
-        assert_eq!(user.username, "Alice");
-    }
-
-    #[test]
-    fn should_generate_non_nil_uuid() {
-        let user = User::new("Alice".to_string());
-
-        assert_ne!(user.id, UserId::nil());
-    }
-
-    #[test]
-    fn should_generate_different_uuid_for_each_user() {
-        let user1 = User::new("Alice".to_string());
-        let user2 = User::new("Alice".to_string());
-
-        assert_ne!(user1.id, user2.id);
     }
 }

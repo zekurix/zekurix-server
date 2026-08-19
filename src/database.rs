@@ -6,7 +6,7 @@ use crate::secrets::database::*;
 use crate::settings::database::*;
 
 pub struct Database {
-    pool: sqlx::PgPool,
+    pub pool: sqlx::PgPool,
 }
 
 impl Database {
