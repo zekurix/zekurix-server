@@ -81,6 +81,9 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+    needs:
+      - clippy
+      - fmt
 
     steps:
       - name: Harden runner
