@@ -4,7 +4,7 @@ use secrecy::{ExposeSecret, SecretString};
 
 const ENV_PASSWORD: &str = "ZEKURIX_DATABASE__PASSWORD";
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Secrets {
     password: Option<SecretString>,
 }

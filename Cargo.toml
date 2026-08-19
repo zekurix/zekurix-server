@@ -24,9 +24,7 @@ uuid = { version = "1.24.0", features = ["v7", "serde"] }
 [dev-dependencies]
 assert_cmd = "2.2.2"
 http-body-util = "0.1.4"
+postgres = "0.19.14"
 predicates = "3.1.4"
 tempfile = "3.27.0"
-testcontainers = "0.27"
-testcontainers-modules = { version = "0.15.0", features = ["postgres"] }
-tokio = { version = "1.53.1", features = ["sync"] }
 tower = { version = "0.5.3", features = ["util"] }
