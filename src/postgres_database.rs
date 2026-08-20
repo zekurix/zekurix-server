@@ -26,6 +26,10 @@ impl PostgresDatabase {
 
         let pool = PgPoolOptions::new()
             .max_connections(settings.max_connections)
+            .min_connections(settings.min_connections)
+            .acquire_timeout(settings.acquire_timeout)
+            .idle_timeout(settings.idle_timeout)
+            .max_lifetime(settings.max_lifetime)
             .connect_with(options)
             .await?;
         info!("PostgreSQL database connection established");
