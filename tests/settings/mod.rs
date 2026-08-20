@@ -1,5 +1,5 @@
-mod toml;
 pub mod fixtures;
+mod toml;
 
 use std::fs;
 use std::time::Duration;
