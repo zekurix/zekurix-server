@@ -1,0 +1,70 @@
+# Logging configuration: controls the verbosity and output format of application logs.
+[logging]
+# Logging verbosity produced by the application.
+# Format: one of "trace", "debug", "info", "warn" or "error".
+# Default value: "info".
+level = "info"
+# Output format used to display application logs.
+# Format: one of "full", "compact", "pretty" or "json".
+# Default value: "full".
+format = "full"
+
+# Server configuration: controls the network address and request handling of the HTTP server.
+[server]
+# IP address on which the server listens for incoming connections.
+# Format: an IPv4 address, IPv6 address or "localhost", without a port number.
+# Default value: "127.0.0.1".
+host = "127.0.0.1"
+# Network port used by the HTTP server.
+# Format: unsigned integer between 0 and 65535.
+# Default value: 8080.
+port = 8080
+# Maximum time allowed to process a server request.
+# Format: human-readable duration, for example "10s", "500ms" or "1m".
+# Default value: "10s".
+timeout = "10s"
+
+# Database configuration: controls the PostgreSQL connection and migration settings.
+# The password used to connect to PostgreSQL may be configured with ZEKURIX_DATABASE__PASSWORD
+# environement variable.
+[database]
+# Username used to connect to PostgreSQL.
+# Format: string; omit this field to connect without an username.
+# Default value: no username
+username = "postgres"
+# Hostname or IP address of the PostgreSQL server.
+# Format: string containing a hostname or IP address, without a port number.
+# Default value: "localhost".
+host = "localhost"
+# Network port of the PostgreSQL server.
+# Format: unsigned integer between 0 and 65535.
+# Default value: 5432.
+port = 5432
+# Name of the PostgreSQL database to use.
+# Format: string.
+# Default value: "zekurix".
+database = "zekurix"
+# Maximum number of simultaneous connections in the PostgreSQL pool.
+# Format: unsigned integer; must be greater than or equal to min_connections.
+# Default value: 8.
+max_connections = 8
+# Minimum number of connections kept in the PostgreSQL pool.
+# Format: unsigned integer; must not exceed max_connections.
+# Default value: 2.
+min_connections = 2
+# Maximum time to wait for a connection from the PostgreSQL pool.
+# Format: human-readable duration, for example "30s", "500ms" or "1m".
+# Default value: "30s".
+acquire_timeout = "30s"
+# Idle time after which a pool connection may be closed.
+# Format: human-readable duration, for example "10m", "30s" or "1h".
+# Default value: "10m".
+idle_timeout = "10m"
+# Maximum lifetime of a pool connection, even when it is in use.
+# Format: human-readable duration, for example "30m", "1h" or "1d".
+# Default value: "30m".
+max_lifetime = "30m"
+# Enables automatic database migrations at startup.
+# Format: boolean (`true` or `false`).
+# Default value: false.
+migrate = false

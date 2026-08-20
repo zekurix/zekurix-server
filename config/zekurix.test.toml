@@ -1,0 +1,8 @@
+[logging]
+level = "debug"
+format = "full"
+
+[database]
+username = "postgres"
+database = "zekurix_test"
+migrate = true

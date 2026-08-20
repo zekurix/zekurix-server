@@ -1,3 +1,5 @@
+pub mod fixtures;
+
 use assert_cmd::Command;
 
 #[test]
