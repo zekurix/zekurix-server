@@ -1,15 +1,16 @@
 use async_trait::async_trait;
+use sqlx::PgPool;
 use tracing::error;
 
 use super::{User, UserId, repository::UserRepository};
 use crate::error::{Error, Result};
 
 pub struct PostgresUserRepository {
-    pool: sqlx::PgPool,
+    pool: PgPool,
 }
 
 impl PostgresUserRepository {
-    pub fn new(pool: sqlx::PgPool) -> Self {
+    pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }

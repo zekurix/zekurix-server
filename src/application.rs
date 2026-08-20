@@ -5,10 +5,10 @@ use tokio::signal;
 use tracing::{debug, info};
 
 use crate::postgres_database::PostgresDatabase;
+use crate::repositories::Repositories;
 use crate::routes;
 use crate::secrets::Secrets;
 use crate::settings::Settings;
-use crate::user::postgres_repository::PostgresUserRepository;
 
 async fn shutdown_signal() {
     let ctrl_c = async {
@@ -39,8 +39,8 @@ async fn shutdown_signal() {
 pub struct Application {
     pub settings: Settings,
     pub secrets: Secrets,
-    pub postgres_database: PostgresDatabase,
-    pub postgres_user_repository: PostgresUserRepository,
+    pub database: PostgresDatabase,
+    pub repositories: Repositories,
 }
 
 impl Application {
@@ -49,15 +49,14 @@ impl Application {
         debug!(settings = ?settings, "configuration loaded");
 
         let secrets = Secrets::load();
-        let postgres_database =
-            PostgresDatabase::init(&settings.database, &secrets.database).await?;
-        let postgres_user_repository = PostgresUserRepository::new(postgres_database.pool.clone());
+        let database = PostgresDatabase::init(&settings.database, &secrets.database).await?;
+        let repositories = Repositories::new(database.pool.clone());
 
         let application = Self {
             settings,
             secrets,
-            postgres_database,
-            postgres_user_repository,
+            database,
+            repositories,
         };
 
         Ok(Arc::new(application))
@@ -76,7 +75,7 @@ impl Application {
 
     async fn shutdown(self: Arc<Self>) -> Result<()> {
         info!("shutting down Zekurix server");
-        self.postgres_database.close().await;
+        self.database.close().await;
         Ok(())
     }
 }
