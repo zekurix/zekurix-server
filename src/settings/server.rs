@@ -1,6 +1,7 @@
-use anyhow::{Result, anyhow, ensure};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::time::Duration;
 
+use anyhow::{Result, anyhow, ensure};
 use serde::{Deserialize, Serialize};
 
 use crate::cli::Cli;
@@ -10,7 +11,8 @@ use crate::cli::Cli;
 pub struct Settings {
     pub host: String,
     pub port: u16,
-    pub timeout: u64,
+    #[serde(with = "humantime_serde")]
+    pub timeout: Duration,
 }
 
 impl Default for Settings {
@@ -18,7 +20,7 @@ impl Default for Settings {
         Self {
             host: "127.0.0.1".to_string(),
             port: 8080,
-            timeout: 10,
+            timeout: Duration::from_secs(10),
         }
     }
 }
@@ -64,7 +66,7 @@ mod tests {
 
         assert_eq!(settings.host, "127.0.0.1");
         assert_eq!(settings.port, 8080);
-        assert_eq!(settings.timeout, 10);
+        assert_eq!(settings.timeout, Duration::from_secs(10));
     }
 
     #[test]

@@ -8,8 +8,8 @@ use crate::application::Application;
 use crate::health;
 use crate::user;
 
-fn timeout_layer(timeout: u64) -> TimeoutLayer {
-    TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(timeout))
+fn timeout_layer(timeout: Duration) -> TimeoutLayer {
+    TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, timeout)
 }
 
 pub fn router(application: Arc<Application>) -> Router {
@@ -32,12 +32,12 @@ mod tests {
     #[tokio::test]
     async fn should_return_timeout_for_slow_route() {
         let slow_handler = || async {
-            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            tokio::time::sleep(Duration::from_secs(2)).await;
         };
 
         let router = Router::new()
             .route("/slow", get(slow_handler))
-            .layer(timeout_layer(1));
+            .layer(timeout_layer(Duration::from_secs(1)));
 
         let response = router
             .oneshot(Request::builder().uri("/slow").body(Body::empty()).unwrap())
