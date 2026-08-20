@@ -5,7 +5,7 @@ use tokio::signal;
 use tracing::{debug, info};
 
 use crate::database::Database;
-use crate::router::build_router;
+use crate::routes;
 use crate::secrets::Secrets;
 use crate::settings::Settings;
 use crate::user::postgres_repository::PostgresUserRepository;
@@ -66,7 +66,7 @@ impl Application {
         let listener = tokio::net::TcpListener::bind(self.settings.server.socket_addr()?).await?;
         info!(address = %listener.local_addr()?, "server listening");
 
-        axum::serve(listener, build_router(self.clone()))
+        axum::serve(listener, routes::router(self.clone()))
             .with_graceful_shutdown(shutdown_signal())
             .await?;
 

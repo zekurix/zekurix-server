@@ -10,7 +10,7 @@ use dotenv::dotenv;
 use tower::util::ServiceExt;
 
 use zekurix_server::application::Application;
-use zekurix_server::router::build_router;
+use zekurix_server::routes;
 use zekurix_server::secrets::Secrets;
 use zekurix_server::settings::Settings;
 
@@ -39,7 +39,7 @@ impl TestApp {
         settings.database.migrate = true;
 
         let application = Application::new(settings).await.unwrap();
-        let router = build_router(application);
+        let router = routes::router(application);
 
         TestApp {
             _temp_database: temp_database,
