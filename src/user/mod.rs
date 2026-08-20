@@ -1,10 +1,12 @@
 mod id;
+mod routes;
 
 pub mod handlers;
 pub mod postgres_repository;
 pub mod repository;
 
 pub use id::UserId;
+pub use routes::router;
 
 #[derive(Clone, Debug, sqlx::FromRow)]
 pub struct User {
