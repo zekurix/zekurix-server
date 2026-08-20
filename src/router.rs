@@ -1,11 +1,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use axum::{
-    Router,
-    http::StatusCode,
-    routing::get,
-};
+use axum::{Router, http::StatusCode, routing::get};
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 
 use crate::application::Application;
