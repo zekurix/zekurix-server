@@ -9,8 +9,8 @@ use axum::{
 use dotenv::dotenv;
 use tower::util::ServiceExt;
 
-use zekurix_server::application::Application;
-use zekurix_server::routes;
+use zekurix_server::Application;
+use zekurix_server::app::routes;
 use zekurix_server::secrets::Secrets;
 use zekurix_server::settings::Settings;
 

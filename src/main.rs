@@ -1,7 +1,7 @@
 use anyhow::Result;
 use dotenv::dotenv;
 
-use zekurix_server::application::Application;
+use zekurix_server::Application;
 use zekurix_server::cli::Cli;
 use zekurix_server::settings::Settings;
 use zekurix_server::telemetry;

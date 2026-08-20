@@ -4,9 +4,10 @@ use std::time::Duration;
 use axum::{Router, http::StatusCode};
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 
-use crate::application::Application;
 use crate::health;
 use crate::user;
+
+use super::Application;
 
 fn timeout_layer(timeout: Duration) -> TimeoutLayer {
     TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, timeout)

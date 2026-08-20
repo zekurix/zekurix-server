@@ -2,8 +2,9 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 use tracing::error;
 
-use super::{User, UserId, repository::UserRepository};
 use crate::error::{Error, Result};
+
+use super::{User, UserId, repository::UserRepository};
 
 pub struct PostgresUserRepository {
     pool: PgPool,

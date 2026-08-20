@@ -1,11 +1,11 @@
-pub mod application;
+pub mod app;
 pub mod cli;
+pub mod database;
 pub mod error;
 pub mod health;
-pub mod postgres_database;
-pub mod repositories;
-pub mod routes;
 pub mod secrets;
 pub mod settings;
 pub mod telemetry;
 pub mod user;
+
+pub use app::Application;
