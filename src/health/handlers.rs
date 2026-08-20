@@ -14,6 +14,6 @@ fn build_health_response() -> HealthResponse {
     }
 }
 
-pub async fn health() -> Json<HealthResponse> {
+pub async fn get_health() -> Json<HealthResponse> {
     Json(build_health_response())
 }

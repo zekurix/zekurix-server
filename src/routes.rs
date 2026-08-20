@@ -1,24 +1,24 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use axum::{Router, http::StatusCode, routing::get};
+use axum::{Router, http::StatusCode};
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 
 use crate::application::Application;
-use crate::handlers::health::*;
+use crate::health;
 use crate::user;
 
-fn build_timeout_layer(timeout: u64) -> TimeoutLayer {
+fn timeout_layer(timeout: u64) -> TimeoutLayer {
     TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(timeout))
 }
 
-pub fn build_router(application: Arc<Application>) -> Router {
+pub fn router(application: Arc<Application>) -> Router {
     Router::new()
-        .route("/health", get(health))
+        .nest("/health", health::router())
         .nest("/users", user::router())
         .layer((
             TraceLayer::new_for_http(),
-            build_timeout_layer(application.settings.server.timeout),
+            timeout_layer(application.settings.server.timeout),
         ))
         .with_state(application)
 }
@@ -26,8 +26,7 @@ pub fn build_router(application: Arc<Application>) -> Router {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::body::Body;
-    use axum::http::Request;
+    use axum::{body::Body, http::Request, routing::get};
     use tower::ServiceExt;
 
     #[tokio::test]
@@ -38,7 +37,7 @@ mod tests {
 
         let router = Router::new()
             .route("/slow", get(slow_handler))
-            .layer(build_timeout_layer(1));
+            .layer(timeout_layer(1));
 
         let response = router
             .oneshot(Request::builder().uri("/slow").body(Body::empty()).unwrap())
