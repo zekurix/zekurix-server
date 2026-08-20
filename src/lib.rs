@@ -1,8 +1,8 @@
 pub mod application;
 pub mod cli;
-pub mod database;
 pub mod error;
 pub mod health;
+pub mod postgres_database;
 pub mod routes;
 pub mod secrets;
 pub mod settings;

@@ -2,16 +2,16 @@ use anyhow::Result;
 use sqlx::{postgres::PgConnectOptions, postgres::PgPoolOptions};
 use tracing::info;
 
-use crate::secrets::database::*;
-use crate::settings::database::*;
+use crate::secrets::database::Secrets;
+use crate::settings::database::Settings;
 
-pub struct Database {
+pub struct PostgresDatabase {
     pub pool: sqlx::PgPool,
 }
 
-impl Database {
+impl PostgresDatabase {
     async fn connect(settings: &Settings, secrets: &Secrets) -> Result<sqlx::PgPool> {
-        info!("connecting to database");
+        info!("connecting to PostgreSQL database");
         let mut options = PgConnectOptions::new()
             .host(&settings.host)
             .port(settings.port)
@@ -28,29 +28,29 @@ impl Database {
             .max_connections(settings.max_connections)
             .connect_with(options)
             .await?;
-        info!("database connection established");
+        info!("PostgreSQL database connection established");
 
         Ok(pool)
     }
 
     async fn migrate(&self) -> Result<()> {
-        info!("running database migrations");
+        info!("running PostgreSQL database migrations");
         sqlx::migrate!().run(&self.pool).await?;
-        info!("database migrations completed");
+        info!("PostgreSQL database migrations completed");
 
         Ok(())
     }
 
     pub async fn init(settings: &Settings, secrets: &Secrets) -> Result<Self> {
-        let database = Self {
+        let postgres_database = Self {
             pool: Self::connect(settings, secrets).await?,
         };
 
         if settings.migrate {
-            database.migrate().await?;
+            postgres_database.migrate().await?;
         }
 
-        Ok(database)
+        Ok(postgres_database)
     }
 
     pub async fn close(&self) {
