@@ -7,7 +7,7 @@ use serde::Deserialize;
 
 use zekurix_server::user::UserId;
 
-use crate::helpers::TestApp;
+use crate::common::TestApp;
 
 #[derive(Deserialize)]
 struct UserResponse {
