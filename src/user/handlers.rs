@@ -7,9 +7,10 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{User, UserId, repository::UserRepository};
-use crate::application::Application;
+use crate::Application;
 use crate::error::Result;
+
+use super::{User, UserId, repository::UserRepository};
 
 #[derive(Deserialize)]
 pub struct UserParams {

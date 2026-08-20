@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 
-use super::{User, UserId};
 use crate::error::Result;
+
+use super::{User, UserId};
 
 #[async_trait]
 pub trait UserRepository: Send + Sync {
