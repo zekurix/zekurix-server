@@ -1,6 +1,3 @@
-#[path = "temp_database.rs"]
-mod temp_database;
-
 use axum::{
     Router,
     body::Body,
@@ -14,12 +11,12 @@ use zekurix_server::app::routes;
 use zekurix_server::secrets::Secrets;
 use zekurix_server::settings::Settings;
 
-use temp_database::TempDatabase;
+use super::temp_database::TempDatabase;
 
 pub struct TestApp {
     // The database is dropped when the TestApp is dropped, so we need to keep it around for the lifetime of the test.
-    pub _temp_database: TempDatabase,
-    pub router: Router,
+    _temp_database: TempDatabase,
+    router: Router,
 }
 
 impl TestApp {

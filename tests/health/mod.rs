@@ -5,7 +5,7 @@ use axum::{
 use http_body_util::BodyExt;
 use serde::Deserialize;
 
-use crate::helpers::TestApp;
+use crate::common::TestApp;
 
 #[derive(Deserialize)]
 struct HealthResponse {
