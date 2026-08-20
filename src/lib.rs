@@ -3,6 +3,7 @@ pub mod cli;
 pub mod error;
 pub mod health;
 pub mod postgres_database;
+pub mod repositories;
 pub mod routes;
 pub mod secrets;
 pub mod settings;

@@ -1,16 +1,16 @@
 use anyhow::Result;
-use sqlx::{postgres::PgConnectOptions, postgres::PgPoolOptions};
+use sqlx::{PgPool, postgres::PgConnectOptions, postgres::PgPoolOptions};
 use tracing::info;
 
 use crate::secrets::database::Secrets;
 use crate::settings::database::Settings;
 
 pub struct PostgresDatabase {
-    pub pool: sqlx::PgPool,
+    pub pool: PgPool,
 }
 
 impl PostgresDatabase {
-    async fn connect(settings: &Settings, secrets: &Secrets) -> Result<sqlx::PgPool> {
+    async fn connect(settings: &Settings, secrets: &Secrets) -> Result<PgPool> {
         info!("connecting to PostgreSQL database");
         let mut options = PgConnectOptions::new()
             .host(&settings.host)
