@@ -1,5 +1,7 @@
 pub mod database;
 
+use crate::error::Result;
+
 #[derive(Default)]
 pub struct Secrets {
     pub database: database::Secrets,
@@ -14,9 +16,9 @@ impl Secrets {
         vars
     }
 
-    pub fn load() -> Self {
-        Self {
-            database: database::Secrets::load(),
-        }
+    pub fn load() -> Result<Self> {
+        Ok(Self {
+            database: database::Secrets::load()?,
+        })
     }
 }

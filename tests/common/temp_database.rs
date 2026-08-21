@@ -39,7 +39,7 @@ impl TempDatabase {
                 .username
                 .as_deref()
                 .expect("database username missing"),
-            self.secrets.password().expect("database password missing"),
+            self.secrets.password(),
             self.settings.host,
             self.settings.port,
             self.settings.database,
@@ -66,7 +66,7 @@ impl TempDatabase {
                 .username
                 .as_deref()
                 .expect("database username missing"),
-            secrets.password().expect("database password missing"),
+            secrets.password(),
         );
 
         info!(database = %settings.database, "running database drop");
