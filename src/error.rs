@@ -11,6 +11,12 @@ pub enum Error {
     #[error("internal error")]
     InternalError,
 
+    #[error("environement variable '{0}' missing")]
+    MissingEnvironmentVariable(String),
+
+    #[error("environement variable '{0}' invalid")]
+    InvalidEnvironmentVariable(String),
+
     #[error("user '{0}' already exists")]
     UserAlreadyExists(String),
 
@@ -28,7 +34,11 @@ pub struct ErrorResponse {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let (status, code) = match &self {
-            Error::InternalError => (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_ERROR"),
+            Error::InternalError
+            | Error::MissingEnvironmentVariable(_)
+            | Error::InvalidEnvironmentVariable(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_ERROR")
+            }
             Error::UserAlreadyExists(_) => (StatusCode::CONFLICT, "USER_ALREADY_EXISTS"),
             Error::UserNotFound(_) => (StatusCode::NOT_FOUND, "USER_NOT_FOUND"),
         };
@@ -44,9 +54,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn should_map_internal_error_to_500() {
+    fn should_map_some_errors_to_500() {
         let response = Error::InternalError.into_response();
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
 
+        let response =
+            Error::MissingEnvironmentVariable("ZEKURIX_ENV_VARIABLE".into()).into_response();
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+
+        let response =
+            Error::InvalidEnvironmentVariable("ZEKURIX_ENV_VARIABLE".into()).into_response();
         assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 

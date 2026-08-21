@@ -25,7 +25,7 @@ impl TestApp {
         dotenv().ok();
 
         let mut settings = test_settings();
-        let secrets = Secrets::load();
+        let secrets = Secrets::load().unwrap();
 
         let temp_database = TempDatabase::new(&settings.database, &secrets.database)
             .create()

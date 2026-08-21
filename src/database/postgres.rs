@@ -15,13 +15,11 @@ impl PostgresDatabase {
         let mut options = PgConnectOptions::new()
             .host(&settings.host)
             .port(settings.port)
-            .database(&settings.database);
+            .database(&settings.database)
+            .password(secrets.password());
 
         if let Some(ref username) = settings.username {
             options = options.username(username);
-        }
-        if let Some(password) = secrets.password() {
-            options = options.password(password);
         }
 
         let pool = PgPoolOptions::new()

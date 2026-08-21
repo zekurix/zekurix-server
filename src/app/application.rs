@@ -49,7 +49,7 @@ impl Application {
         info!(version = env!("CARGO_PKG_VERSION"), "Zekurix server");
         debug!(settings = ?settings, "configuration loaded");
 
-        let secrets = Secrets::load();
+        let secrets = Secrets::load()?;
         let database = PostgresDatabase::init(&settings.database, &secrets.database).await?;
         let repositories = Repositories::new(database.pool.clone());
 
