@@ -44,12 +44,18 @@ impl Settings {
             .extract()?;
 
         settings.merge(cli);
+        settings.validate()?;
         Ok(settings)
     }
 
     fn merge(&mut self, cli: &Cli) {
         self.logging.merge(cli);
         self.server.merge(cli);
+    }
+
+    fn validate(&self) -> Result<()> {
+        self.database.validate()?;
+        Ok(())
     }
 }
 

@@ -17,6 +17,9 @@ pub enum Error {
     #[error("environement variable '{0}' invalid")]
     InvalidEnvironmentVariable(String),
 
+    #[error("setting '{setting}' invalid: {reason}")]
+    InvalidSettings { setting: String, reason: String },
+
     #[error("user '{0}' already exists")]
     UserAlreadyExists(String),
 
@@ -36,7 +39,8 @@ impl IntoResponse for Error {
         let (status, code) = match &self {
             Error::InternalError
             | Error::MissingEnvironmentVariable(_)
-            | Error::InvalidEnvironmentVariable(_) => {
+            | Error::InvalidEnvironmentVariable(_)
+            | Error::InvalidSettings { .. } => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_ERROR")
             }
             Error::UserAlreadyExists(_) => (StatusCode::CONFLICT, "USER_ALREADY_EXISTS"),
@@ -60,6 +64,13 @@ mod tests {
 
         let response =
             Error::MissingEnvironmentVariable("ZEKURIX_ENV_VARIABLE".into()).into_response();
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+
+        let response = Error::InvalidSettings {
+            setting: "setting".into(),
+            reason: "reason".into(),
+        }
+        .into_response();
         assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
 
         let response =

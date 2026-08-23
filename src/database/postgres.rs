@@ -12,15 +12,12 @@ pub struct PostgresDatabase {
 impl PostgresDatabase {
     async fn connect(settings: &Settings, secrets: &Secrets) -> Result<PgPool> {
         info!("connecting to PostgreSQL database");
-        let mut options = PgConnectOptions::new()
+        let options = PgConnectOptions::new()
             .host(&settings.host)
             .port(settings.port)
             .database(&settings.database)
+            .username(&settings.username)
             .password(secrets.password());
-
-        if let Some(ref username) = settings.username {
-            options = options.username(username);
-        }
 
         let pool = PgPoolOptions::new()
             .max_connections(settings.max_connections)

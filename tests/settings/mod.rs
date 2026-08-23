@@ -10,15 +10,6 @@ use zekurix_server::cli::Cli;
 use zekurix_server::settings::Settings;
 
 #[test]
-fn should_load_settings_from_default() {
-    let cli = Cli::default();
-    let settings = Settings::load(&cli).unwrap();
-
-    assert_eq!(settings.server.host, "127.0.0.1");
-    assert_eq!(settings.server.port, 8080);
-}
-
-#[test]
 fn should_load_settings_from_toml() {
     let file = NamedTempFile::new().unwrap();
 
@@ -28,6 +19,9 @@ fn should_load_settings_from_toml() {
         [server]
         host = "10.0.0.1"
         port = 1234
+    
+        [database]
+        username = "postgres"
         "#,
     )
     .unwrap();
@@ -51,6 +45,7 @@ fn should_load_humantime_settings_from_toml() {
         file.path(),
         r#"
         [database]
+        username = "postgres"
         acquire_timeout = "45s"
         idle_timeout = "15m"
         "#,
@@ -79,6 +74,9 @@ fn should_override_toml_with_cli_bind() {
         [server]
         host = "10.0.0.1"
         port = 1234
+    
+        [database]
+        username = "postgres"
         "#,
     )
     .unwrap();
@@ -104,6 +102,9 @@ fn should_return_error_for_invalid_toml() {
         r#"
         [server
         host = "broken"
+
+        [database]
+        username = "postgres"
         "#,
     )
     .unwrap();
@@ -124,6 +125,9 @@ fn should_return_error_for_unknown_fields_settings() {
         file.path(),
         r#"
         [foo]
+
+        [database]
+        username = "postgres"
         "#,
     )
     .unwrap();
@@ -145,6 +149,9 @@ fn should_return_error_for_unknown_fields_settings_logging() {
         r#"
         [logging]
         foo = "bar"
+
+        [database]
+        username = "postgres"
         "#,
     )
     .unwrap();
@@ -166,6 +173,9 @@ fn should_return_error_for_unknown_fields_settings_server() {
         r#"
         [server]
         foo = "bar"
+
+        [database]
+        username = "postgres"
         "#,
     )
     .unwrap();
@@ -187,6 +197,28 @@ fn should_return_error_for_unknown_fields_settings_database() {
         r#"
         [database]
         foo = "bar"
+        username = "postgres"
+        "#,
+    )
+    .unwrap();
+
+    let cli = Cli {
+        config: file.path().to_path_buf(),
+        ..Default::default()
+    };
+
+    assert!(Settings::load(&cli).is_err());
+}
+
+#[test]
+fn should_return_error_for_invalid_settings_database() {
+    let file = NamedTempFile::new().unwrap();
+
+    fs::write(
+        file.path(),
+        r#"
+        [database]
+        username = " "
         "#,
     )
     .unwrap();

@@ -35,10 +35,7 @@ impl TempDatabase {
     pub async fn create(self) -> Result<Self> {
         let url = format!(
             "postgres://{}:{}@{}:{}/{}",
-            self.settings
-                .username
-                .as_deref()
-                .expect("database username missing"),
+            self.settings.username,
             self.secrets.password(),
             self.settings.host,
             self.settings.port,
@@ -62,10 +59,7 @@ impl TempDatabase {
             "host={} port={} user={} password={} dbname=postgres",
             settings.host,
             settings.port,
-            settings
-                .username
-                .as_deref()
-                .expect("database username missing"),
+            settings.username,
             secrets.password(),
         );
 
