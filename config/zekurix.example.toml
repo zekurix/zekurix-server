@@ -26,11 +26,11 @@ timeout = "10s"
 
 # Database configuration: controls the PostgreSQL connection and migration settings.
 # The password used to connect to PostgreSQL may be configured with ZEKURIX_DATABASE__PASSWORD
-# environement variable.
+# environment variable.
 [database]
 # Username used to connect to PostgreSQL.
-# Format: string; omit this field to connect without an username.
-# Default value: no username
+# Format: string.
+# Default value: "", which is an invalid username, you must change it.
 username = "postgres"
 # Hostname or IP address of the PostgreSQL server.
 # Format: string containing a hostname or IP address, without a port number.
@@ -57,11 +57,11 @@ min_connections = 2
 # Default value: "30s".
 acquire_timeout = "30s"
 # Idle time after which a pool connection may be closed.
-# Format: human-readable duration, for example "10m", "30s" or "1h".
+# Format: human-readable duration, for example "10m", "30s" or "1h"; must not exceed max_lifetime.
 # Default value: "10m".
 idle_timeout = "10m"
 # Maximum lifetime of a pool connection, even when it is in use.
-# Format: human-readable duration, for example "30m", "1h" or "1d".
+# Format: human-readable duration, for example "30m", "1h" or "1d"; must be greater than or equal to idle_timeout.
 # Default value: "30m".
 max_lifetime = "30m"
 # Enables automatic database migrations at startup.
