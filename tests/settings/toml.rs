@@ -16,7 +16,7 @@ fn should_load_and_validate_example_configuration() {
     assert_eq!(settings.server.port, default.server.port);
     assert_eq!(settings.server.timeout, default.server.timeout);
 
-    assert_eq!(settings.database.username.as_deref(), Some("postgres"));
+    assert_eq!(settings.database.username, "postgres");
     assert_eq!(settings.database.host, default.database.host);
     assert_eq!(settings.database.port, default.database.port);
     assert_eq!(settings.database.database, default.database.database);
