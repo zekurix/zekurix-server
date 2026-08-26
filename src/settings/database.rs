@@ -69,9 +69,10 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
 
     #[test]
-    fn should_accept_valid_username() {
+    fn should_accept_static_username() {
         let settings = Settings {
             username: "postgres".to_string(),
             ..Default::default()
@@ -102,6 +103,34 @@ mod tests {
 
         assert!(matches!(result, Err(Error::InvalidSettings { .. })));
     }
+
+    proptest! {
+        #[test]
+        fn should_accept_valid_username(username in r".*\S.*") {
+            let settings = Settings {
+                username: username.to_string(),
+                ..Default::default()
+            };
+            let result = settings.validate();
+
+            prop_assert!(result.is_ok());
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn should_reject_blank_username(username in r"\s*") {
+            let settings = Settings {
+                username: username.to_string(),
+                ..Default::default()
+            };
+            let result = settings.validate();
+
+            let is_err = matches!(result, Err(Error::InvalidSettings { .. }));
+            prop_assert!(is_err);
+        }
+    }
+
     #[test]
     fn should_accept_connection_max_greater_than_min() {
         let settings = Settings {
@@ -141,6 +170,21 @@ mod tests {
         assert!(matches!(result, Err(Error::InvalidSettings { .. })));
     }
 
+    proptest! {
+        #[test]
+        fn should_verify_connection_max_greater_or_equal_than_min(max in 0..1000u32, min in 0..1000u32) {
+            let settings = Settings {
+                username: "postgres".to_string(),
+                max_connections: max,
+                min_connections: min,
+                ..Default::default()
+            };
+            let result = settings.validate();
+
+            prop_assert_eq!(result.is_ok(), max >= min);
+        }
+    }
+
     #[test]
     fn should_accept_max_lifetime_greater_than_idle_timeout() {
         let settings = Settings {
@@ -178,5 +222,20 @@ mod tests {
         let result = settings.validate();
 
         assert!(matches!(result, Err(Error::InvalidSettings { .. })));
+    }
+
+    proptest! {
+        #[test]
+        fn should_verify_max_lifetime_greater_or_equal_than_idle_timeout(max_lifetime in 0..1000u64, idle_timeout in 0..1000u64) {
+            let settings = Settings {
+                username: "postgres".to_string(),
+                max_lifetime: Duration::from_mins(max_lifetime),
+                idle_timeout: Duration::from_mins(idle_timeout),
+                ..Default::default()
+            };
+            let result = settings.validate();
+
+            prop_assert_eq!(result.is_ok(), max_lifetime >= idle_timeout);
+        }
     }
 }
