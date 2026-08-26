@@ -28,5 +28,6 @@ assert_cmd = "2.2.2"
 http-body-util = "0.1.4"
 postgres = "0.19.14"
 predicates = "3.1.4"
+proptest = "1.11.0"
 tempfile = "3.27.0"
 tower = { version = "0.5.3", features = ["util"] }
