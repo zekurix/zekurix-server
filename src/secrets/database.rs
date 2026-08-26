@@ -40,10 +40,11 @@ impl Secrets {
 
 #[cfg(test)]
 mod tests {
+    use proptest::prelude::*;
     use super::*;
 
     #[test]
-    fn should_create_secrets_from_valid_password() {
+    fn should_create_secrets_from_static_password() {
         let secrets = Secrets::new("password").unwrap();
 
         assert_eq!(secrets.password(), "password");
@@ -61,5 +62,23 @@ mod tests {
         let result = Secrets::new("   ");
 
         assert!(matches!(result, Err(Error::InvalidEnvironmentVariable(_))));
+    }
+
+    proptest! {
+        #[test]
+        fn should_create_secrets_from_valid_password(password in r".*\S.*") {
+            let secrets = Secrets::new(&password).unwrap();
+
+            prop_assert_eq!(secrets.password(), password);
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn should_reject_blank_password(password in r"\s*") {
+            let result = Secrets::new(&password);
+
+            prop_assert!(matches!(result, Err(Error::InvalidEnvironmentVariable(_))));
+        }
     }
 }
