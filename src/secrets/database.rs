@@ -40,8 +40,8 @@ impl Secrets {
 
 #[cfg(test)]
 mod tests {
-    use proptest::prelude::*;
     use super::*;
+    use proptest::prelude::*;
 
     #[test]
     fn should_create_secrets_from_static_password() {
