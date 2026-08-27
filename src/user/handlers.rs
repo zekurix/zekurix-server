@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::Application;
 use crate::error::Result;
 
-use super::{User, UserId, repository::UserRepository};
+use super::{User, UserId, Username, repository::UserRepository};
 
 #[derive(Deserialize)]
 pub struct UserParams {
@@ -20,7 +20,7 @@ pub struct UserParams {
 #[derive(Debug, Serialize)]
 pub struct UserResponse {
     id: UserId,
-    username: String,
+    username: Username,
 }
 
 impl From<User> for UserResponse {
@@ -45,7 +45,8 @@ pub async fn create_user(
     State(application): State<Arc<Application>>,
     Json(params): Json<UserParams>,
 ) -> Result<(StatusCode, Json<UserResponse>)> {
-    let user = User::new(params.username);
+    let username = Username::new(params.username)?;
+    let user = User::new(username);
 
     application.repositories.user.create(user.clone()).await?;
 

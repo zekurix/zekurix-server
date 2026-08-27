@@ -4,18 +4,20 @@ mod routes;
 pub mod handlers;
 pub mod postgres_repository;
 pub mod repository;
+pub mod username;
 
 pub use id::UserId;
 pub use routes::router;
+pub use username::Username;
 
 #[derive(Clone, Debug, sqlx::FromRow)]
 pub struct User {
     pub id: UserId,
-    pub username: String,
+    pub username: Username,
 }
 
 impl User {
-    pub fn new(username: String) -> Self {
+    pub fn new(username: Username) -> Self {
         Self {
             id: UserId::new(),
             username,

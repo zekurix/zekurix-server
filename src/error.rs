@@ -6,6 +6,8 @@ use axum::{
 use serde::Serialize;
 use thiserror::Error;
 
+use crate::user::{UserId, Username};
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("internal error")]
@@ -21,10 +23,13 @@ pub enum Error {
     InvalidSettings { setting: String, reason: String },
 
     #[error("user '{0}' already exists")]
-    UserAlreadyExists(String),
+    UserAlreadyExists(Username),
 
     #[error("user '{0}' not found")]
-    UserNotFound(String),
+    UserNotFound(UserId),
+
+    #[error("username '{0}' invalid")]
+    InvalidUsername(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -45,6 +50,7 @@ impl IntoResponse for Error {
             }
             Error::UserAlreadyExists(_) => (StatusCode::CONFLICT, "USER_ALREADY_EXISTS"),
             Error::UserNotFound(_) => (StatusCode::NOT_FOUND, "USER_NOT_FOUND"),
+            Error::InvalidUsername(_) => (StatusCode::UNPROCESSABLE_ENTITY, "INVALID_USERNAME"),
         };
 
         let body = Json(ErrorResponse { code });
@@ -90,5 +96,12 @@ mod tests {
         let response = Error::UserNotFound("alice".into()).into_response();
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn should_map_invalid_input_to_422() {
+        let response = Error::InvalidUsername("alice!".into()).into_response();
+
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     }
 }

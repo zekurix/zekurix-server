@@ -55,6 +55,36 @@ async fn should_create_user() {
 }
 
 #[tokio::test]
+async fn should_reject_invalid_user() {
+    let testapp = TestApp::new().await;
+
+    // Reject empty username
+    let request = post_users("");
+    let response = testapp.request(request).await;
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    // Reject username with less than 3 characters: 1 character
+    let request = post_users("A");
+    let response = testapp.request(request).await;
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    // Reject username with less than 3 characters: 1 characters
+    let request = post_users("AB");
+    let response = testapp.request(request).await;
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    // Reject username with more than 64 characters
+    let request = post_users("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789012");
+    let response = testapp.request(request).await;
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    // Reject username with characters != [A-Za-z0-9_-]
+    let request = post_users("Alice!");
+    let response = testapp.request(request).await;
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+}
+
+#[tokio::test]
 async fn should_get_user() {
     let testapp = TestApp::new().await;
     let request = post_users("Alice");
