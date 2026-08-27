@@ -45,7 +45,7 @@ pub async fn create_user(
     State(application): State<Arc<Application>>,
     Json(params): Json<UserParams>,
 ) -> Result<(StatusCode, Json<UserResponse>)> {
-    let username = Username::new(params.username)?;
+    let username = Username::new(&params.username)?;
     let user = User::new(username);
 
     application.repositories.user.create(user.clone()).await?;

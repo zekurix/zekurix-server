@@ -86,14 +86,16 @@ mod tests {
 
     #[test]
     fn should_map_user_already_exists_to_409() {
-        let response = Error::UserAlreadyExists("alice".into()).into_response();
+        let username = Username::new("alice").unwrap();
+        let response = Error::UserAlreadyExists(username).into_response();
 
         assert_eq!(response.status(), StatusCode::CONFLICT);
     }
 
     #[test]
     fn should_map_user_not_found_to_404() {
-        let response = Error::UserNotFound("alice".into()).into_response();
+        let id = UserId::new();
+        let response = Error::UserNotFound(id).into_response();
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }

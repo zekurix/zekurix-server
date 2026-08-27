@@ -5,10 +5,11 @@ use serde::Serialize;
 use crate::error::{Error, Result};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, sqlx::Type)]
+#[sqlx(transparent)]
 pub struct Username(String);
 
 impl Username {
-    pub fn new(value: String) -> Result<Self> {
+    pub fn new(value: &str) -> Result<Self> {
         value.parse()
     }
 
@@ -51,7 +52,7 @@ mod tests {
 
     #[test]
     fn should_accept_alice_username() {
-        let username = Username::new("alice-01_2".to_string());
+        let username = Username::new("alice-01_2");
 
         assert!(username.is_ok());
         assert_eq!(username.unwrap().as_str(), "alice-01_2");
@@ -60,7 +61,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_accept_valid_username(value in "[A-Za-z0-9_-]{3,64}") {
-            let username = Username::new(value.clone()).unwrap();
+            let username = Username::new(&value).unwrap();
 
             prop_assert_eq!(username.as_str(), value);
         }
@@ -68,56 +69,56 @@ mod tests {
 
     #[test]
     fn should_accept_minimum_length() {
-        let username = Username::new("abc".to_string());
+        let username = Username::new("abc");
 
         assert!(username.is_ok());
     }
 
     #[test]
     fn should_accept_maximum_length() {
-        let username = Username::new("a".repeat(64));
+        let username = Username::new(&"a".repeat(64));
 
         assert!(username.is_ok());
     }
 
     #[test]
     fn should_reject_empty_username() {
-        let username = Username::new(String::new());
+        let username = Username::new("");
 
         assert!(matches!(username, Err(Error::InvalidUsername(_))));
     }
 
     #[test]
     fn should_reject_username_shorter_than_3_characters() {
-        let username = Username::new("ab".to_string());
+        let username = Username::new("ab");
 
         assert!(matches!(username, Err(Error::InvalidUsername(_))));
     }
 
     #[test]
     fn should_reject_username_longer_than_64_characters() {
-        let username = Username::new("a".repeat(65));
+        let username = Username::new(&"a".repeat(65));
 
         assert!(matches!(username, Err(Error::InvalidUsername(_))));
     }
 
     #[test]
     fn should_reject_space() {
-        let username = Username::new("alice bob".to_string());
+        let username = Username::new("alice bob");
 
         assert!(matches!(username, Err(Error::InvalidUsername(_))));
     }
 
     #[test]
     fn should_reject_special_characters() {
-        let username = Username::new("alice@bob".to_string());
+        let username = Username::new("alice@bob");
 
         assert!(matches!(username, Err(Error::InvalidUsername(_))));
     }
 
     #[test]
     fn should_reject_non_ascii_characters() {
-        let username = Username::new("älîce".to_string());
+        let username = Username::new("älîce");
 
         assert!(matches!(username, Err(Error::InvalidUsername(_))));
     }
@@ -127,7 +128,7 @@ mod tests {
         fn should_reject_username_containing_invalid_character(
             value in "[A-Za-z0-9_-]{0,32}[@./\\\\:; !?][A-Za-z0-9_-]{0,32}"
         ) {
-            let username = Username::new(value);
+            let username = Username::new(&value);
 
             prop_assert!(matches!(username, Err(Error::InvalidUsername(_))));
         }
@@ -135,7 +136,7 @@ mod tests {
 
     #[test]
     fn should_implement_display() {
-        let username = Username::new("alice".to_string()).unwrap();
+        let username = Username::new("alice").unwrap();
 
         assert_eq!(username.to_string(), "alice");
     }
