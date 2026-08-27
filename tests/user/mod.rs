@@ -1,13 +1,10 @@
-use axum::{
-    body::Body,
-    http::{Request, StatusCode},
-};
-use http_body_util::BodyExt;
+use axum::http::StatusCode;
 use serde::Deserialize;
+use test_case::test_case;
 
 use zekurix_server::user::UserId;
 
-use crate::common::TestApp;
+use crate::common::TestApplication;
 
 #[derive(Deserialize)]
 struct UserResponse {
@@ -20,158 +17,129 @@ struct ErrorResponse {
     code: String,
 }
 
-fn post_users(username: &str) -> Request<Body> {
-    let body = serde_json::json!({
-        "username": username,
-    });
-
-    Request::builder()
-        .method("POST")
-        .uri("/users")
-        .header("content-type", "application/json")
-        .body(Body::from(serde_json::to_string(&body).unwrap()))
-        .unwrap()
-}
-
-fn get_users(id: UserId) -> Request<Body> {
-    Request::builder()
-        .method("GET")
-        .uri(format!("/users/{}", id))
-        .body(Body::empty())
-        .unwrap()
-}
-
 #[tokio::test]
 async fn should_create_user() {
-    let testapp = TestApp::new().await;
-    let request = post_users("Alice");
-    let response = testapp.request(request).await;
+    let app = TestApplication::new().await;
 
-    assert_eq!(response.status(), StatusCode::CREATED);
+    let response = app
+        .server
+        .post("/users")
+        .json(&serde_json::json!({
+            "username": "Alice",
+        }))
+        .await;
+    response.assert_status(StatusCode::CREATED);
 
-    let body = response.into_body().collect().await.unwrap().to_bytes();
-    let user: UserResponse = serde_json::from_slice(&body).unwrap();
+    let user: UserResponse = response.json();
     assert_eq!(user.username, "Alice");
 }
 
+#[test_case("" ; "empty username")]
+#[test_case("A" ; "one character")]
+#[test_case("AB" ; "two characters")]
+#[test_case("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789012" ; "too long")]
+#[test_case("Alice!" ; "invalid characters")]
 #[tokio::test]
-async fn should_reject_invalid_user() {
-    let testapp = TestApp::new().await;
+async fn should_reject_invalid_user(username: &str) {
+    let app = TestApplication::new().await;
 
-    // Reject empty username
-    let request = post_users("");
-    let response = testapp.request(request).await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    let response = app
+        .server
+        .post("/users")
+        .json(&serde_json::json!({
+            "username": username,
+        }))
+        .await;
 
-    // Reject username with less than 3 characters: 1 character
-    let request = post_users("A");
-    let response = testapp.request(request).await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-
-    // Reject username with less than 3 characters: 1 characters
-    let request = post_users("AB");
-    let response = testapp.request(request).await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-
-    // Reject username with more than 64 characters
-    let request = post_users("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789012");
-    let response = testapp.request(request).await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-
-    // Reject username with characters != [A-Za-z0-9_-]
-    let request = post_users("Alice!");
-    let response = testapp.request(request).await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    response.assert_status_unprocessable_entity();
 }
 
 #[tokio::test]
 async fn should_get_user() {
-    let testapp = TestApp::new().await;
-    let request = post_users("Alice");
-    let response = testapp.request(request).await;
+    let app = TestApplication::new().await;
 
-    assert_eq!(response.status(), StatusCode::CREATED);
+    let response = app
+        .server
+        .post("/users")
+        .json(&serde_json::json!({
+            "username": "Alice",
+        }))
+        .await;
+    response.assert_status(StatusCode::CREATED);
+    let user_post: UserResponse = response.json();
 
-    let body = response.into_body().collect().await.unwrap().to_bytes();
-    let user_post: UserResponse = serde_json::from_slice(&body).unwrap();
-    let request = get_users(user_post.id);
-    let response = testapp.request(request).await;
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    let body = response.into_body().collect().await.unwrap().to_bytes();
-    let user_get: UserResponse = serde_json::from_slice(&body).unwrap();
+    let response = app.server.get(&format!("/users/{}", user_post.id)).await;
+    response.assert_status_ok();
+    let user_get: UserResponse = response.json();
     assert_eq!(user_get.id, user_post.id);
     assert_eq!(user_get.username, "Alice");
 }
 
 #[tokio::test]
 async fn should_create_and_get_multiple_users() {
-    let testapp = TestApp::new().await;
+    let app = TestApplication::new().await;
     let usernames = ["Alice", "Bob", "Charlie"];
 
     for username in usernames {
-        let request = post_users(username);
-        let response = testapp.request(request).await;
-        assert_eq!(response.status(), StatusCode::CREATED);
+        let response = app
+            .server
+            .post("/users")
+            .json(&serde_json::json!({
+                "username": username,
+            }))
+            .await;
+        response.assert_status(StatusCode::CREATED);
+        let user_post: UserResponse = response.json();
 
-        let body = response.into_body().collect().await.unwrap().to_bytes();
-        let user_post: UserResponse = serde_json::from_slice(&body).unwrap();
-        let request = get_users(user_post.id);
-        let response = testapp.request(request).await;
-
-        assert_eq!(response.status(), StatusCode::OK);
-
-        let body = response.into_body().collect().await.unwrap().to_bytes();
-        let user_get: UserResponse = serde_json::from_slice(&body).unwrap();
-
+        let response = app.server.get(&format!("/users/{}", user_post.id)).await;
+        response.assert_status_ok();
+        let user_get: UserResponse = response.json();
         assert_eq!(user_get.id, user_post.id);
-        assert_eq!(user_get.username, *username);
+        assert_eq!(user_get.username, username);
     }
 }
 
 #[tokio::test]
 async fn should_return_conflict_for_existing_user() {
-    let testapp = TestApp::new().await;
-    let request = post_users("Alice");
-    let response = testapp.request(request).await;
+    let app = TestApplication::new().await;
 
-    assert_eq!(response.status(), StatusCode::CREATED);
+    let response = app
+        .server
+        .post("/users")
+        .json(&serde_json::json!({
+            "username": "Alice",
+        }))
+        .await;
+    response.assert_status(StatusCode::CREATED);
 
-    let request = post_users("Alice");
-    let response = testapp.request(request).await;
-
-    assert_eq!(response.status(), StatusCode::CONFLICT);
-
-    let body = response.into_body().collect().await.unwrap().to_bytes();
-    let error: ErrorResponse = serde_json::from_slice(&body).unwrap();
+    let response = app
+        .server
+        .post("/users")
+        .json(&serde_json::json!({
+            "username": "Alice",
+        }))
+        .await;
+    response.assert_status_conflict();
+    let error: ErrorResponse = response.json();
     assert_eq!(error.code, "USER_ALREADY_EXISTS");
 }
 
 #[tokio::test]
 async fn should_return_not_found_for_invalid_user_id() {
-    let testapp = TestApp::new().await;
-    let request = get_users(UserId::new());
-    let response = testapp.request(request).await;
+    let app = TestApplication::new().await;
 
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    let user_id = UserId::new();
+    let response = app.server.get(&format!("/users/{}", user_id)).await;
+    response.assert_status_not_found();
 
-    let body = response.into_body().collect().await.unwrap().to_bytes();
-    let error: ErrorResponse = serde_json::from_slice(&body).unwrap();
+    let error: ErrorResponse = response.json();
     assert_eq!(error.code, "USER_NOT_FOUND");
 }
 
 #[tokio::test]
 async fn should_return_unprocessable_entity_for_invalid_payload() {
-    let testapp = TestApp::new().await;
-    let request = Request::builder()
-        .method("POST")
-        .uri("/users")
-        .header("content-type", "application/json")
-        .body(Body::from("{}"))
-        .unwrap();
+    let app = TestApplication::new().await;
 
-    let response = testapp.request(request).await;
-
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    let response = app.server.post("/users").json(&serde_json::json!({})).await;
+    response.assert_status_unprocessable_entity();
 }

@@ -25,9 +25,11 @@ uuid = { version = "1.24.0", features = ["v7", "serde"] }
 
 [dev-dependencies]
 assert_cmd = "2.2.2"
+axum-test = "21.1.0"
 http-body-util = "0.1.4"
 postgres = "0.19.14"
 predicates = "3.1.4"
 proptest = "1.11.0"
 tempfile = "3.27.0"
+test-case = "3.3.1"
 tower = { version = "0.5.3", features = ["util"] }
