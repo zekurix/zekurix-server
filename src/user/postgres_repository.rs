@@ -27,7 +27,7 @@ impl UserRepository for PostgresUserRepository {
                 error!(error = ?err, "Database error");
                 Error::InternalError
             })?
-            .ok_or(Error::UserNotFound(id.to_string()))
+            .ok_or(Error::UserNotFound(id))
     }
 
     async fn create(&self, user: User) -> Result<()> {
