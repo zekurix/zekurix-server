@@ -1,10 +1,5 @@
-use axum::{
-    Router,
-    body::Body,
-    http::{Request, Response},
-};
+use axum_test::TestServer;
 use dotenv::dotenv;
-use tower::util::ServiceExt;
 
 use zekurix_server::Application;
 use zekurix_server::app::routes;
@@ -14,13 +9,13 @@ use super::temp_database::TempDatabase;
 
 use crate::settings::fixtures::test_settings;
 
-pub struct TestApp {
+pub struct TestApplication {
     // The database is dropped when the TestApp is dropped, so we need to keep it around for the lifetime of the test.
     _temp_database: TempDatabase,
-    router: Router,
+    pub server: TestServer,
 }
 
-impl TestApp {
+impl TestApplication {
     pub async fn new() -> Self {
         dotenv().ok();
 
@@ -35,14 +30,11 @@ impl TestApp {
 
         let application = Application::new(settings).await.unwrap();
         let router = routes::router(application);
+        let server = TestServer::new(router);
 
-        TestApp {
+        TestApplication {
             _temp_database: temp_database,
-            router,
+            server,
         }
-    }
-
-    pub async fn request(&self, req: Request<Body>) -> Response<Body> {
-        self.router.clone().oneshot(req).await.unwrap()
     }
 }
