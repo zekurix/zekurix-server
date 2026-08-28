@@ -3,6 +3,10 @@ name = "zekurix-server"
 version = "0.1.0"
 edition = "2024"
 
+description = "Backend REST API for the Zekurix platform"
+license = "AGPL-3.0-only"
+repository = "https://github.com/zekurix/zekurix-server"
+
 [dependencies]
 anyhow = "1.0.104"
 async-trait = "0.1.89"
@@ -21,6 +25,7 @@ tower = { version = "0.5.3", features = ["timeout"] }
 tower-http = { version = "0.7.0", features = ["timeout", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+utoipa = "5.5.0"
 uuid = { version = "1.24.0", features = ["v7", "serde"] }
 
 [dev-dependencies]
