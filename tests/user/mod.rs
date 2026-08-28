@@ -23,7 +23,7 @@ async fn should_create_user() {
 
     let response = app
         .server
-        .post("/users")
+        .post("/api/v1/users")
         .json(&serde_json::json!({
             "username": "Alice",
         }))
@@ -45,7 +45,7 @@ async fn should_reject_invalid_user(username: &str) {
 
     let response = app
         .server
-        .post("/users")
+        .post("/api/v1/users")
         .json(&serde_json::json!({
             "username": username,
         }))
@@ -60,7 +60,7 @@ async fn should_get_user() {
 
     let response = app
         .server
-        .post("/users")
+        .post("/api/v1/users")
         .json(&serde_json::json!({
             "username": "Alice",
         }))
@@ -68,7 +68,10 @@ async fn should_get_user() {
     response.assert_status(StatusCode::CREATED);
     let user_post: UserResponse = response.json();
 
-    let response = app.server.get(&format!("/users/{}", user_post.id)).await;
+    let response = app
+        .server
+        .get(&format!("/api/v1/users/{}", user_post.id))
+        .await;
     response.assert_status_ok();
     let user_get: UserResponse = response.json();
     assert_eq!(user_get.id, user_post.id);
@@ -83,7 +86,7 @@ async fn should_create_and_get_multiple_users() {
     for username in usernames {
         let response = app
             .server
-            .post("/users")
+            .post("/api/v1/users")
             .json(&serde_json::json!({
                 "username": username,
             }))
@@ -91,7 +94,10 @@ async fn should_create_and_get_multiple_users() {
         response.assert_status(StatusCode::CREATED);
         let user_post: UserResponse = response.json();
 
-        let response = app.server.get(&format!("/users/{}", user_post.id)).await;
+        let response = app
+            .server
+            .get(&format!("/api/v1/users/{}", user_post.id))
+            .await;
         response.assert_status_ok();
         let user_get: UserResponse = response.json();
         assert_eq!(user_get.id, user_post.id);
@@ -105,7 +111,7 @@ async fn should_return_conflict_for_existing_user() {
 
     let response = app
         .server
-        .post("/users")
+        .post("/api/v1/users")
         .json(&serde_json::json!({
             "username": "Alice",
         }))
@@ -114,7 +120,7 @@ async fn should_return_conflict_for_existing_user() {
 
     let response = app
         .server
-        .post("/users")
+        .post("/api/v1/users")
         .json(&serde_json::json!({
             "username": "Alice",
         }))
@@ -129,7 +135,7 @@ async fn should_return_not_found_for_invalid_user_id() {
     let app = TestApplication::new().await;
 
     let user_id = UserId::new();
-    let response = app.server.get(&format!("/users/{}", user_id)).await;
+    let response = app.server.get(&format!("/api/v1/users/{}", user_id)).await;
     response.assert_status_not_found();
 
     let error: ErrorResponse = response.json();
@@ -140,6 +146,10 @@ async fn should_return_not_found_for_invalid_user_id() {
 async fn should_return_unprocessable_entity_for_invalid_payload() {
     let app = TestApplication::new().await;
 
-    let response = app.server.post("/users").json(&serde_json::json!({})).await;
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({}))
+        .await;
     response.assert_status_unprocessable_entity();
 }

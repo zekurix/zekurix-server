@@ -13,10 +13,14 @@ fn timeout_layer(timeout: Duration) -> TimeoutLayer {
     TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, timeout)
 }
 
+fn api_v1_router() -> Router<Arc<Application>> {
+    Router::new().nest("/users", user::router())
+}
+
 pub fn router(application: Arc<Application>) -> Router {
     Router::new()
         .nest("/health", health::router())
-        .nest("/users", user::router())
+        .nest("/api/v1", api_v1_router())
         .layer((
             TraceLayer::new_for_http(),
             timeout_layer(application.settings.server.timeout),
