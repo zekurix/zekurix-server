@@ -14,8 +14,7 @@ fn timeout_layer(timeout: Duration) -> TimeoutLayer {
 }
 
 fn api_v1_router() -> Router<Arc<Application>> {
-    Router::new()
-        .nest("/users", user::router())
+    Router::new().nest("/users", user::router())
 }
 
 pub fn router(application: Arc<Application>) -> Router {

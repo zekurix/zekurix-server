@@ -68,7 +68,10 @@ async fn should_get_user() {
     response.assert_status(StatusCode::CREATED);
     let user_post: UserResponse = response.json();
 
-    let response = app.server.get(&format!("/api/v1/users/{}", user_post.id)).await;
+    let response = app
+        .server
+        .get(&format!("/api/v1/users/{}", user_post.id))
+        .await;
     response.assert_status_ok();
     let user_get: UserResponse = response.json();
     assert_eq!(user_get.id, user_post.id);
@@ -91,7 +94,10 @@ async fn should_create_and_get_multiple_users() {
         response.assert_status(StatusCode::CREATED);
         let user_post: UserResponse = response.json();
 
-        let response = app.server.get(&format!("/api/v1/users/{}", user_post.id)).await;
+        let response = app
+            .server
+            .get(&format!("/api/v1/users/{}", user_post.id))
+            .await;
         response.assert_status_ok();
         let user_get: UserResponse = response.json();
         assert_eq!(user_get.id, user_post.id);
@@ -140,6 +146,10 @@ async fn should_return_not_found_for_invalid_user_id() {
 async fn should_return_unprocessable_entity_for_invalid_payload() {
     let app = TestApplication::new().await;
 
-    let response = app.server.post("/api/v1/users").json(&serde_json::json!({})).await;
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({}))
+        .await;
     response.assert_status_unprocessable_entity();
 }
