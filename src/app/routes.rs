@@ -5,6 +5,7 @@ use axum::{Router, http::StatusCode};
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 
 use crate::health;
+use crate::openapi;
 use crate::user;
 
 use super::Application;
@@ -19,6 +20,7 @@ fn api_v1_router() -> Router<Arc<Application>> {
 
 pub fn router(application: Arc<Application>) -> Router {
     Router::new()
+        .merge(openapi::router())
         .nest("/health", health::router())
         .nest("/api/v1", api_v1_router())
         .layer((
