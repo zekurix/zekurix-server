@@ -7,10 +7,7 @@ use crate::error::{Error, Result};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, sqlx::Type, ToSchema)]
 #[sqlx(transparent)]
-#[schema(
-    pattern = "^[A-Za-z0-9_-]{3,64}$",
-    example = "alice-123"
-)]
+#[schema(pattern = "^[A-Za-z0-9_-]{3,64}$", example = "alice-123")]
 pub struct Username(String);
 
 impl Username {
