@@ -3,7 +3,7 @@ use serde::Serialize;
 use utoipa::ToSchema;
 
 /// Response returned by the health check endpoint.
-#[derive(Debug, Serialize, ToSchema)]
+#[derive(Serialize, ToSchema)]
 pub struct HealthResponse {
     /// Current health status of the application.
     #[schema(example = "ok")]
