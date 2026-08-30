@@ -1,8 +1,7 @@
-use axum::Json;
-use utoipa::OpenApi as _;
+use axum::{http::header, response::IntoResponse};
 
-use super::ApiDoc;
+const OPENAPI_JSON: &str = include_str!(env!("OPENAPI_JSON_PATH"));
 
-pub async fn get_openapi() -> Json<utoipa::openapi::OpenApi> {
-    Json(ApiDoc::openapi())
+pub async fn get_openapi() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "application/json")], OPENAPI_JSON)
 }
