@@ -6,6 +6,11 @@ info:
     name: AGPL-3.0-only
     identifier: AGPL-3.0-only
   version: 0.1.0
+tags:
+  - name: health
+    description: Health check endpoints.
+  - name: users
+    description: User management endpoints.
 paths:
   /health:
     get:
@@ -48,20 +53,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./common/schemas.yaml#/components/schemas/ErrorResponse"
         "422":
           description: The username is invalid. It must be between 3 and 64 characters and
             may only contain ASCII alphanumeric characters, '_' and '-'
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./common/schemas.yaml#/components/schemas/ErrorResponse"
         "500":
           description: An unexpected internal server error occurred
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./common/schemas.yaml#/components/schemas/ErrorResponse"
   /users/{id}:
     get:
       tags:
@@ -88,13 +93,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./common/schemas.yaml#/components/schemas/ErrorResponse"
         "500":
           description: An unexpected internal server error occurred
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./common/schemas.yaml#/components/schemas/ErrorResponse"
 components:
   schemas:
     CreateUserRequest:
@@ -107,13 +112,6 @@ components:
           type: string
           description: The username for the new user.
           example: Alice
-    ErrorResponse:
-      type: object
-      required:
-        - code
-      properties:
-        code:
-          type: string
     HealthResponse:
       type: object
       description: Response returned by the health check endpoint.
