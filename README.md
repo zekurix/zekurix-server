@@ -61,6 +61,11 @@ cargo test
 cargo run
 ```
 
+If you modify the OpenAPI specification, you need to regenerate it:
+```bash
+./openapi/scripts/build_openapi.py
+```
+
 ## Security Notice
 
 > [!WARNING]
