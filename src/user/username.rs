@@ -1,13 +1,11 @@
 use std::str::FromStr;
 
 use serde::Serialize;
-use utoipa::ToSchema;
 
 use crate::error::{Error, Result};
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, sqlx::Type, ToSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, sqlx::Type)]
 #[sqlx(transparent)]
-#[schema(pattern = "^[A-Za-z0-9_-]{3,64}$", example = "alice-123")]
 pub struct Username(String);
 
 impl Username {
