@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use serde::Serialize;
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::error::{Error, Result};
 
@@ -36,6 +36,17 @@ impl FromStr for Username {
         }
 
         Ok(Self(s.to_owned()))
+    }
+}
+
+impl<'de> Deserialize<'de> for Username {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+
+        value.parse::<Username>().map_err(serde::de::Error::custom)
     }
 }
 
@@ -131,6 +142,32 @@ mod tests {
             let username = Username::new(&value);
 
             prop_assert!(matches!(username, Err(Error::InvalidUsername(_))));
+        }
+    }
+
+    #[test]
+    fn should_deserialize_valid_username() {
+        let username: Username = serde_json::from_str(r#""Alice-01_2""#).unwrap();
+
+        assert_eq!(username.as_str(), "Alice-01_2");
+    }
+
+    #[test]
+    fn should_reject_invalid_username_during_deserialization() {
+        let result: std::result::Result<Username, _> = serde_json::from_str(r#""alice@bob""#);
+
+        assert!(result.is_err());
+    }
+
+    proptest! {
+        #[test]
+        fn should_round_trip_valid_username(value in "[A-Za-z0-9_-]{3,64}") {
+            let username = Username::new(&value).unwrap();
+
+            let serialized = serde_json::to_string(&username).unwrap();
+            let deserialized: Username = serde_json::from_str(&serialized).unwrap();
+
+            prop_assert_eq!(deserialized, username);
         }
     }
 
