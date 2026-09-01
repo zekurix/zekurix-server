@@ -1,6 +1,7 @@
 paths:
   /health:
     get:
+      security: []
       tags:
         - health
       summary: Health check endpoint.

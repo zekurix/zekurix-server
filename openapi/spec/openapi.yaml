@@ -1,16 +1,37 @@
 openapi: 3.1.0
+
 info:
-  title: zekurix-server
-  description: Backend REST API for the Zekurix platform
+  title: Zekurix Server
+  description: Backend REST API for the Zekurix platform.
+  version: 0.1.0
   license:
     name: AGPL-3.0-only
     identifier: AGPL-3.0-only
-  version: 0.1.0
+    url: https://spdx.org/licenses/AGPL-3.0-only.html
+  contact:
+    name: Zekurix Server
+    url: https://github.com/zekurix/zekurix-server
+
+servers:
+  - url: http://{host}:{port}
+    description: Development server.
+    variables:
+      host:
+        default: localhost
+        description: Server hostname.
+      port:
+        default: "8080"
+        description: Server port.
+
 tags:
   - name: health
     description: Health check endpoints.
   - name: users
     description: User management endpoints.
+
+security:
+  - bearerAuth: []
+
 paths:
   /health:
     $ref: "./health/paths.yaml#/paths/~1health"
@@ -18,3 +39,10 @@ paths:
     $ref: "./users/paths.yaml#/paths/~1users"
   /users/{id}:
     $ref: "./users/paths.yaml#/paths/~1users~1{id}"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -40,7 +40,12 @@ def run_redocly(*args: str) -> None:
 
 
 def lint_openapi() -> None:
-    run_redocly("lint", "spec/openapi.yaml")
+    run_redocly(
+        "lint",
+        "spec/openapi.yaml",
+        "--config",
+        "redocly.yaml",
+    )
 
 
 def bundle_openapi() -> None:
@@ -49,6 +54,8 @@ def bundle_openapi() -> None:
     run_redocly(
         "bundle",
         "spec/openapi.yaml",
+        "--config",
+        "redocly.yaml",
         "-o",
         "generated/openapi.json",
     )

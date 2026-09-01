@@ -1,6 +1,7 @@
 paths:
   /users:
     post:
+      security: []
       tags:
         - users
       summary: Create a new user.
@@ -42,6 +43,7 @@ paths:
                 $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"
   /users/{id}:
     get:
+      security: []
       tags:
         - users
       summary: Retrieve a user by ID.
