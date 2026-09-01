@@ -14,7 +14,7 @@ use super::{User, UserId, Username, repository::UserRepository};
 
 #[derive(Deserialize)]
 pub struct CreateUserRequest {
-    username: String,
+    username: Username,
 }
 
 #[derive(Serialize)]
@@ -45,8 +45,7 @@ pub async fn create_user(
     State(application): State<Arc<Application>>,
     Json(params): Json<CreateUserRequest>,
 ) -> Result<(StatusCode, Json<UserResponse>)> {
-    let username = Username::new(&params.username)?;
-    let user = User::new(username);
+    let user = User::new(params.username);
 
     application.repositories.user.create(user.clone()).await?;
 
