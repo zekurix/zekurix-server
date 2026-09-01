@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import shutil
 import subprocess
@@ -21,9 +22,7 @@ def check_dependency(name: str) -> None:
         raise RuntimeError(f"'{name}' is required and was not found in PATH")
 
 
-def bundle_openapi() -> None:
-    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
-
+def run_redocly(*args: str) -> None:
     subprocess.run(
         [
             "docker",
@@ -34,12 +33,24 @@ def bundle_openapi() -> None:
             "-w",
             "/workspace",
             "redocly/cli",
-            "bundle",
-            "spec/openapi.yaml",
-            "-o",
-            "generated/openapi.json",
+            *args,
         ],
         check=True,
+    )
+
+
+def lint_openapi() -> None:
+    run_redocly("lint", "spec/openapi.yaml")
+
+
+def bundle_openapi() -> None:
+    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
+
+    run_redocly(
+        "bundle",
+        "spec/openapi.yaml",
+        "-o",
+        "generated/openapi.json",
     )
 
     if not OUTPUT_PRETTY.exists():
@@ -57,17 +68,49 @@ def minify_openapi() -> None:
         raise RuntimeError(f"OpenAPI file was not generated: {OUTPUT_MIN}")
 
 
-def main() -> None:
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Lint and build OpenAPI artifacts.")
+
+    parser.add_argument(
+        "command",
+        nargs="?",
+        default="all",
+        choices=["lint", "build", "all"],
+        help="Action to execute.",
+    )
+
+    return parser.parse_args()
+
+
+def validate_inputs() -> None:
     check_dependency("docker")
 
     if not INPUT.exists():
         raise FileNotFoundError(f"OpenAPI specification not found: {INPUT}")
 
+
+def build() -> None:
     bundle_openapi()
     minify_openapi()
 
     print(f"OpenAPI bundle generated: {OUTPUT_PRETTY}")
-    print(f"OpenAPI bundle minified generated: {OUTPUT_MIN}")
+    print(f"OpenAPI minified bundle generated: {OUTPUT_MIN}")
+
+
+def main() -> None:
+    args = parse_args()
+    validate_inputs()
+
+    match args.command:
+        case "lint":
+            lint_openapi()
+
+        case "build":
+            build()
+
+        case "all":
+            lint_openapi()
+            build()
 
 
 if __name__ == "__main__":

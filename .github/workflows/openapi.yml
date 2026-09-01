@@ -35,7 +35,7 @@ jobs:
         run: docker --version
 
       - name: Generate OpenAPI bundle
-        run: python3 openapi/scripts/build_openapi.py
+        run: python3 openapi/scripts/build_openapi.py build
 
       - name: Verify generated artifacts are up to date
         run: git diff --exit-code -- openapi/generated/
