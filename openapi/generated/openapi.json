@@ -161,20 +161,6 @@
   },
   "components": {
     "schemas": {
-      "CreateUserRequest": {
-        "type": "object",
-        "description": "Request parameters for creating a new user.",
-        "required": [
-          "username"
-        ],
-        "properties": {
-          "username": {
-            "type": "string",
-            "description": "The username for the new user.",
-            "example": "Alice"
-          }
-        }
-      },
       "HealthResponse": {
         "type": "object",
         "description": "Response returned by the health check endpoint.",
@@ -195,9 +181,28 @@
           }
         }
       },
+      "CreateUserRequest": {
+        "type": "object",
+        "description": "Request parameters for creating a new user.",
+        "required": [
+          "username"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "The username for the new user.",
+            "example": "Alice"
+          }
+        }
+      },
       "UserId": {
         "type": "string",
         "format": "uuid"
+      },
+      "Username": {
+        "type": "string",
+        "example": "alice-123",
+        "pattern": "^[A-Za-z0-9_-]{3,64}$"
       },
       "UserResponse": {
         "type": "object",
@@ -216,11 +221,6 @@
             "description": "The username of the user."
           }
         }
-      },
-      "Username": {
-        "type": "string",
-        "example": "alice-123",
-        "pattern": "^[A-Za-z0-9_-]{3,64}$"
       },
       "ErrorResponse": {
         "type": "object",
