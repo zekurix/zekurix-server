@@ -1,14 +1,40 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "zekurix-server",
-    "description": "Backend REST API for the Zekurix platform",
+    "title": "Zekurix Server",
+    "description": "Backend REST API for the Zekurix platform.",
+    "version": "0.1.0",
     "license": {
       "name": "AGPL-3.0-only",
-      "identifier": "AGPL-3.0-only"
+      "identifier": "AGPL-3.0-only",
+      "url": "https://spdx.org/licenses/AGPL-3.0-only.html"
     },
-    "version": "0.1.0"
+    "contact": {
+      "name": "Zekurix Server",
+      "url": "https://github.com/zekurix/zekurix-server"
+    }
   },
+  "servers": [
+    {
+      "url": "http://{host}:{port}",
+      "description": "Development server.",
+      "variables": {
+        "host": {
+          "default": "localhost",
+          "description": "Server hostname."
+        },
+        "port": {
+          "default": "8080",
+          "description": "Server port."
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "tags": [
     {
       "name": "health",
@@ -22,6 +48,7 @@
   "paths": {
     "/health": {
       "get": {
+        "security": [],
         "tags": [
           "health"
         ],
@@ -44,6 +71,7 @@
     },
     "/users": {
       "post": {
+        "security": [],
         "tags": [
           "users"
         ],
@@ -107,6 +135,7 @@
     },
     "/users/{id}": {
       "get": {
+        "security": [],
         "tags": [
           "users"
         ],
@@ -160,6 +189,13 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
       "HealthResponse": {
         "type": "object",
