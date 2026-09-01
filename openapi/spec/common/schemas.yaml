@@ -1,9 +1,44 @@
 components:
   schemas:
     ErrorResponse:
+      description: RFC 9457 problem details response.
       type: object
+      additionalProperties: false
       required:
-        - code
+        - type
+        - title
+        - status
+        - detail
+
       properties:
-        code:
+        type:
           type: string
+          format: uri
+          description: Problem type identifier.
+          example: urn:zekurix:problem:internal-server-error
+
+        title:
+          type: string
+          description: Short human-readable summary of the problem.
+          example: Internal Server Error
+
+        status:
+          type: integer
+          description: HTTP status code.
+          example: 500
+
+        detail:
+          type: string
+          description: Human-readable explanation of the problem.
+          example: An unexpected internal server error occurred.
+
+        instance:
+          type: string
+          format: uri
+          description: URI identifying the specific occurrence of the problem.
+
+      example:
+        type: urn:zekurix:problem:internal-server-error
+        title: Internal Server Error
+        status: 500
+        detail: An unexpected internal server error occurred.

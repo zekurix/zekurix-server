@@ -1,2 +1,6 @@
+extends:
+  - recommended-strict
+
 rules:
   operation-4xx-response: off
+  operation-description: error
