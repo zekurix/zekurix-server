@@ -1,0 +1,32 @@
+components:
+  schemas:
+    UserId:
+      type: string
+      format: uuid
+    Username:
+      type: string
+      example: alice-123
+      pattern: ^[A-Za-z0-9_-]{3,64}$
+    CreateUserRequest:
+      type: object
+      description: Request parameters for creating a new user.
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          description: The username for the new user.
+          example: Alice
+    UserResponse:
+      type: object
+      description: Response containing user information.
+      required:
+        - id
+        - username
+      properties:
+        id:
+          $ref: "#/components/schemas/UserId"
+          description: The unique identifier of the user.
+        username:
+          $ref: "#/components/schemas/Username"
+          description: The username of the user.

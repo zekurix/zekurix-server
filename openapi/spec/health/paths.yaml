@@ -1,0 +1,15 @@
+paths:
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check endpoint.
+      description: Returns the current application status and version.
+      operationId: get_health
+      responses:
+        "200":
+          description: Current application status and version
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.yaml#/components/schemas/HealthResponse"
