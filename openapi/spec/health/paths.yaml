@@ -4,12 +4,13 @@ paths:
       security: []
       tags:
         - health
-      summary: Health check endpoint.
-      description: Returns the current application status and version.
-      operationId: get_health
+      summary: Get application health status.
+      description: Returns the current application health status and version.
+      operationId: getHealth
+
       responses:
         "200":
-          description: Current application status and version
+          description: Current application health status and version.
           content:
             application/json:
               schema:

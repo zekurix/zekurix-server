@@ -3,15 +3,18 @@ components:
     HealthResponse:
       type: object
       description: Response returned by the health check endpoint.
+      additionalProperties: false
       required:
         - status
         - version
       properties:
         status:
           type: string
+          enum:
+            - ok
           description: Current health status of the application.
           example: ok
         version:
           type: string
-          description: Current application version.
+          description: Current application version following Semantic Versioning (SemVer).
           example: 1.0.0

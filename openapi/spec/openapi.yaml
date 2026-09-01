@@ -35,9 +35,11 @@ security:
 paths:
   /health:
     $ref: "./health/paths.yaml#/paths/~1health"
-  /users:
+
+  /api/v1/users:
     $ref: "./users/paths.yaml#/paths/~1users"
-  /users/{id}:
+
+  /api/v1/users/{id}:
     $ref: "./users/paths.yaml#/paths/~1users~1{id}"
 
 components:

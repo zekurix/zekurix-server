@@ -1,32 +1,38 @@
 components:
   schemas:
     UserId:
+      description: Unique identifier of a user.
       type: string
       format: uuid
+      example: 01a05d6f-ca97-7801-8c05-097d2e1c727a
+
     Username:
+      description: Username containing 3 to 64 ASCII alphanumeric characters, underscores, or hyphens.
       type: string
-      example: alice-123
-      pattern: ^[A-Za-z0-9_-]{3,64}$
+      minLength: 3
+      maxLength: 64
+      pattern: ^[A-Za-z0-9_-]+$
+      example: Alice-123
+
     CreateUserRequest:
+      description: Request payload for creating a user.
       type: object
-      description: Request parameters for creating a new user.
+      additionalProperties: false
       required:
         - username
       properties:
         username:
-          type: string
-          description: The username for the new user.
-          example: Alice
+          $ref: "#/components/schemas/Username"
+
     UserResponse:
+      description: Response containing user details.
       type: object
-      description: Response containing user information.
+      additionalProperties: false
       required:
         - id
         - username
       properties:
         id:
           $ref: "#/components/schemas/UserId"
-          description: The unique identifier of the user.
         username:
           $ref: "#/components/schemas/Username"
-          description: The username of the user.
