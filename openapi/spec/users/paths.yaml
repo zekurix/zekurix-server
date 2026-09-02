@@ -8,6 +8,9 @@ paths:
       description: Creates a user and returns the created user details.
       operationId: createUser
 
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+
       requestBody:
         description: User creation request payload.
         content:
@@ -20,6 +23,8 @@ paths:
         "201":
           description: User created successfully.
           headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
             Location:
               description: URI of the created user resource.
               schema:
@@ -41,6 +46,9 @@ paths:
 
         "409":
           description: A user with this username already exists.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
           content:
             application/problem+json:
               schema:
@@ -48,6 +56,9 @@ paths:
 
         "422":
           description: Request validation failed.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
           content:
             application/problem+json:
               schema:
@@ -66,11 +77,15 @@ paths:
       operationId: getUser
 
       parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
         - $ref: "./parameters.yaml#/components/parameters/UserId"
 
       responses:
         "200":
           description: User retrieved successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
           content:
             application/json:
               schema:
@@ -78,6 +93,9 @@ paths:
 
         "404":
           description: User not found.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
           content:
             application/problem+json:
               schema:

@@ -1,0 +1,10 @@
+components:
+  parameters:
+    X-Request-Id:
+      name: X-Request-Id
+      in: header
+      description: Optional request correlation identifier. If omitted, the server generates one.
+      required: false
+      schema:
+        type: string
+        format: uuid

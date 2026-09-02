@@ -8,9 +8,15 @@ paths:
       description: Returns the current application health status and version.
       operationId: getHealth
 
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+
       responses:
         "200":
           description: Current application health status and version.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
           content:
             application/json:
               schema:
