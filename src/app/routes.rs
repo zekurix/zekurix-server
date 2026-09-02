@@ -1,14 +1,46 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use axum::{Router, http::StatusCode};
+use axum::{
+    Router,
+    extract::Request,
+    http::{HeaderValue, StatusCode},
+    middleware::Next,
+    response::Response,
+};
+use tower::ServiceBuilder;
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
+use uuid::Uuid;
 
 use crate::health;
 use crate::openapi;
 use crate::user;
 
 use super::Application;
+
+pub async fn request_id_middleware(mut request: Request, next: Next) -> Response {
+    let request_id = request
+        .headers()
+        .get("x-request-id")
+        .filter(|value| {
+            value
+                .to_str()
+                .ok()
+                .and_then(|value| Uuid::parse_str(value).ok())
+                .is_some()
+        })
+        .cloned()
+        .unwrap_or_else(|| {
+            HeaderValue::from_str(&Uuid::now_v7().to_string())
+                .expect("UUID is always a valid header value")
+        });
+    request.extensions_mut().insert(request_id.clone());
+
+    let mut response = next.run(request).await;
+
+    response.headers_mut().insert("x-request-id", request_id);
+    response
+}
 
 fn timeout_layer(timeout: Duration) -> TimeoutLayer {
     TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, timeout)
@@ -23,10 +55,12 @@ pub fn router(application: Arc<Application>) -> Router {
         .merge(openapi::router())
         .nest("/health", health::router())
         .nest("/api/v1", api_v1_router())
-        .layer((
-            TraceLayer::new_for_http(),
-            timeout_layer(application.settings.server.timeout),
-        ))
+        .layer(
+            ServiceBuilder::new()
+                .layer(axum::middleware::from_fn(request_id_middleware))
+                .layer(TraceLayer::new_for_http())
+                .layer(timeout_layer(application.settings.server.timeout)),
+        )
         .with_state(application)
 }
 

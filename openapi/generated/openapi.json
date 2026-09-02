@@ -55,9 +55,19 @@
         "summary": "Get application health status.",
         "description": "Returns the current application health status and version.",
         "operationId": "getHealth",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Current application health status and version.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -78,6 +88,11 @@
         "summary": "Create a new user.",
         "description": "Creates a user and returns the created user details.",
         "operationId": "createUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          }
+        ],
         "requestBody": {
           "description": "User creation request payload.",
           "content": {
@@ -93,6 +108,9 @@
           "201": {
             "description": "User created successfully.",
             "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              },
               "Location": {
                 "description": "URI of the created user resource.",
                 "schema": {
@@ -121,6 +139,11 @@
           },
           "409": {
             "description": "A user with this username already exists.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -131,6 +154,11 @@
           },
           "422": {
             "description": "Request validation failed.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -156,12 +184,20 @@
         "operationId": "getUser",
         "parameters": [
           {
+            "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
             "$ref": "#/components/parameters/UserId"
           }
         ],
         "responses": {
           "200": {
             "description": "User retrieved successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -172,6 +208,11 @@
           },
           "404": {
             "description": "User not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -193,6 +234,36 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "X-Request-Id": {
+        "name": "X-Request-Id",
+        "in": "header",
+        "description": "Optional request correlation identifier. If omitted, the server generates one.",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "UserId": {
+        "name": "id",
+        "in": "path",
+        "description": "Unique identifier of the user.",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/UserId"
+        }
+      }
+    },
+    "headers": {
+      "X-Request-Id": {
+        "description": "Request correlation identifier.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
       }
     },
     "schemas": {
@@ -313,23 +384,17 @@
     "responses": {
       "InternalServerError": {
         "description": "An unexpected internal server error occurred.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
         "content": {
           "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
             }
           }
-        }
-      }
-    },
-    "parameters": {
-      "UserId": {
-        "name": "id",
-        "in": "path",
-        "description": "Unique identifier of the user.",
-        "required": true,
-        "schema": {
-          "$ref": "#/components/schemas/UserId"
         }
       }
     }

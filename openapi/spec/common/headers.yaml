@@ -1,0 +1,7 @@
+components:
+  headers:
+    X-Request-Id:
+      description: Request correlation identifier.
+      schema:
+        type: string
+        format: uuid

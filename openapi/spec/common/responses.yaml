@@ -2,6 +2,9 @@ components:
   responses:
     InternalServerError:
       description: An unexpected internal server error occurred.
+      headers:
+        X-Request-Id:
+          $ref: "./headers.yaml#/components/headers/X-Request-Id"
       content:
         application/problem+json:
           schema:
