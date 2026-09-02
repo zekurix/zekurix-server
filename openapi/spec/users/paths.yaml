@@ -23,18 +23,29 @@ paths:
             application/json:
               schema:
                 $ref: "./schemas.yaml#/components/schemas/UserResponse"
+          links:
+            GetUserById:
+              operationId: getUser
+              parameters:
+                id: "$response.body#/id"
+              description: >
+                The user identifier returned by this operation can be used as the id parameter of
+                the getUser operation.
+
         "409":
           description: A user with this username already exists.
           content:
             application/json:
               schema:
                 $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"
+
         "422":
           description: Request validation failed.
           content:
             application/json:
               schema:
                 $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"
+
         "500":
           $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
 
@@ -57,11 +68,13 @@ paths:
             application/json:
               schema:
                 $ref: "./schemas.yaml#/components/schemas/UserResponse"
+
         "404":
           description: User not found.
           content:
             application/json:
               schema:
                 $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"
+
         "500":
           $ref: "./../common/responses.yaml#/components/responses/InternalServerError"

@@ -98,6 +98,15 @@
                   "$ref": "#/components/schemas/UserResponse"
                 }
               }
+            },
+            "links": {
+              "GetUserById": {
+                "operationId": "getUser",
+                "parameters": {
+                  "id": "$response.body#/id"
+                },
+                "description": "The user identifier returned by this operation can be used as the id parameter of the getUser operation.\n"
+              }
             }
           },
           "409": {
