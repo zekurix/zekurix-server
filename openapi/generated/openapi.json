@@ -122,7 +122,7 @@
           "409": {
             "description": "A user with this username already exists.",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
@@ -132,7 +132,7 @@
           "422": {
             "description": "Request validation failed.",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
@@ -173,7 +173,7 @@
           "404": {
             "description": "User not found.",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
@@ -314,7 +314,7 @@
       "InternalServerError": {
         "description": "An unexpected internal server error occurred.",
         "content": {
-          "application/json": {
+          "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
             }
