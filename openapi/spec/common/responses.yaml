@@ -3,6 +3,6 @@ components:
     InternalServerError:
       description: An unexpected internal server error occurred.
       content:
-        application/json:
+        application/problem+json:
           schema:
             $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
