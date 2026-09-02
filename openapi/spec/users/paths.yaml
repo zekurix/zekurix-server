@@ -19,6 +19,13 @@ paths:
       responses:
         "201":
           description: User created successfully.
+          headers:
+            Location:
+              description: URI of the created user resource.
+              schema:
+                type: string
+                format: uri-reference
+                example: /api/v1/users/01a05d6f-ca97-7801-8c05-097d2e1c727a
           content:
             application/json:
               schema:

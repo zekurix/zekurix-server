@@ -3,7 +3,8 @@ use std::sync::Arc;
 use axum::{
     Json,
     extract::{Path, State},
-    http::StatusCode,
+    http::{StatusCode, header, HeaderName},
+    response::AppendHeaders,
 };
 use serde::{Deserialize, Serialize};
 
@@ -44,10 +45,18 @@ pub async fn get_user(
 pub async fn create_user(
     State(application): State<Arc<Application>>,
     Json(params): Json<CreateUserRequest>,
-) -> Result<(StatusCode, Json<UserResponse>)> {
+) -> Result<(
+    StatusCode,
+    AppendHeaders<[(HeaderName, String); 1]>,
+    Json<UserResponse>,
+)> {
     let user = User::new(params.username);
 
     application.repositories.user.create(user.clone()).await?;
 
-    Ok((StatusCode::CREATED, Json(user.into())))
+    Ok((
+        StatusCode::CREATED,
+        AppendHeaders([(header::LOCATION, format!("/api/v1/users/{}", user.id))]),
+        Json(user.into()),
+    ))
 }

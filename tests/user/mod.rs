@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http::{StatusCode, header};
 use serde::Deserialize;
 use test_case::test_case;
 
@@ -30,7 +30,15 @@ async fn should_create_user() {
         .await;
     response.assert_status(StatusCode::CREATED);
 
+    let location = response
+        .headers()
+        .get(header::LOCATION)
+        .expect("Location header should be present")
+        .to_str()
+        .unwrap();
     let user: UserResponse = response.json();
+
+    assert_eq!(location, format!("/api/v1/users/{}", user.id));
     assert_eq!(user.username, "Alice");
 }
 
