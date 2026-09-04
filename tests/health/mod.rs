@@ -1,6 +1,8 @@
+use axum::http::StatusCode;
 use serde::Deserialize;
 use uuid::Uuid;
 
+use crate::common::ErrorResponse;
 use crate::common::TestApplication;
 
 #[derive(Deserialize)]
@@ -27,6 +29,17 @@ async fn should_return_not_found_for_unknown_route() {
 
     let response = app.server.get("/foobar").await;
     response.assert_status_not_found();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/http/not-found"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::NOT_FOUND.as_u16());
+    assert!(!body.detail.is_empty());
 }
 
 #[tokio::test]
