@@ -1,5 +1,5 @@
 use axum::{
-    http::StatusCode,
+    http::{StatusCode, Uri},
     response::{IntoResponse, Response},
 };
 use problem_details::ProblemDetails;
@@ -19,6 +19,9 @@ pub enum Error {
     #[error("environement variable '{0}' invalid")]
     InvalidEnvironmentVariable(String),
 
+    #[error("Resource '{0}' not found.")]
+    HttpNotFound(Uri),
+
     #[error("setting '{setting}' invalid: {reason}")]
     InvalidSettings { setting: String, reason: String },
 
@@ -37,6 +40,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl Error {
     fn into_problem_details(self) -> ProblemDetails {
         match self {
+            Self::HttpNotFound(uri) => ProblemDetails::new()
+                .with_type(problem_type::http::NOT_FOUND.as_uri())
+                .with_title("Resource Not Found")
+                .with_status(StatusCode::NOT_FOUND)
+                .with_detail(format!("Resource '{uri}' was not found.")),
+
             Self::UserAlreadyExists(username) => ProblemDetails::new()
                 .with_type(problem_type::user::ALREADY_EXISTS.as_uri())
                 .with_title("User Already Exists")
@@ -75,6 +84,26 @@ mod tests {
     use super::*;
     use problem_details;
     use test_case::test_case;
+
+    #[test]
+    fn http_not_found_maps_to_not_found() {
+        let uri = "/invalid/route".parse::<Uri>().unwrap();
+
+        let problem = Error::HttpNotFound(uri).into_problem_details();
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::NOT_FOUND.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Resource Not Found".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::NOT_FOUND));
+        assert_eq!(
+            problem.detail,
+            Some("Resource '/invalid/route' was not found.".to_string())
+        );
+    }
 
     #[test]
     fn user_already_exists_maps_to_conflict() {
