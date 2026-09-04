@@ -15,7 +15,7 @@ components:
           type: string
           format: uri
           description: Problem type identifier.
-          example: urn:zekurix:problem:internal-server-error
+          example: https://api.zekurix.com/problems/internal-server-error
 
         title:
           type: string
@@ -38,7 +38,7 @@ components:
           description: URI identifying the specific occurrence of the problem.
 
       example:
-        type: urn:zekurix:problem:internal-server-error
+        type: https://api.zekurix.com/problems/internal-server-error
         title: Internal Server Error
         status: 500
         detail: An unexpected internal server error occurred.
