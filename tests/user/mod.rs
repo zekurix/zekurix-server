@@ -4,17 +4,13 @@ use test_case::test_case;
 
 use zekurix_server::user::UserId;
 
+use crate::common::ErrorResponse;
 use crate::common::TestApplication;
 
 #[derive(Deserialize)]
 struct UserResponse {
     id: UserId,
     username: String,
-}
-
-#[derive(Deserialize)]
-struct ErrorResponse {
-    code: String,
 }
 
 #[tokio::test]
@@ -134,8 +130,17 @@ async fn should_return_conflict_for_existing_user() {
         }))
         .await;
     response.assert_status_conflict();
-    let error: ErrorResponse = response.json();
-    assert_eq!(error.code, "USER_ALREADY_EXISTS");
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/user/already-exists"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::CONFLICT.as_u16());
+    assert!(!body.detail.is_empty());
 }
 
 #[tokio::test]
@@ -146,8 +151,16 @@ async fn should_return_not_found_for_invalid_user_id() {
     let response = app.server.get(&format!("/api/v1/users/{}", user_id)).await;
     response.assert_status_not_found();
 
-    let error: ErrorResponse = response.json();
-    assert_eq!(error.code, "USER_NOT_FOUND");
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/user/not-found"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::NOT_FOUND.as_u16());
+    assert!(!body.detail.is_empty());
 }
 
 #[tokio::test]
