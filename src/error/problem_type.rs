@@ -21,6 +21,9 @@ pub mod http {
     pub const NOT_FOUND: ProblemType =
         ProblemType::new("https://api.zekurix.com/problems/http/not-found");
 
+    pub const METHOD_NOT_ALLOWED: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/http/method-not-allowed");
+
     pub const GATEWAY_TIMEOUT: ProblemType =
         ProblemType::new("https://api.zekurix.com/problems/http/gateway-timeout");
 }
@@ -45,6 +48,7 @@ mod tests {
 
     #[test_case(INTERNAL_SERVER_ERROR, "internal-server-error" ; "internal server error")]
     #[test_case(http::NOT_FOUND, "http/not-found" ; "http not found")]
+    #[test_case(http::METHOD_NOT_ALLOWED, "http/method-not-allowed" ; "http method not allowed")]
     #[test_case(http::GATEWAY_TIMEOUT, "http/gateway-timeout" ; "http gateway timeout")]
     #[test_case(user::NOT_FOUND, "user/not-found" ; "user not found")]
     #[test_case(user::ALREADY_EXISTS, "user/already-exists" ; "user already exists")]

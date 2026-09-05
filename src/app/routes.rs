@@ -4,7 +4,7 @@ use axum::{
     BoxError, Router,
     error_handling::HandleErrorLayer,
     extract::Request,
-    http::{HeaderValue, Uri},
+    http::{HeaderValue, Method, Uri},
     middleware::Next,
     response::Response,
 };
@@ -56,6 +56,10 @@ async fn http_not_found(uri: Uri) -> Error {
     Error::HttpNotFound(uri)
 }
 
+async fn http_method_not_allowed(uri: Uri, method: Method) -> Error {
+    Error::HttpMethodNotAllowed { uri, method }
+}
+
 fn api_v1_router() -> Router<Arc<Application>> {
     Router::new().nest("/users", user::router())
 }
@@ -75,6 +79,7 @@ pub fn router(application: Arc<Application>) -> Router {
                         .timeout(application.settings.server.timeout),
                 ),
         )
+        .method_not_allowed_fallback(http_method_not_allowed)
         .fallback(http_not_found)
         .with_state(application)
 }
