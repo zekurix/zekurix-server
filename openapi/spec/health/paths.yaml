@@ -21,3 +21,6 @@ paths:
             application/json:
               schema:
                 $ref: "./schemas.yaml#/components/schemas/HealthResponse"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
