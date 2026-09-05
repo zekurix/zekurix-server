@@ -1,5 +1,5 @@
 use axum::{
-    http::{StatusCode, Uri},
+    http::{Method, StatusCode, Uri},
     response::{IntoResponse, Response},
 };
 use problem_details::ProblemDetails;
@@ -21,6 +21,9 @@ pub enum Error {
 
     #[error("Resource '{0}' not found.")]
     HttpNotFound(Uri),
+
+    #[error("HTTP method '{method}' not allowed for URI '{uri}'")]
+    HttpMethodNotAllowed { uri: Uri, method: Method },
 
     #[error("Gateway timeout")]
     HttpGatewayTimeout,
@@ -48,6 +51,14 @@ impl Error {
                 .with_title("Resource Not Found")
                 .with_status(StatusCode::NOT_FOUND)
                 .with_detail(format!("Resource '{uri}' was not found.")),
+
+            Self::HttpMethodNotAllowed { uri, method } => ProblemDetails::new()
+                .with_type(problem_type::http::METHOD_NOT_ALLOWED.as_uri())
+                .with_title("Method Not Allowed")
+                .with_status(StatusCode::METHOD_NOT_ALLOWED)
+                .with_detail(format!(
+                    "HTTP method '{method}' not allowed for URI '{uri}'"
+                )),
 
             Self::HttpGatewayTimeout => ProblemDetails::new()
                 .with_type(problem_type::http::GATEWAY_TIMEOUT.as_uri())
@@ -111,6 +122,27 @@ mod tests {
         assert_eq!(
             problem.detail,
             Some("Resource '/invalid/route' was not found.".to_string())
+        );
+    }
+
+    #[test]
+    fn http_method_not_allowed_maps_to_method_not_allowed() {
+        let uri = "/health".parse::<Uri>().unwrap();
+        let method = "POST".parse::<Method>().unwrap();
+
+        let problem = Error::HttpMethodNotAllowed { uri, method }.into_problem_details();
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::METHOD_NOT_ALLOWED.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Method Not Allowed".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::METHOD_NOT_ALLOWED));
+        assert_eq!(
+            problem.detail,
+            Some("HTTP method 'POST' not allowed for URI '/health'".to_string())
         );
     }
 
