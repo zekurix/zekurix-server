@@ -9,3 +9,13 @@ components:
         application/problem+json:
           schema:
             $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
+
+    GatewayTimeout:
+      description: A gateway timeout occurred.
+      headers:
+        X-Request-Id:
+          $ref: "./headers.yaml#/components/headers/X-Request-Id"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "./schemas.yaml#/components/schemas/ErrorResponse"

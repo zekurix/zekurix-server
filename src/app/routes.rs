@@ -1,15 +1,15 @@
 use std::sync::Arc;
-use std::time::Duration;
 
 use axum::{
-    Router,
+    BoxError, Router,
+    error_handling::HandleErrorLayer,
     extract::Request,
-    http::{HeaderValue, StatusCode, Uri},
+    http::{HeaderValue, Uri},
     middleware::Next,
     response::Response,
 };
-use tower::ServiceBuilder;
-use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
+use tower::{ServiceBuilder, timeout::error::Elapsed};
+use tower_http::trace::TraceLayer;
 use uuid::Uuid;
 
 use crate::error::Error;
@@ -43,8 +43,13 @@ pub async fn request_id_middleware(mut request: Request, next: Next) -> Response
     response
 }
 
-fn timeout_layer(timeout: Duration) -> TimeoutLayer {
-    TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, timeout)
+async fn handle_timeout_error(error: BoxError) -> Error {
+    if error.is::<Elapsed>() {
+        Error::HttpGatewayTimeout
+    } else {
+        tracing::error!(%error, "unexpected timeout middleware error");
+        Error::InternalError
+    }
 }
 
 async fn http_not_found(uri: Uri) -> Error {
@@ -64,7 +69,11 @@ pub fn router(application: Arc<Application>) -> Router {
             ServiceBuilder::new()
                 .layer(axum::middleware::from_fn(request_id_middleware))
                 .layer(TraceLayer::new_for_http())
-                .layer(timeout_layer(application.settings.server.timeout)),
+                .layer(
+                    ServiceBuilder::new()
+                        .layer(HandleErrorLayer::new(handle_timeout_error))
+                        .timeout(application.settings.server.timeout),
+                ),
         )
         .fallback(http_not_found)
         .with_state(application)
@@ -73,7 +82,12 @@ pub fn router(application: Arc<Application>) -> Router {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{body::Body, http::Request, routing::get};
+    use axum::{
+        body::Body,
+        http::{Request, StatusCode},
+        routing::get,
+    };
+    use std::time::Duration;
     use tower::ServiceExt;
 
     #[tokio::test]
@@ -82,15 +96,19 @@ mod tests {
             tokio::time::sleep(Duration::from_secs(2)).await;
         };
 
-        let router = Router::new()
-            .route("/slow", get(slow_handler))
-            .layer(timeout_layer(Duration::from_secs(1)));
+        let router = Router::new().route("/slow", get(slow_handler)).layer(
+            ServiceBuilder::new().layer(
+                ServiceBuilder::new()
+                    .layer(HandleErrorLayer::new(handle_timeout_error))
+                    .timeout(Duration::from_secs(1)),
+            ),
+        );
 
         let response = router
             .oneshot(Request::builder().uri("/slow").body(Body::empty()).unwrap())
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::REQUEST_TIMEOUT);
+        assert_eq!(response.status(), StatusCode::GATEWAY_TIMEOUT);
     }
 }

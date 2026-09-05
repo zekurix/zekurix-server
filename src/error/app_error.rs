@@ -22,6 +22,9 @@ pub enum Error {
     #[error("Resource '{0}' not found.")]
     HttpNotFound(Uri),
 
+    #[error("Gateway timeout")]
+    HttpGatewayTimeout,
+
     #[error("setting '{setting}' invalid: {reason}")]
     InvalidSettings { setting: String, reason: String },
 
@@ -45,6 +48,12 @@ impl Error {
                 .with_title("Resource Not Found")
                 .with_status(StatusCode::NOT_FOUND)
                 .with_detail(format!("Resource '{uri}' was not found.")),
+
+            Self::HttpGatewayTimeout => ProblemDetails::new()
+                .with_type(problem_type::http::GATEWAY_TIMEOUT.as_uri())
+                .with_title("Gateway Timeout")
+                .with_status(StatusCode::GATEWAY_TIMEOUT)
+                .with_detail("Gateway timed out."),
 
             Self::UserAlreadyExists(username) => ProblemDetails::new()
                 .with_type(problem_type::user::ALREADY_EXISTS.as_uri())
@@ -103,6 +112,21 @@ mod tests {
             problem.detail,
             Some("Resource '/invalid/route' was not found.".to_string())
         );
+    }
+
+    #[test]
+    fn http_gateway_timeout_maps_to_gateway_timeout() {
+        let problem = Error::HttpGatewayTimeout.into_problem_details();
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::GATEWAY_TIMEOUT.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Gateway Timeout".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::GATEWAY_TIMEOUT));
+        assert_eq!(problem.detail, Some("Gateway timed out.".to_string()));
     }
 
     #[test]
