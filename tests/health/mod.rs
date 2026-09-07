@@ -152,6 +152,24 @@ async fn should_return_problem_details_for_json_bytes_rejection() {
 }
 
 #[tokio::test]
+async fn should_return_problem_details_for_path_rejection() {
+    let app = TestApplication::new().await;
+
+    let response = app.server.get("/api/v1/users/invalid-uuid").await;
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/path/rejection"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::BAD_REQUEST.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
 async fn should_echo_request_id_when_provided() {
     let app = TestApplication::new().await;
     let request_id_request = Uuid::now_v7().to_string();

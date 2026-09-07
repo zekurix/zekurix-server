@@ -209,6 +209,9 @@
               }
             }
           },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
           "404": {
             "description": "User not found.",
             "headers": {

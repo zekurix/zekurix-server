@@ -44,6 +44,13 @@ pub mod json {
         ProblemType::new("https://api.zekurix.com/problems/json/bytes-rejection");
 }
 
+pub mod path {
+    use super::ProblemType;
+
+    pub const REJECTION: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/path/rejection");
+}
+
 pub mod user {
     use super::ProblemType;
 
@@ -70,6 +77,7 @@ mod tests {
     #[test_case(json::SYNTAX_ERROR, "json/syntax-error" ; "json syntax error")]
     #[test_case(json::MISSING_CONTENT_TYPE, "json/missing-content-type" ; "json missing content type")]
     #[test_case(json::BYTES_REJECTION, "json/bytes-rejection" ; "json bytes rejection")]
+    #[test_case(path::REJECTION, "path/rejection" ; "path rejection")]
     #[test_case(user::NOT_FOUND, "user/not-found" ; "user not found")]
     #[test_case(user::ALREADY_EXISTS, "user/already-exists" ; "user already exists")]
     #[test_case(user::INVALID_USERNAME, "user/invalid-username" ; "invalid username")]
