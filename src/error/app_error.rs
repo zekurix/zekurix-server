@@ -1,5 +1,5 @@
 use axum::{
-    extract::rejection::JsonRejection,
+    extract::rejection::{JsonRejection, PathRejection},
     http::{Method, StatusCode, Uri},
     response::{IntoResponse, Response},
 };
@@ -43,6 +43,9 @@ pub enum Error {
 
     #[error("JSON error")]
     Json(#[from] JsonRejection),
+
+    #[error("Path error")]
+    Path(#[from] PathRejection),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -120,6 +123,12 @@ impl Error {
                     .with_detail("An unexpected internal server error occurred."),
             },
 
+            Self::Path(path_rejection) => ProblemDetails::new()
+                .with_type(problem_type::path::REJECTION.as_uri())
+                .with_title("Path rejection")
+                .with_status(path_rejection.status())
+                .with_detail(path_rejection.body_text()),
+
             _ => ProblemDetails::new()
                 .with_type(problem_type::INTERNAL_SERVER_ERROR.as_uri())
                 .with_title("Internal Server Error")
@@ -140,7 +149,7 @@ mod tests {
     use super::*;
     use axum::{
         body::Body,
-        extract::{FromRequest, Json},
+        extract::{FromRequest, Json, rejection::MissingPathParams},
         http::Request,
     };
     use problem_details;
@@ -308,6 +317,24 @@ mod tests {
             Some("JSON rejection: bytes rejection".to_string())
         );
         assert_eq!(problem.status, Some(StatusCode::BAD_REQUEST));
+        assert!(problem.detail.is_some_and(|s| !s.is_empty()));
+    }
+
+    #[test]
+    fn path_rejection_maps_to_bad_request() {
+        let problem = Error::Path(PathRejection::MissingPathParams(
+            MissingPathParams::default(),
+        ))
+        .into_problem_details();
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::path::REJECTION.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Path rejection".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::INTERNAL_SERVER_ERROR));
         assert!(problem.detail.is_some_and(|s| !s.is_empty()));
     }
 

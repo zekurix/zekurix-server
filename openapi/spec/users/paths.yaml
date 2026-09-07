@@ -96,6 +96,9 @@ paths:
               schema:
                 $ref: "./schemas.yaml#/components/schemas/UserResponse"
 
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
         "404":
           description: User not found.
           headers:

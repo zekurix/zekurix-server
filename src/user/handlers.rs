@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::State,
     http::{HeaderName, StatusCode, header},
     response::AppendHeaders,
 };
@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::Application;
 use crate::app::api_json::ApiJson;
+use crate::app::api_path::ApiPath;
 use crate::error::Result;
 
 use super::{User, UserId, Username, repository::UserRepository};
@@ -36,7 +37,7 @@ impl From<User> for UserResponse {
 
 pub async fn get_user(
     State(application): State<Arc<Application>>,
-    Path(id): Path<UserId>,
+    ApiPath(id): ApiPath<UserId>,
 ) -> Result<Json<UserResponse>> {
     let user = application.repositories.user.find(id).await?;
 
