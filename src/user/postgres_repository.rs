@@ -25,7 +25,7 @@ impl UserRepository for PostgresUserRepository {
             .await
             .map_err(|err| {
                 error!(error = ?err, "Database error");
-                Error::InternalError
+                Error::InternalError(err.into())
             })?
             .ok_or(Error::UserNotFound(id))
     }
@@ -40,7 +40,7 @@ impl UserRepository for PostgresUserRepository {
         .await
         .map_err(|err| {
             error!(error = ?err, "Database error");
-            Error::InternalError
+            Error::InternalError(err.into())
         })?;
 
         if result.rows_affected() == 0 {

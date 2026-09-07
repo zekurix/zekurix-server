@@ -48,7 +48,7 @@ async fn handle_timeout_error(error: BoxError) -> Error {
         Error::HttpGatewayTimeout
     } else {
         tracing::error!(%error, "unexpected timeout middleware error");
-        Error::InternalError
+        Error::InternalError(anyhow::anyhow!("unexpected timeout middleware error"))
     }
 }
 
