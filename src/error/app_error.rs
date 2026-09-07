@@ -1,4 +1,5 @@
 use axum::{
+    extract::rejection::JsonRejection,
     http::{Method, StatusCode, Uri},
     response::{IntoResponse, Response},
 };
@@ -39,6 +40,9 @@ pub enum Error {
 
     #[error("username '{0}' invalid")]
     InvalidUsername(String),
+
+    #[error("JSON error")]
+    Json(#[from] JsonRejection),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -84,6 +88,38 @@ impl Error {
                 .with_status(StatusCode::UNPROCESSABLE_ENTITY)
                 .with_detail(format!("Username '{username}' is invalid.")),
 
+            Self::Json(json_rejection) => match json_rejection {
+                JsonRejection::JsonDataError(_) => ProblemDetails::new()
+                    .with_type(problem_type::json::DATA_ERROR.as_uri())
+                    .with_title("JSON rejection: data error")
+                    .with_status(json_rejection.status())
+                    .with_detail(json_rejection.body_text()),
+
+                JsonRejection::JsonSyntaxError(_) => ProblemDetails::new()
+                    .with_type(problem_type::json::SYNTAX_ERROR.as_uri())
+                    .with_title("JSON rejection: syntax error")
+                    .with_status(json_rejection.status())
+                    .with_detail(json_rejection.body_text()),
+
+                JsonRejection::MissingJsonContentType(_) => ProblemDetails::new()
+                    .with_type(problem_type::json::MISSING_CONTENT_TYPE.as_uri())
+                    .with_title("JSON rejection: missing content type")
+                    .with_status(json_rejection.status())
+                    .with_detail(json_rejection.body_text()),
+
+                JsonRejection::BytesRejection(_) => ProblemDetails::new()
+                    .with_type(problem_type::json::BYTES_REJECTION.as_uri())
+                    .with_title("JSON rejection: bytes rejection")
+                    .with_status(json_rejection.status())
+                    .with_detail(json_rejection.body_text()),
+
+                _ => ProblemDetails::new()
+                    .with_type(problem_type::INTERNAL_SERVER_ERROR.as_uri())
+                    .with_title("Internal Server Error")
+                    .with_status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .with_detail("An unexpected internal server error occurred."),
+            },
+
             _ => ProblemDetails::new()
                 .with_type(problem_type::INTERNAL_SERVER_ERROR.as_uri())
                 .with_title("Internal Server Error")
@@ -102,6 +138,11 @@ impl IntoResponse for Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::{
+        body::Body,
+        extract::{FromRequest, Json},
+        http::Request,
+    };
     use problem_details;
     use test_case::test_case;
 
@@ -159,6 +200,115 @@ mod tests {
         assert_eq!(problem.title, Some("Gateway Timeout".to_string()));
         assert_eq!(problem.status, Some(StatusCode::GATEWAY_TIMEOUT));
         assert_eq!(problem.detail, Some("Gateway timed out.".to_string()));
+    }
+
+    #[tokio::test]
+    async fn json_data_error_maps_to_unprocessable_entity() {
+        let rejection = Json::<String>::from_request(
+            Request::builder()
+                .header("content-type", "application/json")
+                .body(Body::from("42"))
+                .unwrap(),
+            &(),
+        )
+        .await
+        .unwrap_err();
+        let err = Error::from(rejection);
+        let problem = err.into_problem_details();
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::json::DATA_ERROR.as_uri()
+            ))
+        );
+        assert_eq!(
+            problem.title,
+            Some("JSON rejection: data error".to_string())
+        );
+        assert_eq!(problem.status, Some(StatusCode::UNPROCESSABLE_ENTITY));
+        assert!(problem.detail.is_some_and(|s| !s.is_empty()));
+    }
+
+    #[tokio::test]
+    async fn json_syntax_error_maps_to_bad_request() {
+        let rejection = Json::<String>::from_request(
+            Request::builder()
+                .header("content-type", "application/json")
+                .body(Body::from("not a json"))
+                .unwrap(),
+            &(),
+        )
+        .await
+        .unwrap_err();
+        let app_err = Error::from(rejection);
+        let problem = app_err.into_problem_details();
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::json::SYNTAX_ERROR.as_uri()
+            ))
+        );
+        assert_eq!(
+            problem.title,
+            Some("JSON rejection: syntax error".to_string())
+        );
+        assert_eq!(problem.status, Some(StatusCode::BAD_REQUEST));
+        assert!(problem.detail.is_some_and(|s| !s.is_empty()));
+    }
+
+    #[test]
+    fn json_missing_content_type_maps_to_unsupported_media_type() {
+        let jr = JsonRejection::MissingJsonContentType(Default::default());
+        let app_err = Error::from(jr);
+        let problem = app_err.into_problem_details();
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::json::MISSING_CONTENT_TYPE.as_uri()
+            ))
+        );
+        assert_eq!(
+            problem.title,
+            Some("JSON rejection: missing content type".to_string())
+        );
+        assert_eq!(problem.status, Some(StatusCode::UNSUPPORTED_MEDIA_TYPE));
+        assert!(problem.detail.is_some_and(|s| !s.is_empty()));
+    }
+
+    #[tokio::test]
+    async fn json_bytes_rejection_maps_to_bad_request() {
+        let rejection = Json::<String>::from_request(
+            Request::builder()
+                .header("content-type", "application/json")
+                .body(Body::from_stream(tokio_stream::once(Err::<
+                    axum::body::Bytes,
+                    _,
+                >(
+                    std::io::Error::other("body read failed"),
+                ))))
+                .unwrap(),
+            &(),
+        )
+        .await
+        .unwrap_err();
+        let app_err = Error::from(rejection);
+        let problem = app_err.into_problem_details();
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::json::BYTES_REJECTION.as_uri()
+            ))
+        );
+        assert_eq!(
+            problem.title,
+            Some("JSON rejection: bytes rejection".to_string())
+        );
+        assert_eq!(problem.status, Some(StatusCode::BAD_REQUEST));
+        assert!(problem.detail.is_some_and(|s| !s.is_empty()));
     }
 
     #[test]

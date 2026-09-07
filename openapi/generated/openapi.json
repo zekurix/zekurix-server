@@ -140,6 +140,9 @@
               }
             }
           },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
           "409": {
             "description": "A user with this username already exists.",
             "headers": {
@@ -155,20 +158,14 @@
               }
             }
           },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
           "422": {
-            "description": "Request validation failed.",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/X-Request-Id"
-              }
-            },
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+            "$ref": "#/components/responses/UnprocessableEntity"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
@@ -393,6 +390,66 @@
     "responses": {
       "GatewayTimeout": {
         "description": "A gateway timeout occurred.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "The request syntax is malformed and cannot be processed.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "The request payload exceeds the maximum accepted size.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "The request media type is not supported.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "The request is syntactically valid but failed validation.",
         "headers": {
           "X-Request-Id": {
             "$ref": "#/components/headers/X-Request-Id"
