@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, de::Error as _};
 
 use crate::error::{Error, Result};
 
@@ -46,7 +46,7 @@ impl<'de> Deserialize<'de> for Username {
     {
         let value = String::deserialize(deserializer)?;
 
-        value.parse::<Username>().map_err(serde::de::Error::custom)
+        value.parse::<Username>().map_err(D::Error::custom)
     }
 }
 
