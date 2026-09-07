@@ -12,7 +12,7 @@ use crate::user::{UserId, Username};
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("internal error")]
-    InternalError,
+    InternalError(#[source] anyhow::Error),
 
     #[error("environement variable '{0}' missing")]
     MissingEnvironmentVariable(String),
@@ -395,7 +395,7 @@ mod tests {
         );
     }
 
-    #[test_case(Error::InternalError ; "internal server error")]
+    #[test_case(Error::InternalError(anyhow::anyhow!("error")) ; "internal server error")]
     #[test_case(Error::MissingEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "missing environment variable")]
     #[test_case(Error::InvalidEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "invalid environment variable")]
     #[test_case(Error::InvalidSettings {
