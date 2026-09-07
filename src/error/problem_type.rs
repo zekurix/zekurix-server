@@ -28,6 +28,22 @@ pub mod http {
         ProblemType::new("https://api.zekurix.com/problems/http/gateway-timeout");
 }
 
+pub mod json {
+    use super::ProblemType;
+
+    pub const DATA_ERROR: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/json/data-error");
+
+    pub const SYNTAX_ERROR: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/json/syntax-error");
+
+    pub const MISSING_CONTENT_TYPE: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/json/missing-content-type");
+
+    pub const BYTES_REJECTION: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/json/bytes-rejection");
+}
+
 pub mod user {
     use super::ProblemType;
 
@@ -50,6 +66,10 @@ mod tests {
     #[test_case(http::NOT_FOUND, "http/not-found" ; "http not found")]
     #[test_case(http::METHOD_NOT_ALLOWED, "http/method-not-allowed" ; "http method not allowed")]
     #[test_case(http::GATEWAY_TIMEOUT, "http/gateway-timeout" ; "http gateway timeout")]
+    #[test_case(json::DATA_ERROR, "json/data-error" ; "json data error")]
+    #[test_case(json::SYNTAX_ERROR, "json/syntax-error" ; "json syntax error")]
+    #[test_case(json::MISSING_CONTENT_TYPE, "json/missing-content-type" ; "json missing content type")]
+    #[test_case(json::BYTES_REJECTION, "json/bytes-rejection" ; "json bytes rejection")]
     #[test_case(user::NOT_FOUND, "user/not-found" ; "user not found")]
     #[test_case(user::ALREADY_EXISTS, "user/already-exists" ; "user already exists")]
     #[test_case(user::INVALID_USERNAME, "user/invalid-username" ; "invalid username")]

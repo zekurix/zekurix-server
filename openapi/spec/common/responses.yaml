@@ -1,5 +1,45 @@
 components:
   responses:
+    BadRequest:
+      description: The request syntax is malformed and cannot be processed.
+      headers:
+        X-Request-Id:
+          $ref: "./headers.yaml#/components/headers/X-Request-Id"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
+
+    PayloadTooLarge:
+      description: The request payload exceeds the maximum accepted size.
+      headers:
+        X-Request-Id:
+          $ref: "./headers.yaml#/components/headers/X-Request-Id"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
+
+    UnsupportedMediaType:
+      description: The request media type is not supported.
+      headers:
+        X-Request-Id:
+          $ref: "./headers.yaml#/components/headers/X-Request-Id"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
+    
+    UnprocessableEntity:
+      description: The request is syntactically valid but failed validation.
+      headers:
+        X-Request-Id:
+          $ref: "./headers.yaml#/components/headers/X-Request-Id"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
+
     InternalServerError:
       description: An unexpected internal server error occurred.
       headers:

@@ -9,6 +9,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::Application;
+use crate::app::api_json::ApiJson;
 use crate::error::Result;
 
 use super::{User, UserId, Username, repository::UserRepository};
@@ -44,7 +45,7 @@ pub async fn get_user(
 
 pub async fn create_user(
     State(application): State<Arc<Application>>,
-    Json(params): Json<CreateUserRequest>,
+    ApiJson(params): ApiJson<CreateUserRequest>,
 ) -> Result<(
     StatusCode,
     AppendHeaders<[(HeaderName, String); 1]>,

@@ -3081,6 +3081,7 @@ dependencies = [
  "test-case",
  "thiserror",
  "tokio",
+ "tokio-stream",
  "tower",
  "tower-http",
  "tracing",
