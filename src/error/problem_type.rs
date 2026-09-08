@@ -59,9 +59,6 @@ pub mod user {
 
     pub const ALREADY_EXISTS: ProblemType =
         ProblemType::new("https://api.zekurix.com/problems/user/already-exists");
-
-    pub const INVALID_USERNAME: ProblemType =
-        ProblemType::new("https://api.zekurix.com/problems/user/invalid-username");
 }
 
 #[cfg(test)]
@@ -80,7 +77,6 @@ mod tests {
     #[test_case(path::REJECTION, "path/rejection" ; "path rejection")]
     #[test_case(user::NOT_FOUND, "user/not-found" ; "user not found")]
     #[test_case(user::ALREADY_EXISTS, "user/already-exists" ; "user already exists")]
-    #[test_case(user::INVALID_USERNAME, "user/invalid-username" ; "invalid username")]
     fn internal_server_error_uri(problem_type: ProblemType, expected_uri: &str) {
         let uri = format!("https://api.zekurix.com/problems/{expected_uri}");
         assert_eq!(problem_type.as_uri(), uri.parse::<Uri>().unwrap());
