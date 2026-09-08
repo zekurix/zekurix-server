@@ -4,6 +4,7 @@ pub mod database;
 pub mod error;
 pub mod health;
 pub mod openapi;
+pub mod router;
 pub mod secrets;
 pub mod settings;
 pub mod telemetry;

@@ -2,7 +2,7 @@ use axum_test::TestServer;
 use dotenv::dotenv;
 
 use zekurix_server::Application;
-use zekurix_server::app::routes;
+use zekurix_server::router::routes;
 use zekurix_server::secrets::Secrets;
 
 use super::temp_database::TempDatabase;

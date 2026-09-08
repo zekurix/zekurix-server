@@ -9,9 +9,8 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::Application;
-use crate::app::api_json::ApiJson;
-use crate::app::api_path::ApiPath;
 use crate::error::Result;
+use crate::router::{ApiJson, ApiPath};
 
 use super::{User, UserId, Username, repository::UserRepository};
 
