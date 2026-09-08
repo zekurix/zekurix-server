@@ -50,16 +50,24 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-impl Error {
-    fn into_problem_details(self) -> ProblemDetails {
-        match self {
-            Self::HttpNotFound(uri) => ProblemDetails::new()
+fn internal_server_error() -> ProblemDetails {
+    ProblemDetails::new()
+        .with_type(problem_type::INTERNAL_SERVER_ERROR.as_uri())
+        .with_title("Internal Server Error")
+        .with_status(StatusCode::INTERNAL_SERVER_ERROR)
+        .with_detail("An unexpected internal server error occurred.")
+}
+
+impl From<Error> for ProblemDetails {
+    fn from(error: Error) -> Self {
+        match error {
+            Error::HttpNotFound(uri) => ProblemDetails::new()
                 .with_type(problem_type::http::NOT_FOUND.as_uri())
                 .with_title("Resource Not Found")
                 .with_status(StatusCode::NOT_FOUND)
                 .with_detail(format!("Resource '{uri}' was not found.")),
 
-            Self::HttpMethodNotAllowed { uri, method } => ProblemDetails::new()
+            Error::HttpMethodNotAllowed { uri, method } => ProblemDetails::new()
                 .with_type(problem_type::http::METHOD_NOT_ALLOWED.as_uri())
                 .with_title("Method Not Allowed")
                 .with_status(StatusCode::METHOD_NOT_ALLOWED)
@@ -67,80 +75,66 @@ impl Error {
                     "HTTP method '{method}' not allowed for URI '{uri}'"
                 )),
 
-            Self::HttpGatewayTimeout => ProblemDetails::new()
+            Error::HttpGatewayTimeout => ProblemDetails::new()
                 .with_type(problem_type::http::GATEWAY_TIMEOUT.as_uri())
                 .with_title("Gateway Timeout")
                 .with_status(StatusCode::GATEWAY_TIMEOUT)
                 .with_detail("Gateway timed out."),
 
-            Self::UserAlreadyExists(username) => ProblemDetails::new()
+            Error::UserAlreadyExists(username) => ProblemDetails::new()
                 .with_type(problem_type::user::ALREADY_EXISTS.as_uri())
                 .with_title("User Already Exists")
                 .with_status(StatusCode::CONFLICT)
                 .with_detail(format!("User '{username}' already exists.")),
 
-            Self::UserNotFound(id) => ProblemDetails::new()
+            Error::UserNotFound(id) => ProblemDetails::new()
                 .with_type(problem_type::user::NOT_FOUND.as_uri())
                 .with_title("User Not Found")
                 .with_status(StatusCode::NOT_FOUND)
                 .with_detail(format!("User '{id}' was not found.")),
 
-            Self::InvalidUsername(username) => ProblemDetails::new()
-                .with_type(problem_type::user::INVALID_USERNAME.as_uri())
-                .with_title("Invalid Username")
-                .with_status(StatusCode::UNPROCESSABLE_ENTITY)
-                .with_detail(format!("Username '{username}' is invalid.")),
-
-            Self::Json(json_rejection) => match json_rejection {
+            Error::Json(rejection) => match rejection {
                 JsonRejection::JsonDataError(_) => ProblemDetails::new()
                     .with_type(problem_type::json::DATA_ERROR.as_uri())
                     .with_title("JSON rejection: data error")
-                    .with_status(json_rejection.status())
-                    .with_detail(json_rejection.body_text()),
+                    .with_status(rejection.status())
+                    .with_detail(rejection.body_text()),
 
                 JsonRejection::JsonSyntaxError(_) => ProblemDetails::new()
                     .with_type(problem_type::json::SYNTAX_ERROR.as_uri())
                     .with_title("JSON rejection: syntax error")
-                    .with_status(json_rejection.status())
-                    .with_detail(json_rejection.body_text()),
+                    .with_status(rejection.status())
+                    .with_detail(rejection.body_text()),
 
                 JsonRejection::MissingJsonContentType(_) => ProblemDetails::new()
                     .with_type(problem_type::json::MISSING_CONTENT_TYPE.as_uri())
                     .with_title("JSON rejection: missing content type")
-                    .with_status(json_rejection.status())
-                    .with_detail(json_rejection.body_text()),
+                    .with_status(rejection.status())
+                    .with_detail(rejection.body_text()),
 
                 JsonRejection::BytesRejection(_) => ProblemDetails::new()
                     .with_type(problem_type::json::BYTES_REJECTION.as_uri())
                     .with_title("JSON rejection: bytes rejection")
-                    .with_status(json_rejection.status())
-                    .with_detail(json_rejection.body_text()),
+                    .with_status(rejection.status())
+                    .with_detail(rejection.body_text()),
 
-                _ => ProblemDetails::new()
-                    .with_type(problem_type::INTERNAL_SERVER_ERROR.as_uri())
-                    .with_title("Internal Server Error")
-                    .with_status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .with_detail("An unexpected internal server error occurred."),
+                _ => internal_server_error(),
             },
 
-            Self::Path(path_rejection) => ProblemDetails::new()
+            Error::Path(rejection) => ProblemDetails::new()
                 .with_type(problem_type::path::REJECTION.as_uri())
                 .with_title("Path rejection")
-                .with_status(path_rejection.status())
-                .with_detail(path_rejection.body_text()),
+                .with_status(rejection.status())
+                .with_detail(rejection.body_text()),
 
-            _ => ProblemDetails::new()
-                .with_type(problem_type::INTERNAL_SERVER_ERROR.as_uri())
-                .with_title("Internal Server Error")
-                .with_status(StatusCode::INTERNAL_SERVER_ERROR)
-                .with_detail("An unexpected internal server error occurred."),
+            _ => internal_server_error(),
         }
     }
 }
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        self.into_problem_details().into_response()
+        ProblemDetails::from(self).into_response()
     }
 }
 
@@ -159,7 +153,7 @@ mod tests {
     fn http_not_found_maps_to_not_found() {
         let uri = "/invalid/route".parse::<Uri>().unwrap();
         let error = Error::HttpNotFound(uri);
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -181,7 +175,7 @@ mod tests {
             uri: "/health".parse::<Uri>().unwrap(),
             method: "POST".parse::<Method>().unwrap(),
         };
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -200,7 +194,7 @@ mod tests {
     #[test]
     fn http_gateway_timeout_maps_to_gateway_timeout() {
         let error = Error::HttpGatewayTimeout;
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -225,7 +219,7 @@ mod tests {
         .await
         .unwrap_err();
         let error = Error::from(rejection);
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -253,7 +247,7 @@ mod tests {
         .await
         .unwrap_err();
         let error = Error::from(rejection);
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -273,7 +267,7 @@ mod tests {
     fn json_missing_content_type_maps_to_unsupported_media_type() {
         let rejection = JsonRejection::MissingJsonContentType(Default::default());
         let error = Error::from(rejection);
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -306,7 +300,7 @@ mod tests {
         .await
         .unwrap_err();
         let error = Error::from(rejection);
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -326,7 +320,7 @@ mod tests {
     fn path_rejection_maps_to_bad_request() {
         let rejection = PathRejection::MissingPathParams(MissingPathParams::default());
         let error = Error::Path(rejection);
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -343,7 +337,7 @@ mod tests {
     fn user_already_exists_maps_to_conflict() {
         let username = Username::new("Alice").unwrap();
         let error = Error::UserAlreadyExists(username);
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -363,7 +357,7 @@ mod tests {
     fn user_not_found_maps_to_not_found() {
         let id = UserId::new();
         let error = Error::UserNotFound(id);
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
@@ -376,27 +370,8 @@ mod tests {
         assert_eq!(problem.detail, Some(format!("User '{id}' was not found.")));
     }
 
-    #[test]
-    fn invalid_username_maps_to_conflict() {
-        let username = "invalid username".to_owned();
-
-        let problem = Error::InvalidUsername(username).into_problem_details();
-
-        assert_eq!(
-            problem.r#type,
-            Some(problem_details::ProblemType::from(
-                problem_type::user::INVALID_USERNAME.as_uri()
-            ))
-        );
-        assert_eq!(problem.title, Some("Invalid Username".to_string()));
-        assert_eq!(problem.status, Some(StatusCode::UNPROCESSABLE_ENTITY));
-        assert_eq!(
-            problem.detail,
-            Some("Username 'invalid username' is invalid.".to_string())
-        );
-    }
-
     #[test_case(Error::InternalError(anyhow::anyhow!("error")) ; "internal server error")]
+    #[test_case(Error::InvalidUsername("Alice!".to_owned()) ; "invalid user name")]
     #[test_case(Error::MissingEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "missing environment variable")]
     #[test_case(Error::InvalidEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "invalid environment variable")]
     #[test_case(Error::InvalidSettings {
@@ -404,7 +379,7 @@ mod tests {
             reason: "reason".to_owned(),
         } ; "invalid settings")]
     fn other_error_maps_to_internal_server_error(error: Error) {
-        let problem = error.into_problem_details();
+        let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
