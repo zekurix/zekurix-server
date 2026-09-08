@@ -17,7 +17,7 @@ use crate::health;
 use crate::openapi;
 use crate::user;
 
-use super::Application;
+use crate::Application;
 
 pub async fn request_id_middleware(mut request: Request, next: Next) -> Response {
     let request_id = request

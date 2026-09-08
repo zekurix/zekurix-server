@@ -5,11 +5,11 @@ use tokio::signal;
 use tracing::{debug, info};
 
 use crate::database::postgres::PostgresDatabase;
+use crate::router::routes;
 use crate::secrets::Secrets;
 use crate::settings::Settings;
 
 use super::repositories::Repositories;
-use super::routes;
 
 async fn shutdown_signal() {
     let ctrl_c = async {
