@@ -3,14 +3,15 @@ use std::sync::Arc;
 use axum::{
     BoxError, Router,
     error_handling::HandleErrorLayer,
-    extract::Request,
-    http::{HeaderValue, Method, Uri},
-    middleware::Next,
-    response::Response,
+    http::{Method, Request, Uri},
 };
 use tower::{ServiceBuilder, timeout::error::Elapsed};
-use tower_http::trace::TraceLayer;
-use uuid::Uuid;
+use tower_http::{
+    ServiceBuilderExt,
+    request_id::{MakeRequestUuid, RequestId},
+    trace::TraceLayer,
+};
+use tracing::{info_span, warn};
 
 use crate::error::Error;
 use crate::health;
@@ -18,30 +19,6 @@ use crate::openapi;
 use crate::user;
 
 use crate::Application;
-
-pub async fn request_id_middleware(mut request: Request, next: Next) -> Response {
-    let request_id = request
-        .headers()
-        .get("x-request-id")
-        .filter(|value| {
-            value
-                .to_str()
-                .ok()
-                .and_then(|value| Uuid::parse_str(value).ok())
-                .is_some()
-        })
-        .cloned()
-        .unwrap_or_else(|| {
-            HeaderValue::from_str(&Uuid::now_v7().to_string())
-                .expect("UUID is always a valid header value")
-        });
-    request.extensions_mut().insert(request_id.clone());
-
-    let mut response = next.run(request).await;
-
-    response.headers_mut().insert("x-request-id", request_id);
-    response
-}
 
 async fn handle_timeout_error(error: BoxError) -> Error {
     if error.is::<Elapsed>() {
@@ -71,13 +48,38 @@ pub fn router(application: Arc<Application>) -> Router {
         .nest("/api/v1", api_v1_router())
         .layer(
             ServiceBuilder::new()
-                .layer(axum::middleware::from_fn(request_id_middleware))
-                .layer(TraceLayer::new_for_http())
+                .set_x_request_id(MakeRequestUuid)
+                .layer(
+                    TraceLayer::new_for_http().make_span_with(|request: &Request<_>| {
+                        let request_id = request
+                            .extensions()
+                            .get::<RequestId>()
+                            .and_then(|id| id.header_value().to_str().ok())
+                            .unwrap_or_else(|| {
+                                warn!("failed to extract request ID from extensions");
+                                "unknown"
+                            });
+
+                        let request_id_truncated = if request_id.len() <= 128 {
+                            request_id
+                        } else {
+                            &request_id[..request_id.floor_char_boundary(128)]
+                        };
+
+                        info_span!(
+                            "request",
+                            method = %request.method(),
+                            uri = %request.uri(),
+                            request_id = %request_id_truncated,
+                        )
+                    }),
+                )
                 .layer(
                     ServiceBuilder::new()
                         .layer(HandleErrorLayer::new(handle_timeout_error))
                         .timeout(application.settings.server.timeout),
-                ),
+                )
+                .propagate_x_request_id(),
         )
         .method_not_allowed_fallback(http_method_not_allowed)
         .fallback(http_not_found)

@@ -25,32 +25,6 @@ async fn should_echo_request_id_when_provided() {
 }
 
 #[tokio::test]
-async fn should_generate_request_id_when_provided_id_is_invalid() {
-    let app = TestApplication::new().await;
-
-    let response = app
-        .server
-        .get("/health")
-        .add_header("X-Request-Id", "not-a-uuid")
-        .await;
-
-    response.assert_status_ok();
-
-    let request_id = response
-        .headers()
-        .get("X-Request-Id")
-        .unwrap()
-        .to_str()
-        .unwrap();
-
-    assert_ne!(request_id, "not-a-uuid");
-    assert!(
-        Uuid::parse_str(request_id).is_ok(),
-        "response request ID should be a valid UUID"
-    );
-}
-
-#[tokio::test]
 async fn should_generate_request_id_when_missing() {
     let app = TestApplication::new().await;
 
