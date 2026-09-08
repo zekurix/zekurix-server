@@ -158,8 +158,8 @@ mod tests {
     #[test]
     fn http_not_found_maps_to_not_found() {
         let uri = "/invalid/route".parse::<Uri>().unwrap();
-
-        let problem = Error::HttpNotFound(uri).into_problem_details();
+        let error = Error::HttpNotFound(uri);
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -177,10 +177,11 @@ mod tests {
 
     #[test]
     fn http_method_not_allowed_maps_to_method_not_allowed() {
-        let uri = "/health".parse::<Uri>().unwrap();
-        let method = "POST".parse::<Method>().unwrap();
-
-        let problem = Error::HttpMethodNotAllowed { uri, method }.into_problem_details();
+        let error = Error::HttpMethodNotAllowed {
+            uri: "/health".parse::<Uri>().unwrap(),
+            method: "POST".parse::<Method>().unwrap(),
+        };
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -198,7 +199,8 @@ mod tests {
 
     #[test]
     fn http_gateway_timeout_maps_to_gateway_timeout() {
-        let problem = Error::HttpGatewayTimeout.into_problem_details();
+        let error = Error::HttpGatewayTimeout;
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -222,8 +224,8 @@ mod tests {
         )
         .await
         .unwrap_err();
-        let err = Error::from(rejection);
-        let problem = err.into_problem_details();
+        let error = Error::from(rejection);
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -250,8 +252,8 @@ mod tests {
         )
         .await
         .unwrap_err();
-        let app_err = Error::from(rejection);
-        let problem = app_err.into_problem_details();
+        let error = Error::from(rejection);
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -269,9 +271,9 @@ mod tests {
 
     #[test]
     fn json_missing_content_type_maps_to_unsupported_media_type() {
-        let jr = JsonRejection::MissingJsonContentType(Default::default());
-        let app_err = Error::from(jr);
-        let problem = app_err.into_problem_details();
+        let rejection = JsonRejection::MissingJsonContentType(Default::default());
+        let error = Error::from(rejection);
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -303,8 +305,8 @@ mod tests {
         )
         .await
         .unwrap_err();
-        let app_err = Error::from(rejection);
-        let problem = app_err.into_problem_details();
+        let error = Error::from(rejection);
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -322,10 +324,9 @@ mod tests {
 
     #[test]
     fn path_rejection_maps_to_bad_request() {
-        let problem = Error::Path(PathRejection::MissingPathParams(
-            MissingPathParams::default(),
-        ))
-        .into_problem_details();
+        let rejection = PathRejection::MissingPathParams(MissingPathParams::default());
+        let error = Error::Path(rejection);
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -341,8 +342,8 @@ mod tests {
     #[test]
     fn user_already_exists_maps_to_conflict() {
         let username = Username::new("Alice").unwrap();
-
-        let problem = Error::UserAlreadyExists(username).into_problem_details();
+        let error = Error::UserAlreadyExists(username);
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
@@ -361,8 +362,8 @@ mod tests {
     #[test]
     fn user_not_found_maps_to_not_found() {
         let id = UserId::new();
-
-        let problem = Error::UserNotFound(id).into_problem_details();
+        let error = Error::UserNotFound(id);
+        let problem = error.into_problem_details();
 
         assert_eq!(
             problem.r#type,
