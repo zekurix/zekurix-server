@@ -7,4 +7,3 @@ components:
       required: false
       schema:
         type: string
-        format: uuid

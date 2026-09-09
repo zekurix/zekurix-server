@@ -252,8 +252,7 @@
         "description": "Optional request correlation identifier. If omitted, the server generates one.",
         "required": false,
         "schema": {
-          "type": "string",
-          "format": "uuid"
+          "type": "string"
         }
       },
       "UserId": {
@@ -270,8 +269,7 @@
       "X-Request-Id": {
         "description": "Request correlation identifier.",
         "schema": {
-          "type": "string",
-          "format": "uuid"
+          "type": "string"
         }
       }
     },

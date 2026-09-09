@@ -8,6 +8,7 @@ use crate::common::ErrorResponse;
 use crate::common::TestApplication;
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct UserResponse {
     id: UserId,
     username: String,
@@ -56,6 +57,44 @@ async fn should_reject_invalid_user(username: &str) {
         .await;
 
     response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/json/data-error"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
+async fn should_reject_unknown_fields() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({
+                    "username": "Alice",
+                    "unknown_field": 42,
+                    }))
+    .await;
+
+    response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/json/data-error"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
+    assert!(!body.detail.is_empty());
 }
 
 #[tokio::test]
