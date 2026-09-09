@@ -3,6 +3,7 @@ use serde::Deserialize;
 use crate::common::TestApplication;
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct HealthResponse {
     status: String,
     version: String,

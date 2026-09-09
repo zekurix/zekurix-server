@@ -15,6 +15,7 @@ use crate::router::{ApiJson, ApiPath};
 use super::{User, UserId, Username, repository::UserRepository};
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CreateUserRequest {
     username: Username,
 }
