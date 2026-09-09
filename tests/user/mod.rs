@@ -78,10 +78,10 @@ async fn should_reject_unknown_fields() {
         .server
         .post("/api/v1/users")
         .json(&serde_json::json!({
-                    "username": "Alice",
-                    "unknown_field": 42,
-                    }))
-    .await;
+        "username": "Alice",
+        "unknown_field": 42,
+        }))
+        .await;
 
     response.assert_status_unprocessable_entity();
 
