@@ -5,7 +5,6 @@ use axum::{
 };
 use problem_details::ProblemDetails;
 use thiserror::Error;
-use tracing::debug;
 
 use super::problem_type;
 use crate::user::{UserId, Username};
@@ -135,9 +134,7 @@ impl From<Error> for ProblemDetails {
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        let problem = ProblemDetails::from(self);
-        debug!(?problem);
-        problem.into_response()
+        ProblemDetails::from(self).into_response()
     }
 }
 
