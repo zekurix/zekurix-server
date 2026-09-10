@@ -20,7 +20,7 @@ servers:
         default: localhost
         description: Server hostname.
       port:
-        default: "8080"
+        default: "3000"
         description: Server port.
 
 tags:

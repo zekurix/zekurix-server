@@ -17,8 +17,8 @@ format = "full"
 host = "127.0.0.1"
 # Network port used by the HTTP server.
 # Format: unsigned integer between 0 and 65535.
-# Default value: 8080.
-port = 8080
+# Default value: 3000.
+port = 3000
 # Maximum time allowed to process a server request.
 # Format: human-readable duration, for example "10s", "500ms" or "1m".
 # Default value: "10s".

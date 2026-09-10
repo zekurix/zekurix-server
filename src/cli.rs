@@ -92,26 +92,26 @@ mod tests {
 
     #[test]
     fn should_parse_bind_ipv4_address() {
-        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "192.168.1.1:8080"]).unwrap();
-        assert_eq!(cli.bind, Some("192.168.1.1:8080".parse().unwrap()));
+        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "192.168.1.1:3000"]).unwrap();
+        assert_eq!(cli.bind, Some("192.168.1.1:3000".parse().unwrap()));
     }
 
     #[test]
     fn should_parse_bind_loopback() {
-        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "[::1]:8080"]).unwrap();
-        assert_eq!(cli.bind, Some("[::1]:8080".parse().unwrap()));
+        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "[::1]:3000"]).unwrap();
+        assert_eq!(cli.bind, Some("[::1]:3000".parse().unwrap()));
     }
 
     #[test]
     fn should_parse_bind_localhost() {
-        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "127.0.0.1:8080"]).unwrap();
-        assert_eq!(cli.bind, Some("127.0.0.1:8080".parse().unwrap()));
+        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "127.0.0.1:3000"]).unwrap();
+        assert_eq!(cli.bind, Some("127.0.0.1:3000".parse().unwrap()));
     }
 
     #[test]
     fn should_parse_bind_ipv6_address() {
-        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "[2001:db8::1]:8080"]).unwrap();
-        assert_eq!(cli.bind, Some("[2001:db8::1]:8080".parse().unwrap()));
+        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "[2001:db8::1]:3000"]).unwrap();
+        assert_eq!(cli.bind, Some("[2001:db8::1]:3000".parse().unwrap()));
     }
 
     #[test]
