@@ -19,7 +19,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             host: "127.0.0.1".to_string(),
-            port: 8080,
+            port: 3000,
             timeout: Duration::from_secs(10),
         }
     }
@@ -65,7 +65,7 @@ mod tests {
         let settings = Settings::default();
 
         assert_eq!(settings.host, "127.0.0.1");
-        assert_eq!(settings.port, 8080);
+        assert_eq!(settings.port, 3000);
         assert_eq!(settings.timeout, Duration::from_secs(10));
     }
 
@@ -73,31 +73,31 @@ mod tests {
     fn should_build_socket_addr_ipv4() {
         let settings = Settings {
             host: "127.0.0.1".into(),
-            port: 8080,
+            port: 3000,
             ..Default::default()
         };
         let addr = settings.socket_addr().unwrap();
 
-        assert_eq!(addr, "127.0.0.1:8080".parse::<SocketAddr>().unwrap());
+        assert_eq!(addr, "127.0.0.1:3000".parse::<SocketAddr>().unwrap());
     }
 
     #[test]
     fn should_build_socket_addr_ipv6() {
         let settings = Settings {
             host: "::1".into(),
-            port: 8080,
+            port: 3000,
             ..Default::default()
         };
         let addr = settings.socket_addr().unwrap();
 
-        assert_eq!(addr, "[::1]:8080".parse::<SocketAddr>().unwrap());
+        assert_eq!(addr, "[::1]:3000".parse::<SocketAddr>().unwrap());
     }
 
     #[test]
     fn should_reject_empty_host() {
         let settings = Settings {
             host: "".into(),
-            port: 8080,
+            port: 3000,
             ..Default::default()
         };
 
@@ -108,7 +108,7 @@ mod tests {
     fn should_reject_invalid_host_with_space() {
         let settings = Settings {
             host: "invalid host".into(),
-            port: 8080,
+            port: 3000,
             ..Default::default()
         };
 
@@ -118,8 +118,8 @@ mod tests {
     #[test]
     fn should_reject_host_with_port() {
         let settings = Settings {
-            host: "127.0.0.1:8080".into(),
-            port: 8080,
+            host: "127.0.0.1:3000".into(),
+            port: 3000,
             ..Default::default()
         };
 
