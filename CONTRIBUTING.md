@@ -23,6 +23,7 @@ Before opening a pull request, please ensure that the following checks pass succ
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test
+cargo audit
 ```
 
 All CI checks must pass before a pull request can be merged.
