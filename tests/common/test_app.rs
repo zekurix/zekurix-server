@@ -1,5 +1,5 @@
 use axum_test::TestServer;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 
 use zekurix_server::Application;
 use zekurix_server::router::routes;

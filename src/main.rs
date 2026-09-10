@@ -1,5 +1,5 @@
 use anyhow::Result;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 
 use zekurix_server::Application;
 use zekurix_server::cli::Cli;
