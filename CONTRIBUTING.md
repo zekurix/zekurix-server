@@ -24,6 +24,8 @@ cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 cargo audit
+cargo machete
+cargo deny check
 ```
 
 All CI checks must pass before a pull request can be merged.
