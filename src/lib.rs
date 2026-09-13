@@ -1,16 +1,16 @@
 //! # Zekurix Server
 //!
 //! **Zero-Knowledge Hierarchical Collaboration Platform - Server Component**
-//! 
+//!
 //! <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 0.75em 1em; margin: 1em 0;">
 //! <strong>⚠ Warning:</strong> This project is in an early prototype stage.<br/>
 //! Core functionality is still under development and many planned features are not yet implemented.
 //! </div>
-//! 
+//!
 //! ## Project Scope
-//! 
+//!
 //! Zekurix Server is one component of the broader Zekurix ecosystem.
-//! 
+//!
 //! The project is intended to evolve into a larger ecosystem that may include:
 //! - Zekurix Server
 //! - Cross-platform SDK
