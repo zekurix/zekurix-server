@@ -109,6 +109,12 @@ mod tests {
     }
 
     #[test]
+    fn should_parse_bind_any() {
+        let cli = Cli::try_parse_from(["zekurix-server", "--bind", "0.0.0.0:3000"]).unwrap();
+        assert_eq!(cli.bind, Some("0.0.0.0:3000".parse().unwrap()));
+    }
+
+    #[test]
     fn should_parse_bind_ipv6_address() {
         let cli = Cli::try_parse_from(["zekurix-server", "--bind", "[2001:db8::1]:3000"]).unwrap();
         assert_eq!(cli.bind, Some("[2001:db8::1]:3000".parse().unwrap()));

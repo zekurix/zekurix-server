@@ -13,8 +13,8 @@ format = "full"
 [server]
 # IP address on which the server listens for incoming connections.
 # Format: an IPv4 address, IPv6 address or "localhost", without a port number.
-# Default value: "127.0.0.1".
-host = "127.0.0.1"
+# Default value: "0.0.0.0".
+host = "0.0.0.0"
 # Network port used by the HTTP server.
 # Format: unsigned integer between 0 and 65535.
 # Default value: 3000.

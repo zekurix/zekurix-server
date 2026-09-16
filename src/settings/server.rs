@@ -18,7 +18,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            host: "127.0.0.1".to_string(),
+            host: "0.0.0.0".to_string(),
             port: 3000,
             timeout: Duration::from_secs(10),
         }
@@ -64,7 +64,7 @@ mod tests {
     fn should_use_default_settings() {
         let settings = Settings::default();
 
-        assert_eq!(settings.host, "127.0.0.1");
+        assert_eq!(settings.host, "0.0.0.0");
         assert_eq!(settings.port, 3000);
         assert_eq!(settings.timeout, Duration::from_secs(10));
     }
@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn should_reject_host_with_port() {
         let settings = Settings {
-            host: "127.0.0.1:3000".into(),
+            host: "0.0.0.0:3000".into(),
             port: 3000,
             ..Default::default()
         };
@@ -129,12 +129,12 @@ mod tests {
     #[test]
     fn supports_port_boundaries() {
         let s0 = Settings {
-            host: "127.0.0.1".into(),
+            host: "0.0.0.0".into(),
             port: 0,
             ..Default::default()
         };
         let smax = Settings {
-            host: "127.0.0.1".into(),
+            host: "0.0.0.0".into(),
             port: 65535,
             ..Default::default()
         };
