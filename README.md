@@ -66,6 +66,13 @@ If you modify the OpenAPI specification, you need to regenerate it:
 ./openapi/scripts/build_openapi.py
 ```
 
+If you want to run the service fully with docker compose:
+```bash
+docker compose up --build
+# ...
+docker compose down -v
+```
+
 ## Security Notice
 
 > [!WARNING]
