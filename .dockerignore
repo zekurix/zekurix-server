@@ -1,0 +1,7 @@
+.git
+.github
+target
+.env
+.env.*
+.DS_Store
+.ruff_cache
