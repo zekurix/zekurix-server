@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
+    restart: always
+    environment:
+      POSTGRES_USER: ${ZEKURIX_DATABASE__USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${ZEKURIX_DATABASE__PASSWORD}
+      POSTGRES_DB: ${ZEKURIX_DATABASE__DATABASE:-zekurix}
+    expose:
+      - 5432
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "zekurix"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  zekurix:
+    build:
+      context: .
+      target: final
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 3000:3000
+    env_file:
+      # Must declare at least the ZEKURIX_DATABASE__PASSWORD variable in this file,
+      # otherwise the container will not start
+      - .env
+    environment:
+      ZEKURIX_DATABASE__HOST: postgres
+      ZEKURIX_DATABASE__USERNAME: ${ZEKURIX_DATABASE__USERNAME:-postgres}
+      ZEKURIX_DATABASE__MIGRATE: true
+    volumes:
+      - ./config/zekurix.toml:/etc/zekurix/zekurix.toml:ro  
+
+volumes:
+  postgres-data:
