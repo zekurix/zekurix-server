@@ -38,6 +38,7 @@ impl Settings {
             .merge(Toml::file(&cli.config))
             .merge(
                 Env::prefixed(ENV_PREFIX)
+                    .ignore(&Self::strip_env_prefix(Cli::env_vars()))
                     .ignore(&Self::strip_env_prefix(Secrets::env_vars()))
                     .split("__"),
             )
