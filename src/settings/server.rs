@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::cli::Cli;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Settings {
     pub host: String,
