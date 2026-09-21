@@ -1,5 +1,6 @@
 # Zekurix Server
 
+[![All Contributors](https://img.shields.io/github/all-contributors/projectOwner/projectName?color=ee8449&style=flat-square)](#contributors)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/zekurix/zekurix-server/badge)](https://scorecard.dev/viewer/?uri=github.com/zekurix/zekurix-server)
 
 **Zero-Knowledge Hierarchical Collaboration Platform - Server Component**
@@ -83,3 +84,14 @@ docker compose down -v
 - See `CONTRIBUTING.md` for contribution guidelines and development setup instructions
 - See `LICENSE.md` for full terms of the license
 - Issues: https://github.com/zekurix/zekurix-server/issues
+
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->

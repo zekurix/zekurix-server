@@ -34,3 +34,6 @@ All CI checks must pass before a pull request can be merged.
 
 Please do not report security vulnerabilities through public GitHub issues.
 See `SECURITY.md` for the vulnerability disclosure process.
+
+## Add yourself as a contributor
+To add yourself to the table of contributors, follow the `allcontributors` bot usage [instructions](https://allcontributors.org/en/bot/usage/).
