@@ -19,7 +19,7 @@ RUN --mount=type=bind,source=src,target=src \
 # Runtime stage - based on Alpine Docker Official image
 # This stage runs the already-compiled binary with minimal dependencies.
 ################################################################################
-FROM alpine:3.18 AS final
+FROM alpine:3.20 AS final
 
 ARG UID=10001
 RUN adduser \
