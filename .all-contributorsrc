@@ -2,7 +2,7 @@
   "projectName": "zekurix-server",
   "projectOwner": "zekurix",
   "files": [
-    "README.md"
+    "CONTRIBUTORS.md"
   ],
   "commitType": "docs",
   "commitConvention": "angular",
