@@ -5,3 +5,7 @@ target
 .env.*
 .DS_Store
 .ruff_cache
+deny.lock
+.poutine.yml
+CHANGELOG.md
+CONTRIBUTING.md

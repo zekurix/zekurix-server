@@ -6,17 +6,25 @@ services:
       POSTGRES_USER: ${ZEKURIX_DATABASE__USERNAME:-postgres}
       POSTGRES_PASSWORD: ${ZEKURIX_DATABASE__PASSWORD}
       POSTGRES_DB: ${ZEKURIX_DATABASE__DATABASE:-zekurix}
-    expose:
-      - 5432
+    ports:
+      - ${ZEKURIX_DATABASE__PORT:-5432}:${ZEKURIX_DATABASE__PORT:-5432}
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "zekurix"]
+      test:
+        - CMD
+        - pg_isready
+        - -U
+        - ${ZEKURIX_DATABASE__USERNAME:-postgres}
+        - -d
+        - ${ZEKURIX_DATABASE__DATABASE:-zekurix}
       interval: 2s
       timeout: 5s
       retries: 10
 
   zekurix:
+    profiles:
+      - full
     build:
       context: .
       target: final
@@ -25,7 +33,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - 3000:3000
+      - ${ZEKURIX_SERVER__PORT:-3000}:${ZEKURIX_SERVER__PORT:-3000}
     env_file:
       # Must declare at least the ZEKURIX_DATABASE__PASSWORD variable in this file,
       # otherwise the container will not start

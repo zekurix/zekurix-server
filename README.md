@@ -46,10 +46,10 @@ cp .env.example .env
 # Edit the .env file with your credentials
 ```
 
-Setup the PostgreSQL database:
+Setup the dependencies database:
 
 ```bash
-docker run --name zekurix-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=zekurix -p 5432:5432 -d postgres:18
+docker compose up --build -d --wait
 cargo install sqlx-cli --no-default-features --features postgres
 sqlx migrate run
 ```
@@ -63,15 +63,33 @@ cargo run
 ```
 
 If you modify the OpenAPI specification, you need to regenerate it:
+
 ```bash
 ./openapi/scripts/build_openapi.py
 ```
 
-If you want to run the service fully with docker compose:
+## Quick Start
+
+### Running the full stack
+
+To run all services (Zekurix server and its dependencies) with Docker Compose:
+
 ```bash
-docker compose up --build
-# ...
-docker compose down -v
+docker compose --profile full up --build -d --wait
+```
+
+### Shutting down
+
+To stop and remove all containers:
+
+```bash
+docker compose --profile full down
+```
+
+Add the `-v` flag to also remove persistent data (volumes):
+
+```bash
+docker compose --profile full down -v
 ```
 
 ## Security Notice
