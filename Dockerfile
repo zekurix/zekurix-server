@@ -10,6 +10,7 @@ RUN --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=openapi,target=openapi \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
+    --mount=type=bind,source=build.rs,target=build.rs \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/var/cache/cargo \
     CARGO_HOME=/var/cache/cargo cargo build --locked --release \
