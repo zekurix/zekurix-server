@@ -6,6 +6,8 @@ use anyhow::{Result, bail};
 use clap::parser::ValueSource;
 use clap::{CommandFactory, Parser};
 
+const ENV_CONFIG_PATH: &str = "ZEKURIX_CONFIG_PATH";
+
 #[cfg(target_os = "linux")]
 const DEFAULT_CONFIG_PATH: &str = "/etc/zekurix/zekurix.toml";
 
@@ -27,7 +29,7 @@ const DEFAULT_CONFIG_PATH: &str = r"C:\ProgramData\Zekurix\zekurix.toml";
 #[command(version, propagate_version = true, about, long_about)]
 pub struct Cli {
     /// Path to the configuration file.
-    #[arg(short, long, value_name = "FILE", default_value = DEFAULT_CONFIG_PATH)]
+    #[arg(short, long, value_name = "FILE", env = ENV_CONFIG_PATH, default_value = DEFAULT_CONFIG_PATH)]
     pub config: PathBuf,
 
     /// Address to bind the server to.
@@ -57,7 +59,12 @@ impl Default for Cli {
 impl Cli {
     pub fn build() -> Result<Self> {
         let matches = Self::command().get_matches();
-        let is_config_present = matches.value_source("config") == Some(ValueSource::CommandLine);
+        let config_source = matches.value_source("config");
+        let is_config_present = matches!(
+            config_source,
+            Some(ValueSource::CommandLine | ValueSource::EnvVariable)
+        );
+
         let cli = Self::parse();
 
         if is_config_present && !cli.config.exists() {
@@ -68,6 +75,10 @@ impl Cli {
         }
 
         Ok(cli)
+    }
+
+    pub fn env_vars() -> Vec<&'static str> {
+        vec![ENV_CONFIG_PATH]
     }
 }
 
