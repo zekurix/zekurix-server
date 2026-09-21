@@ -14,7 +14,7 @@ use super::server;
 
 const ENV_PREFIX: &str = "ZEKURIX_";
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Settings {
     pub logging: logging::Settings,
