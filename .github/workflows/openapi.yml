@@ -87,7 +87,7 @@ jobs:
       - name: Start services
         run: docker compose --profile full up --build -d --wait
         env:
-          #ZEKURIX_DATABASE__PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          # ZEKURIX_DATABASE__PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
           ZEKURIX_DATABASE__PASSWORD: postgres
 
       - name: Dump container logs
