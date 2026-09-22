@@ -31,9 +31,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Verify Docker dependency
-        run: docker --version
-
       - name: Generate OpenAPI bundle
         run: python3 openapi/scripts/build_openapi.py lint
  
@@ -55,12 +52,91 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Verify Docker dependency
-        run: docker --version
-
       - name: Generate OpenAPI bundle
         run: python3 openapi/scripts/build_openapi.py build
 
       - name: Verify generated artifacts are up to date
         run: git diff --exit-code -- openapi/generated/
  
+  schematesis:
+    name: Run Schematesis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    needs:
+      - lint
+      - bundle
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Start services
+        run: docker compose --profile full up --build -d --wait
+
+      - name: Schemathesis
+        uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160 # v3.0.0
+        with:
+          schema: "http://localhost:3000/openapi.json"
+          args: "--phases examples,coverage,fuzzing --report junit"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: schemathesis-results
+          path: schemathesis-report/
+
+      - name: Cleanup
+        if: always()
+        run: docker compose --profile full down -v --remove-orphans
+
+  schematesis-stateful:
+    name: Run stateful Schematesis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    needs:
+      - lint
+      - bundle
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Start services
+        run: docker compose --profile full up --build -d --wait
+
+      - name: Schemathesis
+        uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160 # v3.0.0
+        with:
+          schema: "http://localhost:3000/openapi.json"
+          args: "--phases stateful --max-examples 25 --report junit"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: schemathesis-stateful-results
+          path: schemathesis-report/
+
+      - name: Cleanup
+        if: always()
+        run: docker compose --profile full down -v --remove-orphans
+
