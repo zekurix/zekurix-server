@@ -79,6 +79,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Create empty environment file
+        # Required because compose.yaml references .env via env_file,
+        # but CI injects secrets through environment variables instead.
+        run: touch .env
+
       - name: Start services
         run: docker compose --profile full up --build -d --wait
         env:
@@ -133,6 +138,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Create empty environment file
+        # Required because compose.yaml references .env via env_file,
+        # but CI injects secrets through environment variables instead.
+        run: touch .env
 
       - name: Start services
         run: docker compose --profile full up --build -d --wait
