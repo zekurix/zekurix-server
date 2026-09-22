@@ -79,22 +79,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Create empty environment file
-        # Required because compose.yaml references .env via env_file,
-        # but CI injects secrets through environment variables instead.
-        run: touch .env
+      - name: Create environment file
+        run: |
+          cat > .env <<EOF
+          ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          EOF
 
       - name: Start services
         run: docker compose --profile full up --build -d --wait
-        env:
-          # ZEKURIX_DATABASE__PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          ZEKURIX_DATABASE__PASSWORD: postgres
-
-      - name: Dump container logs
-        if: always()
-        run: |
-          docker compose logs postgres
-          docker compose logs zekurix
 
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -146,15 +138,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Create empty environment file
-        # Required because compose.yaml references .env via env_file,
-        # but CI injects secrets through environment variables instead.
-        run: touch .env
+      - name: Create environment file
+        run: |
+          cat > .env <<EOF
+          ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          EOF
 
       - name: Start services
         run: docker compose --profile full up --build -d --wait
-        env:
-          ZEKURIX_DATABASE__PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
 
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
