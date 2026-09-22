@@ -43,6 +43,6 @@ HEALTHCHECK \
     --timeout=5s \
     --start-period=10s \
     --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://127.0.0.1:3000/health || exit 1
+    CMD wget -Y off --quiet --tries=1 --spider http://127.0.0.1:3000/health || exit 1
 
 CMD ["/bin/zekurix-server"]
