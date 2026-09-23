@@ -1,6 +1,6 @@
 # Zekurix Server
 
-[![All Contributors](https://img.shields.io/github/all-contributors/projectOwner/projectName?color=ee8449&style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/github/all-contributors/zekurix/zekurix-server?color=ee8449&style=flat-square)](#contributors)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/zekurix/zekurix-server/badge)](https://scorecard.dev/viewer/?uri=github.com/zekurix/zekurix-server)
 
 **Zero-Knowledge Hierarchical Collaboration Platform - Server Component**
