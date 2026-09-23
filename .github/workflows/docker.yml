@@ -1,0 +1,100 @@
+name: Docker Image
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    name: Build and test Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build Docker image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test image runs
+        run: |
+          docker run --rm --detach \
+            --name zekurix-test \
+            -p 3000:3000 \
+            ${{ env.IMAGE_NAME }}:test &
+          
+          sleep 2
+          
+          docker ps | grep zekurix-test || (echo "Container failed to start"; exit 1)
+          docker stop zekurix-test
+
+      - name: Test healthcheck
+        run: |
+          docker run --rm --detach \
+            --name zekurix-health \
+            -p 3001:3000 \
+            ${{ env.IMAGE_NAME }}:test
+          
+          # Wait for Docker to report the container as healthy
+          for i in {1..30}; do
+            health_status=$(docker inspect -f '{{.State.Health.Status}}' zekurix-health 2>/dev/null)
+            if [ "$health_status" = "healthy" ]; then
+              echo "Healthcheck passed"
+              docker stop zekurix-health
+              exit 0
+            fi
+            sleep 1
+          done
+          
+          echo "Healthcheck failed"
+          docker inspect zekurix-health --format '{{json .State.Health}}' | jq .
+          docker logs zekurix-health
+          docker stop zekurix-health || true
+          exit 1
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:test
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
