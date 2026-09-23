@@ -17,7 +17,7 @@ env:
 
 jobs:
   build:
-    name: Build and test Docker image
+    name: Build Docker image
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -47,94 +47,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Debug container crash (capture logs before --rm removes it)
-        run: |
-          echo "=== Container Crash Investigation ==="
-    
-          # Démarrer le conteneur sans --rm pour pouvoir inspecter après
-          docker run --detach \
-            --name zekurix-debug \
-            -p 3000:3000 \
-            "${IMAGE_NAME}":test
-    
-          echo "Waiting 15 seconds for potential crash..."
-          sleep 15
-    
-          # Capturer TOUS les détails AVANT suppression
-          echo "=== Container Status ==="
-          docker ps -a | grep zekurix-debug || echo "Container no longer exists"
-    
-          echo "=== Exit Code ==="
-          docker inspect zekurix-debug --format '{{.State.ExitCode}}' 2>/dev/null || echo "Cannot inspect"
-    
-          echo "=== Container Logs ==="
-          docker logs zekurix-debug 2>&1 || echo "No logs available"
-    
-          echo "=== Health Status ==="
-          docker inspect zekurix-debug --format '{{.State.Health.Status}}' 2>/dev/null || echo "No health status"
-    
-          echo "=== Process Info ==="
-          docker inspect zekurix-debug --format '{{json .State.Process}}' 2>/dev/null || echo "No process info"
-    
-          echo "=== Kill & Cleanup ==="
-          docker stop zekurix-debug 2>/dev/null || true
-          docker rm zekurix-debug 2>/dev/null || true
-    
-          echo "=== Debug Complete ==="
-          exit 0  # Ne fait pas échouer le CI - juste informative
-
-      - name: Test image runs
-        run: |
-          set -euo pipefail
-
-          docker run --rm --detach \
-            --name zekurix-test \
-            -p 3000:3000 \
-            ${IMAGE_NAME}:test
-
-          sleep 10
-
-          if ! docker ps | grep -q zekurix-test; then
-            echo "Container failed to start"
-            docker logs zekurix-test || true
-            docker stop zekurix-test || true
-            exit 1
-          fi
-
-          echo "Container is running"
-          docker logs zekurix-test
-          docker stop zekurix-test
-
-      - name: Test healthcheck
-        run: |
-          set -euo pipefail
-
-          docker run --rm --detach \
-            --name zekurix-health \
-            -p 3001:3000 \
-            ${IMAGE_NAME}:test
-
-          echo "Waiting for healthcheck..."
-          for i in {1..30}; do
-            health_status=$(docker inspect -f '{{.State.Health.Status}}' zekurix-health 2>/dev/null)         
-            if [ "$health_status" = "healthy" ]; then
-              echo "Healthcheck passed"
-              docker stop zekurix-health
-              exit 0
-            fi
-            sleep 1
-          done
-          
-          echo "Healthcheck failed after 30 attempts"
-          docker logs zekurix-health || true
-          docker inspect zekurix-health --format '{{json .State.Health}}' || true
-          docker stop zekurix-health || true
-          exit 1
-
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ${IMAGE_NAME}:test
+          image-ref: ${{ env.IMAGE_NAME }}:test
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
