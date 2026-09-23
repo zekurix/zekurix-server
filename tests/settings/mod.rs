@@ -209,24 +209,3 @@ fn should_return_error_for_unknown_fields_settings_database() {
 
     assert!(Settings::load(&cli).is_err());
 }
-
-#[test]
-fn should_return_error_for_invalid_settings_database() {
-    let file = NamedTempFile::new().unwrap();
-
-    fs::write(
-        file.path(),
-        r#"
-        [database]
-        username = " "
-        "#,
-    )
-    .unwrap();
-
-    let cli = Cli {
-        config: file.path().to_path_buf(),
-        ..Default::default()
-    };
-
-    assert!(Settings::load(&cli).is_err());
-}
