@@ -1,8 +1,19 @@
+# ------------------------------------------------------------------------------
+# Test configuration
+#
+# This file contains settings used by automated tests.
+#
+# For a complete description of all available settings, refer to
+# `config/zekurix.example.toml`.
+# ------------------------------------------------------------------------------
+
 [logging]
 level = "debug"
 format = "full"
 
 [database]
 username = "postgres"
+# Dedicated database used by automated tests.
 database = "zekurix_test"
+# Automatically apply database migrations before running tests.
 migrate = true
