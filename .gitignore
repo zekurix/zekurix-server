@@ -16,5 +16,8 @@ target
 # Environnement files
 .env
 
+# Configuration file
+zekurix.toml
+
 # Ruff cache
 .ruff_cache
