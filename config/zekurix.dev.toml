@@ -1,0 +1,20 @@
+# ------------------------------------------------------------------------------
+# Development configuration
+#
+# This file contains settings commonly used during local development.
+#
+# For a complete description of all available settings, refer to
+# `config/zekurix.example.toml`.
+# ------------------------------------------------------------------------------
+
+[logging]
+# Use the most verbose log level to ease troubleshooting during development.
+level = "trace"
+
+# Human-readable log output optimized for local debugging.
+format = "pretty"
+
+[database]
+# Automatically apply database migrations at startup to keep the local
+# development database schema up to date.
+migrate = true

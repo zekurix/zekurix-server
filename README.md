@@ -39,19 +39,20 @@ git clone https://github.com/zekurix/zekurix-server.git
 cd zekurix-server
 ```
 
-Set your environment variables:
+Configure the environment:
 
 ```bash
 cp .env.example .env
-# Edit the .env file with your credentials
+cp config/zekurix.dev.toml zekurix.toml
 ```
 
-Setup the dependencies database:
+The provided `zekurix.dev.toml` file contains sensible defaults for local
+development. Adjust the `.env` and `zekurix.toml` files to match your environment.
+
+Start the local development dependencies:
 
 ```bash
-docker compose up --build -d --wait
-cargo install sqlx-cli --no-default-features --features postgres
-sqlx migrate run
+docker compose up -d --wait
 ```
 
 Build, test and run:
@@ -62,7 +63,7 @@ cargo test
 cargo run
 ```
 
-If you modify the OpenAPI specification, you need to regenerate it:
+If you modify the OpenAPI specification sources, regenerate the bundled specification:
 
 ```bash
 ./openapi/scripts/build_openapi.py
@@ -86,7 +87,7 @@ To stop and remove all containers:
 docker compose --profile full down
 ```
 
-Add the `-v` flag to also remove persistent data (volumes):
+Add the `-v` flag to also remove persistent data:
 
 ```bash
 docker compose --profile full down -v
@@ -95,7 +96,8 @@ docker compose --profile full down -v
 ## Security Notice
 
 > [!WARNING]
-> Zekurix Server has not yet undergone an independent security audit. All security-related functionality should currently be considered experimental.
+> Zekurix Server has not yet undergone an independent security audit.
+> All security-related functionality should currently be considered experimental.
 
 ## Contributing
 
