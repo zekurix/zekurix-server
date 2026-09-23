@@ -13,7 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  REGISTRY: docker.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -50,26 +49,38 @@ jobs:
 
       - name: Test image runs
         run: |
+          set -euo pipefail
+
           docker run --rm --detach \
             --name zekurix-test \
             -p 3000:3000 \
-            ${{ env.IMAGE_NAME }}:test &
-          
-          sleep 2
-          
-          docker ps | grep zekurix-test || (echo "Container failed to start"; exit 1)
+            ${IMAGE_NAME}:test
+
+          sleep 10
+
+          if ! docker ps | grep -q zekurix-test; then
+            echo "Container failed to start"
+            docker logs zekurix-test || true
+            docker stop zekurix-test || true
+            exit 1
+          fi
+
+          echo "Container is running"
+          docker logs zekurix-test
           docker stop zekurix-test
 
       - name: Test healthcheck
         run: |
+          set -euo pipefail
+
           docker run --rm --detach \
             --name zekurix-health \
             -p 3001:3000 \
-            ${{ env.IMAGE_NAME }}:test
-          
-          # Wait for Docker to report the container as healthy
+            ${IMAGE_NAME}:test
+
+          echo "Waiting for healthcheck..."
           for i in {1..30}; do
-            health_status=$(docker inspect -f '{{.State.Health.Status}}' zekurix-health 2>/dev/null)
+            health_status=$(docker inspect -f '{{.State.Health.Status}}' zekurix-health 2>/dev/null)         
             if [ "$health_status" = "healthy" ]; then
               echo "Healthcheck passed"
               docker stop zekurix-health
@@ -78,16 +89,16 @@ jobs:
             sleep 1
           done
           
-          echo "Healthcheck failed"
-          docker inspect zekurix-health --format '{{json .State.Health}}' | jq .
-          docker logs zekurix-health
+          echo "Healthcheck failed after 30 attempts"
+          docker logs zekurix-health || true
+          docker inspect zekurix-health --format '{{json .State.Health}}' || true
           docker stop zekurix-health || true
           exit 1
 
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ${{ env.IMAGE_NAME }}:test
+          image-ref: ${IMAGE_NAME}:test
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
