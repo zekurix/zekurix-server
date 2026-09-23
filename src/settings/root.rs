@@ -72,6 +72,7 @@ mod tests {
 
         assert_eq!(result, vec!["DATABASE__PASSWORD", "STORAGE__SECRET_KEY",]);
     }
+
     #[test]
     fn should_keep_env_var_when_prefix_is_missing() {
         let vars = vec!["DATABASE__PASSWORD"];
@@ -79,5 +80,21 @@ mod tests {
         let result = Settings::strip_env_prefix(vars);
 
         assert_eq!(result, vec!["DATABASE__PASSWORD",]);
+    }
+
+    #[test]
+    fn should_reject_invalid_settings() {
+        let settings = Settings {
+            database: database::Settings {
+                username: "postgres".to_string(),
+                max_connections: 5,
+                min_connections: 6,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = settings.validate();
+
+        assert!(result.is_err());
     }
 }
