@@ -118,21 +118,6 @@ jobs:
       - fmt
       - build
 
-    services:
-      postgres:
-        image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          POSTGRES_DB: zekurix
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -152,10 +137,21 @@ jobs:
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
+      - name: Create environment file
+        run: |
+          cat > .env <<EOF
+          ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          EOF
+
+      - name: Start services
+        run: docker compose up -d --wait
+
       - name: Test
         run: cargo test
-        env:
-          ZEKURIX_DATABASE__PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v --remove-orphans
 
   doc:
     name: Documentation
