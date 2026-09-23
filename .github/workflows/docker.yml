@@ -47,6 +47,42 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Debug container crash (capture logs before --rm removes it)
+        run: |
+          echo "=== Container Crash Investigation ==="
+    
+          # Démarrer le conteneur sans --rm pour pouvoir inspecter après
+          docker run --detach \
+            --name zekurix-debug \
+            -p 3000:3000 \
+            "${IMAGE_NAME}":test
+    
+          echo "Waiting 15 seconds for potential crash..."
+          sleep 15
+    
+          # Capturer TOUS les détails AVANT suppression
+          echo "=== Container Status ==="
+          docker ps -a | grep zekurix-debug || echo "Container no longer exists"
+    
+          echo "=== Exit Code ==="
+          docker inspect zekurix-debug --format '{{.State.ExitCode}}' 2>/dev/null || echo "Cannot inspect"
+    
+          echo "=== Container Logs ==="
+          docker logs zekurix-debug 2>&1 || echo "No logs available"
+    
+          echo "=== Health Status ==="
+          docker inspect zekurix-debug --format '{{.State.Health.Status}}' 2>/dev/null || echo "No health status"
+    
+          echo "=== Process Info ==="
+          docker inspect zekurix-debug --format '{{json .State.Process}}' 2>/dev/null || echo "No process info"
+    
+          echo "=== Kill & Cleanup ==="
+          docker stop zekurix-debug 2>/dev/null || true
+          docker rm zekurix-debug 2>/dev/null || true
+    
+          echo "=== Debug Complete ==="
+          exit 0  # Ne fait pas échouer le CI - juste informative
+
       - name: Test image runs
         run: |
           set -euo pipefail
