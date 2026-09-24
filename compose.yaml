@@ -41,9 +41,9 @@ services:
     environment:
       ZEKURIX_DATABASE__HOST: postgres
       ZEKURIX_DATABASE__USERNAME: ${ZEKURIX_DATABASE__USERNAME:-postgres}
-      ZEKURIX_DATABASE__MIGRATE: true
+      ZEKURIX_DATABASE__MIGRATE: ${ZEKURIX_DATABASE__MIGRATE:-true}
     volumes:
-      - ./config/zekurix.toml:/etc/zekurix/zekurix.toml:ro  
+      - ./zekurix.toml:/zekurix.toml:ro
 
 volumes:
   postgres-data:
