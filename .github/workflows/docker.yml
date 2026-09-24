@@ -136,7 +136,7 @@ jobs:
   push:
     name: Push to Docker Hub
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 300
     permissions:
       contents: read
     needs:
@@ -149,6 +149,9 @@ jobs:
         github.ref == 'refs/heads/main' ||
         startsWith(github.ref, 'refs/tags/v')
       )
+    concurrency:
+      group: ci-push-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
 
     steps:
       - name: Harden runner
