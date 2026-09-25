@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:18
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${ZEKURIX_DATABASE__PASSWORD}
+      POSTGRES_DB: zekurix
+    expose:
+      - 5432
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - -U
+        - postgres
+        - -d
+        - zekurix
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  zekurix:
+    image: zekurix/zekurix-server:latest
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 3000:3000
+    environment:
+      ZEKURIX_DATABASE__HOST: postgres
+      ZEKURIX_DATABASE__USERNAME: postgres
+      ZEKURIX_DATABASE__PASSWORD: ${ZEKURIX_DATABASE__PASSWORD}
+      ZEKURIX_DATABASE__MIGRATE: true
+
+volumes:
+  postgres-data:

@@ -1,0 +1,46 @@
+name: Examples
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose-minimal:
+    name: Compose / Minimal
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      ZEKURIX_DATABASE__PASSWORD: change-me
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Start example
+        working-directory: examples/compose/minimal
+        run: docker compose up -d --wait
+
+      - name: Verify health endpoint
+        run: curl --fail http://127.0.0.1:3000/health
+
+      - name: Stop example
+        if: always()
+        working-directory: examples/compose/minimal
+        run: docker compose down -v
