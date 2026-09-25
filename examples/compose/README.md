@@ -7,3 +7,4 @@ This directory contains Docker Compose deployment examples for Zekurix Server.
 | Example | Description |
 | --- | --- |
 | minimal | Minimal deployment configured through environment variables only |
+| with-env | Deployment configured through environment variables stored in a `.env` file |
