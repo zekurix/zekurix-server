@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:18
+    restart: always
+    environment:
+      POSTGRES_USER: ${ZEKURIX_DATABASE__USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${ZEKURIX_DATABASE__PASSWORD}
+      POSTGRES_DB: ${ZEKURIX_DATABASE__DATABASE:-zekurix}
+    expose:
+      - ${ZEKURIX_DATABASE__PORT:-5432}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - -U
+        - ${ZEKURIX_DATABASE__USERNAME:-postgres}
+        - -d
+        - ${ZEKURIX_DATABASE__DATABASE:-zekurix}
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  zekurix:
+    image: zekurix/zekurix-server:latest
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - ${ZEKURIX_SERVER__PORT:-3000}:${ZEKURIX_SERVER__PORT:-3000}
+    env_file:
+      - .env
+    environment:
+      ZEKURIX_DATABASE__HOST: postgres
+    volumes:
+      - ./zekurix.toml:/etc/zekurix/zekurix.toml:ro
+
+volumes:
+  postgres-data:
