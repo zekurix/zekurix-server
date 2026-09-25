@@ -30,11 +30,10 @@ services:
         condition: service_healthy
     ports:
       - ${ZEKURIX_SERVER__PORT:-3000}:${ZEKURIX_SERVER__PORT:-3000}
+    env_file:
+      - .env
     environment:
       ZEKURIX_DATABASE__HOST: postgres
-      ZEKURIX_DATABASE__USERNAME: ${ZEKURIX_DATABASE__USERNAME:-postgres}
-      ZEKURIX_DATABASE__PASSWORD: ${ZEKURIX_DATABASE__PASSWORD}
-      ZEKURIX_DATABASE__MIGRATE: ${ZEKURIX_DATABASE__MIGRATE:-true}
 
 volumes:
   postgres-data:

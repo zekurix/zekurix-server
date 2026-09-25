@@ -15,6 +15,7 @@ target
 
 # Environnement files
 .env
+!examples/**/.env
 
 # Configuration file
 zekurix.toml
