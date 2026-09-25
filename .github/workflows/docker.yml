@@ -10,7 +10,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: docker-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -137,6 +137,7 @@ jobs:
     name: Push to Docker Hub
     runs-on: ubuntu-latest
     timeout-minutes: 300
+    environment: release
     permissions:
       contents: read
     needs:
