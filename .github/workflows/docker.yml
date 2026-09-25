@@ -47,8 +47,8 @@ jobs:
           push: false
           load: true
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ github.workflow }}-${{ github.job }}
+          cache-to: type=gha,scope=${{ github.workflow }}-${{ github.job }},mode=max
 
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -194,8 +194,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ github.workflow }}-${{ github.job }}
+          cache-to: type=gha,scope=${{ github.workflow }}-${{ github.job }},mode=max
 
       - name: Run Docker Scout scan
         uses: docker/scout-action@7c6b6c3f7844478ace1ffd4e7aef649053d1f87d # v1.24.0
