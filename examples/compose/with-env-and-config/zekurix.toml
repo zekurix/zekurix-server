@@ -1,0 +1,22 @@
+# ------------------------------------------------------------------------------
+# Example configuration file for Zekurix Server.
+#
+# This file is loaded by Zekurix Server at startup.
+#
+# Only a subset of the available settings is shown here. Refer to the project
+# documentation for the complete configuration reference.
+#
+# Review and adjust the values to match your environment before deploying
+# to production.
+# ------------------------------------------------------------------------------
+
+[logging]
+# Minimum log level emitted by the application.
+level = "trace"
+
+# Output format used for application logs.
+format = "pretty"
+
+[database]
+# Enables automatic database migrations at startup.
+migrate = true
