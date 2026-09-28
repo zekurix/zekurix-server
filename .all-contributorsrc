@@ -44,6 +44,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "codecov",
+      "name": "Codecov",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8226205?v=4",
+      "profile": "https://codecov.io/",
+      "contributions": [
+        "review"
+      ]
     }
   ]
 }
