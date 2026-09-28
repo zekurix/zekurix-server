@@ -1,5 +1,6 @@
 # Zekurix Server
 
+[![codecov](https://codecov.io/gh/zekurix/zekurix-server/graph/badge.svg?token=4G35QTWRWV)](https://codecov.io/gh/zekurix/zekurix-server)
 [![All Contributors](https://img.shields.io/github/all-contributors/zekurix/zekurix-server?color=ee8449&style=flat-square)](#contributors)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/zekurix/zekurix-server/badge)](https://scorecard.dev/viewer/?uri=github.com/zekurix/zekurix-server)
 

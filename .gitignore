@@ -23,3 +23,6 @@ zekurix.toml
 
 # Ruff cache
 .ruff_cache
+
+# Codecov
+coverage.json
