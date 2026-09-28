@@ -302,6 +302,15 @@ jobs:
       - name: Install cargo-llvm-cov
         run: cargo install cargo-llvm-cov --locked
 
+      - name: Create environment file
+        run: |
+          cat > .env <<EOF
+          ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          EOF
+
+      - name: Start services
+        run: docker compose up -d --wait
+
       - name: Generate coverage
         run: cargo llvm-cov --codecov --all-features --output-path coverage.json
 
@@ -310,3 +319,7 @@ jobs:
         with:
           fail_ci_if_error: true
           files: ./coverage.json
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v --remove-orphans
