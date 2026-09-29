@@ -3,7 +3,7 @@
   "info": {
     "title": "Zekurix Server",
     "description": "Backend REST API for the Zekurix platform.",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": {
       "name": "AGPL-3.0-only",
       "identifier": "AGPL-3.0-only",
