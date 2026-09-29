@@ -1,8 +1,11 @@
 # Zekurix Server
 
+[![CI](https://github.com/zekurix/zekurix-server/actions/workflows/ci.yml/badge.svg)](https://github.com/zekurix/zekurix-server/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/zekurix/zekurix-server/graph/badge.svg?token=4G35QTWRWV)](https://codecov.io/gh/zekurix/zekurix-server)
-[![All Contributors](https://img.shields.io/github/all-contributors/zekurix/zekurix-server?color=ee8449&style=flat-square)](#contributors)
+[![Release](https://img.shields.io/github/v/release/zekurix/zekurix-server)](https://github.com/zekurix/zekurix-server/releases)
+[![License](https://img.shields.io/github/license/zekurix/zekurix-server)](LICENSE)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/zekurix/zekurix-server/badge)](https://scorecard.dev/viewer/?uri=github.com/zekurix/zekurix-server)
+[![All Contributors](https://img.shields.io/github/all-contributors/zekurix/zekurix-server)](#contributors)
 
 **Zero-Knowledge Hierarchical Collaboration Platform - Server Component**
 
