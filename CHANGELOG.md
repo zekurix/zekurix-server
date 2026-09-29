@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-29
+
+### Added
+
+- Docker deployment support:
+  - Official Docker image distribution through Docker Hub and GitHub Container Registry (GHCR)
+  - Docker Compose deployment examples for common scenarios:
+    - Minimal deployment
+    - Environment variable based configuration
+    - Combined environment variable and TOML configuration
+  - Example configurations and deployment documentation
+  - Published container images include SBOM and provenance attestations (SLSA) for improved software supply-chain transparency.
+- Configuration:
+  - Support for `ZEKURIX_CONFIG_PATH` environment variable to override the configuration file location
+
+### Changed
+
+- Default server bind address changed from `127.0.0.1` to `0.0.0.0` to improve container compatibility
+
 ## [0.1.0] - 2026-09-14
 
 ### Added
@@ -33,5 +52,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Graceful Shutdown: Server gracefully closes active connections on shutdown
 - Request Timeout: Configurable request timeout to prevent hanging requests
 
-[unreleased]: https://github.com/zekurix/zekurix-server/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/zekurix/zekurix-server/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/zekurix/zekurix-server/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/zekurix/zekurix-server/releases/tag/v0.1.0
