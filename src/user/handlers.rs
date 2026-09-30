@@ -53,8 +53,7 @@ pub async fn create_user(
     Json<UserResponse>,
 )> {
     let user = User::new(params.username);
-
-    application.repositories.user.create(user.clone()).await?;
+    let user = application.repositories.user.create(user).await?;
 
     Ok((
         StatusCode::CREATED,

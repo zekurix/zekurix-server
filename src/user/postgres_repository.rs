@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
-use tracing::error;
+use tracing::{error, instrument};
 
 use crate::error::{Error, Result};
 
@@ -18,6 +18,7 @@ impl PostgresUserRepository {
 
 #[async_trait]
 impl UserRepository for PostgresUserRepository {
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
     async fn find(&self, id: UserId) -> Result<User> {
         sqlx::query_as::<_, User>("SELECT id, username FROM users WHERE id = $1")
             .bind(id)
@@ -30,7 +31,8 @@ impl UserRepository for PostgresUserRepository {
             .ok_or(Error::UserNotFound(id))
     }
 
-    async fn create(&self, user: User) -> Result<()> {
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn create(&self, user: User) -> Result<User> {
         let result = sqlx::query(
             "INSERT INTO users (id, username) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING",
         )
@@ -47,6 +49,6 @@ impl UserRepository for PostgresUserRepository {
             return Err(Error::UserAlreadyExists(user.username));
         }
 
-        Ok(())
+        Ok(user)
     }
 }
