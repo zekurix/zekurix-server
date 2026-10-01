@@ -7,5 +7,5 @@ use super::{User, UserId};
 #[async_trait]
 pub trait UserRepository: Send + Sync {
     async fn find(&self, id: UserId) -> Result<User>;
-    async fn create(&self, user: User) -> Result<()>;
+    async fn create(&self, user: User) -> Result<User>;
 }
