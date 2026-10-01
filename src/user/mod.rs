@@ -1,3 +1,4 @@
+mod dto;
 mod entity;
 mod id;
 mod routes;
