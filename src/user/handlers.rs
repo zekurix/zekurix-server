@@ -6,34 +6,16 @@ use axum::{
     http::{HeaderName, StatusCode, header},
     response::AppendHeaders,
 };
-use serde::{Deserialize, Serialize};
 
 use crate::Application;
 use crate::error::Result;
 use crate::router::{ApiJson, ApiPath};
 
-use super::{User, UserId, Username, repository::UserRepository};
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct CreateUserRequest {
-    username: Username,
-}
-
-#[derive(Serialize)]
-pub struct UserResponse {
-    id: UserId,
-    username: Username,
-}
-
-impl From<User> for UserResponse {
-    fn from(user: User) -> Self {
-        Self {
-            id: user.id,
-            username: user.username,
-        }
-    }
-}
+use super::{
+    User, UserId,
+    dto::{CreateUserRequest, UserResponse},
+    repository::UserRepository,
+};
 
 pub async fn get_user(
     State(application): State<Arc<Application>>,
