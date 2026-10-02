@@ -44,6 +44,8 @@ pub mod router;
 #[doc(hidden)]
 pub mod secrets;
 #[doc(hidden)]
+pub mod session;
+#[doc(hidden)]
 pub mod settings;
 #[doc(hidden)]
 pub mod telemetry;
