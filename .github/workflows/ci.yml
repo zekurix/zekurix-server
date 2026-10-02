@@ -275,6 +275,7 @@ jobs:
 
       - name: Deny - License and security checks
         run: cargo deny check
+
   coverage:
     name: Code coverage
     runs-on: ubuntu-latest
@@ -315,6 +316,7 @@ jobs:
         run: cargo llvm-cov --codecov --all-features --output-path coverage.json
 
       - name: Upload to Codecov
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           fail_ci_if_error: true
