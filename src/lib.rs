@@ -38,13 +38,13 @@ pub mod error;
 #[doc(hidden)]
 pub mod health;
 #[doc(hidden)]
+pub mod identity;
+#[doc(hidden)]
 pub mod openapi;
 #[doc(hidden)]
 pub mod router;
 #[doc(hidden)]
 pub mod secrets;
-#[doc(hidden)]
-pub mod session;
 #[doc(hidden)]
 pub mod settings;
 #[doc(hidden)]
