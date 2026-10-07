@@ -83,6 +83,8 @@ jobs:
         run: |
           cat > .env <<EOF
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          ZEKURIX_AUTHENTICATION__ISSUER="https://auth.example.com"
+          ZEKURIX_AUTHENTICATION__AUDIENCE="zekurix"
           EOF
 
       - name: Start services
@@ -142,6 +144,8 @@ jobs:
         run: |
           cat > .env <<EOF
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          ZEKURIX_AUTHENTICATION__ISSUER="https://auth.example.com"
+          ZEKURIX_AUTHENTICATION__AUDIENCE="zekurix"
           EOF
 
       - name: Start services

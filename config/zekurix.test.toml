@@ -17,3 +17,9 @@ username = "postgres"
 database = "zekurix_test"
 # Automatically apply database migrations before running tests.
 migrate = true
+
+[authentication]
+# JWT issuer expected by automated tests.
+issuer = "https://auth.example.com"
+# JWT audience expected by automated tests.
+audience = "zekurix"

@@ -18,7 +18,9 @@ fn should_load_dev_configuration() {
     // can be validated in isolation.
     let original = fs::read_to_string("config/zekurix.dev.toml").expect("should read dev config");
     let temp = NamedTempFile::new().expect("should create temp file");
-    let content = format!("{original}\nusername = \"postgres\"\n");
+    let content = format!(
+        "{original}\n\nusername = \"postgres\"\n\n[authentication]\nissuer = \"https://auth.example.com\"\naudience = \"zekurix\"\n"
+    );
     fs::write(temp.path(), content).expect("should write temp config");
 
     let cli = cli_with_config(temp.path().to_str().unwrap());

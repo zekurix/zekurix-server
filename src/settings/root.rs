@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::cli::Cli;
 use crate::secrets::Secrets;
 
+use super::authentication;
 use super::database;
 use super::logging;
 use super::server;
@@ -20,6 +21,7 @@ pub struct Settings {
     pub logging: logging::Settings,
     pub server: server::Settings,
     pub database: database::Settings,
+    pub authentication: authentication::Settings,
 }
 
 impl Settings {
@@ -56,6 +58,7 @@ impl Settings {
 
     fn validate(&self) -> Result<()> {
         self.database.validate()?;
+        self.authentication.validate()?;
         Ok(())
     }
 }
