@@ -40,6 +40,11 @@ jobs:
       - name: Verify health endpoint
         run: curl --fail http://127.0.0.1:3000/health
 
+      - name: Dump logs
+        if: always()
+        working-directory: examples/compose/minimal
+        run: docker compose logs --no-color
+
       - name: Stop example
         if: always()
         working-directory: examples/compose/minimal
@@ -70,6 +75,11 @@ jobs:
       - name: Verify health endpoint
         run: curl --fail http://127.0.0.1:3000/health
 
+      - name: Dump logs
+        if: always()
+        working-directory: examples/compose/minimal
+        run: docker compose logs --no-color
+
       - name: Stop example
         if: always()
         working-directory: examples/compose/with-env
@@ -99,6 +109,11 @@ jobs:
 
       - name: Verify health endpoint
         run: curl --fail http://127.0.0.1:3000/health
+
+      - name: Dump logs
+        if: always()
+        working-directory: examples/compose/minimal
+        run: docker compose logs --no-color
 
       - name: Stop example
         if: always()
