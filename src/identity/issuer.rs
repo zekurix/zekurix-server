@@ -22,11 +22,21 @@ impl FromStr for Issuer {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
+<<<<<<< HEAD
         if s.is_empty() || s.len() > 1024 || s.contains('\0') {
             return Err(Error::InvalidIssuer(s.to_string()));
         }
 
         Ok(Self(s.to_owned()))
+=======
+        let trimmed = s.trim();
+
+        if trimmed.is_empty() || trimmed.len() > 1024 {
+            return Err(Error::InvalidIssuer(s.to_string()));
+        }
+
+        Ok(Self(trimmed.to_owned()))
+>>>>>>> 3cb58b8 (feat(identity): validate issuer and subject values)
     }
 }
 
@@ -98,8 +108,13 @@ mod tests {
     }
 
     #[test]
+<<<<<<< HEAD
     fn should_reject_issuer_containing_null_character() {
         let issuer = Issuer::new("foo\0bar");
+=======
+    fn should_reject_spaces_only_issuer() {
+        let issuer = Issuer::new("   ");
+>>>>>>> 3cb58b8 (feat(identity): validate issuer and subject values)
 
         assert!(matches!(issuer, Err(Error::InvalidIssuer(_))));
     }
@@ -113,7 +128,11 @@ mod tests {
 
     #[test]
     fn should_reject_invalid_issuer_during_deserialization() {
+<<<<<<< HEAD
         let result: std::result::Result<Issuer, _> = serde_json::from_str(r#""""#);
+=======
+        let result: std::result::Result<Issuer, _> = serde_json::from_str(r#""   ""#);
+>>>>>>> 3cb58b8 (feat(identity): validate issuer and subject values)
 
         assert!(result.is_err());
     }
