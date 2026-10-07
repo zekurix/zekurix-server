@@ -45,7 +45,10 @@ fn should_succeed_dry_run_with_valid_configuration() {
         .env("ZEKURIX_DATABASE__PASSWORD", "change-me")
         .env("ZEKURIX_AUTHENTICATION__ISSUER", "https://auth.example.com")
         .env("ZEKURIX_AUTHENTICATION__AUDIENCE", "zekurix")
-        .env("ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE", "tests/jwks.json")
+        .env(
+            "ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE",
+            "tests/jwks.json",
+        )
         .arg("--dry-run")
         .assert()
         .success();
@@ -60,7 +63,10 @@ fn should_fail_dry_run_with_invalid_configuration() {
         .env("ZEKURIX_DATABASE__PASSWORD", "change-me")
         .env("ZEKURIX_AUTHENTICATION__ISSUER", "https://auth.example.com")
         .env("ZEKURIX_AUTHENTICATION__AUDIENCE", "zekurix")
-        .env("ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE", "tests/jwks.json")
+        .env(
+            "ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE",
+            "tests/jwks.json",
+        )
         .arg("--dry-run")
         .assert()
         .failure();
@@ -75,7 +81,10 @@ fn should_fail_dry_run_with_missing_secret() {
         .env("ZEKURIX_DATABASE__USERNAME", "postgres")
         .env("ZEKURIX_AUTHENTICATION__ISSUER", "https://auth.example.com")
         .env("ZEKURIX_AUTHENTICATION__AUDIENCE", "zekurix")
-        .env("ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE", "tests/jwks.json")
+        .env(
+            "ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE",
+            "tests/jwks.json",
+        )
         .arg("--dry-run")
         .assert()
         .failure();

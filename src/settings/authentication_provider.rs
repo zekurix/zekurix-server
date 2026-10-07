@@ -5,20 +5,11 @@ use url::Url;
 
 use crate::error::{Error, Result};
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Settings {
     pub discovery_url: Option<Url>,
     pub jwks_file: Option<PathBuf>,
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            discovery_url: None,
-            jwks_file: None,
-        }
-    }
 }
 
 impl Settings {
@@ -46,7 +37,11 @@ mod tests {
     #[test]
     fn validate_should_succeed_when_only_discovery_url_is_configured() {
         let settings = Settings {
-            discovery_url: Some("https://auth.example.com/.well-known/openid-configuration".parse().unwrap()),
+            discovery_url: Some(
+                "https://auth.example.com/.well-known/openid-configuration"
+                    .parse()
+                    .unwrap(),
+            ),
             jwks_file: None,
         };
 
@@ -77,7 +72,11 @@ mod tests {
     #[test]
     fn validate_should_fail_when_both_discovery_url_and_jwks_file_are_configured() {
         let settings = Settings {
-            discovery_url: Some("https://auth.example.com/.well-known/openid-configuration".parse().unwrap()),
+            discovery_url: Some(
+                "https://auth.example.com/.well-known/openid-configuration"
+                    .parse()
+                    .unwrap(),
+            ),
             jwks_file: Some("tests/jwks.json".into()),
         };
         let result = settings.validate();
