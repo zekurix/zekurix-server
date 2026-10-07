@@ -30,7 +30,8 @@ timeout = "10s"
 [database]
 # Username used to connect to PostgreSQL.
 # Format: string.
-# Default value: "", which is an invalid username, you must change it.
+# Default value: none.
+# This setting is required.
 username = "postgres"
 # Hostname or IP address of the PostgreSQL server.
 # Format: string containing a hostname or IP address, without a port number.
@@ -68,3 +69,20 @@ max_lifetime = "30m"
 # Format: boolean (`true` or `false`).
 # Default value: false.
 migrate = false
+
+# Authentication configuration: controls JWT validation.
+[authentication]
+# JWT issuer expected by Zekurix.
+# Format: string matching the JWT "iss" claim. Typically an HTTPS URL.
+# Default value: none.
+# This setting is required.
+issuer = "https://auth.example.com"
+# JWT audience expected by Zekurix.
+# Format: string.
+# Default value: none.
+# This setting is required.
+audience = "zekurix"
+# Maximum clock skew tolerated during token validation.
+# Format: human-readable duration, for example "10s", "30s" or "1m".
+# Default value: "30s".
+clock_skew = "30s"

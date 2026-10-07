@@ -22,6 +22,10 @@ fn should_load_settings_from_toml() {
     
         [database]
         username = "postgres"
+
+        [authentication]
+        issuer = "https://auth.example.com"
+        audience = "zekurix"
         "#,
     )
     .unwrap();
@@ -48,6 +52,10 @@ fn should_load_humantime_settings_from_toml() {
         username = "postgres"
         acquire_timeout = "45s"
         idle_timeout = "15m"
+
+        [authentication]
+        issuer = "https://auth.example.com"
+        audience = "zekurix"
         "#,
     )
     .unwrap();
@@ -77,6 +85,10 @@ fn should_override_toml_with_cli_bind() {
     
         [database]
         username = "postgres"
+
+        [authentication]
+        issuer = "https://auth.example.com"
+        audience = "zekurix"
         "#,
     )
     .unwrap();
@@ -105,6 +117,10 @@ fn should_return_error_for_invalid_toml() {
 
         [database]
         username = "postgres"
+
+        [authentication]
+        issuer = "https://auth.example.com"
+        audience = "zekurix"
         "#,
     )
     .unwrap();
@@ -128,6 +144,10 @@ fn should_return_error_for_unknown_fields_settings() {
 
         [database]
         username = "postgres"
+
+        [authentication]
+        issuer = "https://auth.example.com"
+        audience = "zekurix"
         "#,
     )
     .unwrap();
@@ -152,6 +172,10 @@ fn should_return_error_for_unknown_fields_settings_logging() {
 
         [database]
         username = "postgres"
+
+        [authentication]
+        issuer = "https://auth.example.com"
+        audience = "zekurix"
         "#,
     )
     .unwrap();
@@ -176,6 +200,10 @@ fn should_return_error_for_unknown_fields_settings_server() {
 
         [database]
         username = "postgres"
+
+        [authentication]
+        issuer = "https://auth.example.com"
+        audience = "zekurix"
         "#,
     )
     .unwrap();
@@ -198,6 +226,10 @@ fn should_return_error_for_unknown_fields_settings_database() {
         [database]
         foo = "bar"
         username = "postgres"
+
+        [authentication]
+        issuer = "https://auth.example.com"
+        audience = "zekurix"
         "#,
     )
     .unwrap();
