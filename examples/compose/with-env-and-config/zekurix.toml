@@ -27,7 +27,3 @@ issuer = "https://auth.example.com"
 
 # JWT audience used for token validation.
 audience = "zekurix"
-
-[authentication.provider]
-# JWKS file used for token signature validation.
-jwks_file = "tests/jwks.json"
