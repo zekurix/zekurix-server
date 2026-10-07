@@ -7,6 +7,7 @@ use clap::parser::ValueSource;
 use clap::{CommandFactory, Parser};
 
 const ENV_CONFIG_PATH: &str = "ZEKURIX_CONFIG_PATH";
+pub const ENV_DISABLE_DOTENV: &str = "ZEKURIX_DISABLE_DOTENV";
 
 #[cfg(target_os = "linux")]
 const DEFAULT_CONFIG_PATH: &str = "/etc/zekurix/zekurix.toml";
@@ -43,6 +44,10 @@ pub struct Cli {
     /// Reduce logging output to warnings and errors only.
     #[arg(short, long, conflicts_with = "verbose")]
     pub quiet: bool,
+
+    /// Validate configuration and secrets, then exit.
+    #[arg(long)]
+    pub dry_run: bool,
 }
 
 impl Default for Cli {
@@ -52,6 +57,7 @@ impl Default for Cli {
             bind: None,
             verbose: false,
             quiet: false,
+            dry_run: false,
         }
     }
 }
@@ -78,7 +84,7 @@ impl Cli {
     }
 
     pub fn env_vars() -> Vec<&'static str> {
-        vec![ENV_CONFIG_PATH]
+        vec![ENV_CONFIG_PATH, ENV_DISABLE_DOTENV]
     }
 }
 

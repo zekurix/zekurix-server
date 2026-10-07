@@ -1,34 +1,47 @@
-use std::fs;
-use tempfile::NamedTempFile;
-
-use zekurix_server::settings::Settings;
-
-use crate::cli::fixtures::cli_with_config;
+use assert_cmd::Command;
 
 #[test]
 fn should_load_example_configuration() {
-    let cli = cli_with_config("zekurix.example.toml");
-    Settings::load(&cli).expect("example configuration should be valid");
+    Command::cargo_bin("zekurix-server")
+        .unwrap()
+        .env_clear()
+        .env("ZEKURIX_DISABLE_DOTENV", "true")
+        .env("ZEKURIX_DATABASE__PASSWORD", "change-me")
+        .arg("--config")
+        .arg("config/zekurix.example.toml")
+        .arg("--dry-run")
+        .assert()
+        .success();
 }
 
 #[test]
 fn should_load_dev_configuration() {
-    // `zekurix.dev.toml` is intentionally incomplete because the database username
-    // is normally provided via environment variables. Append it here so the file
-    // can be validated in isolation.
-    let original = fs::read_to_string("config/zekurix.dev.toml").expect("should read dev config");
-    let temp = NamedTempFile::new().expect("should create temp file");
-    let content = format!(
-        "{original}\n\nusername = \"postgres\"\n\n[authentication]\nissuer = \"https://auth.example.com\"\naudience = \"zekurix\"\n"
-    );
-    fs::write(temp.path(), content).expect("should write temp config");
-
-    let cli = cli_with_config(temp.path().to_str().unwrap());
-    Settings::load(&cli).expect("development configuration should be valid");
+    Command::cargo_bin("zekurix-server")
+        .unwrap()
+        .env_clear()
+        .env("ZEKURIX_DISABLE_DOTENV", "true")
+        .env("ZEKURIX_DATABASE__USERNAME", "postgres")
+        .env("ZEKURIX_DATABASE__PASSWORD", "change-me")
+        .env("ZEKURIX_AUTHENTICATION__ISSUER", "https://auth.example.com")
+        .env("ZEKURIX_AUTHENTICATION__AUDIENCE", "zekurix")
+        .env("ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE", "tests/jwks.json")
+        .arg("--config")
+        .arg("config/zekurix.dev.toml")
+        .arg("--dry-run")
+        .assert()
+        .success();
 }
 
 #[test]
 fn should_load_test_configuration() {
-    let cli = cli_with_config("zekurix.test.toml");
-    Settings::load(&cli).expect("test configuration should be valid");
+    Command::cargo_bin("zekurix-server")
+        .unwrap()
+        .env_clear()
+        .env("ZEKURIX_DISABLE_DOTENV", "true")
+        .env("ZEKURIX_DATABASE__PASSWORD", "change-me")
+        .arg("--config")
+        .arg("config/zekurix.test.toml")
+        .arg("--dry-run")
+        .assert()
+        .success();
 }

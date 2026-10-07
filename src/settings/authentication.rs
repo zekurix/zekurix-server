@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, Result};
 
+use super::authentication_provider;
+
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Settings {
@@ -11,6 +13,7 @@ pub struct Settings {
     pub audience: String,
     #[serde(with = "humantime_serde")]
     pub clock_skew: Duration,
+    pub provider: authentication_provider::Settings,
 }
 
 impl Default for Settings {
@@ -19,6 +22,7 @@ impl Default for Settings {
             issuer: "".to_string(),
             audience: "".to_string(),
             clock_skew: Duration::from_secs(30),
+            provider: Default::default(),
         }
     }
 }
@@ -39,6 +43,8 @@ impl Settings {
             });
         }
 
+        self.provider.validate()?;
+
         Ok(())
     }
 }
@@ -53,6 +59,10 @@ mod tests {
         let settings = Settings {
             issuer: "https://auth.example.com".to_string(),
             audience: "zekurix".to_string(),
+            provider: authentication_provider::Settings {
+                jwks_file: Some("tests/jwks.json".into()),
+                ..Default::default()
+            },
             ..Default::default()
         };
         let result = settings.validate();
@@ -65,6 +75,10 @@ mod tests {
         let settings = Settings {
             issuer: "".to_string(),
             audience: "zekurix".to_string(),
+            provider: authentication_provider::Settings {
+                jwks_file: Some("tests/jwks.json".into()),
+                ..Default::default()
+            },
             ..Default::default()
         };
         let result = settings.validate();
@@ -77,6 +91,10 @@ mod tests {
         let settings = Settings {
             issuer: "   ".to_string(),
             audience: "zekurix".to_string(),
+            provider: authentication_provider::Settings {
+                jwks_file: Some("tests/jwks.json".into()),
+                ..Default::default()
+            },
             ..Default::default()
         };
         let result = settings.validate();
@@ -90,6 +108,10 @@ mod tests {
             let settings = Settings {
                 issuer: issuer.to_string(),
                 audience: "zekurix".to_string(),
+                provider: authentication_provider::Settings {
+                    jwks_file: Some("tests/jwks.json".into()),
+                    ..Default::default()
+                },
                 ..Default::default()
             };
             let result = settings.validate();
@@ -104,6 +126,10 @@ mod tests {
             let settings = Settings {
                 issuer: issuer.to_string(),
                 audience: "zekurix".to_string(),
+                provider: authentication_provider::Settings {
+                    jwks_file: Some("tests/jwks.json".into()),
+                    ..Default::default()
+                },
                 ..Default::default()
             };
             let result = settings.validate();
@@ -118,6 +144,10 @@ mod tests {
         let settings = Settings {
             issuer: "https://auth.example.com".to_string(),
             audience: "".to_string(),
+            provider: authentication_provider::Settings {
+                jwks_file: Some("tests/jwks.json".into()),
+                ..Default::default()
+            },
             ..Default::default()
         };
         let result = settings.validate();
@@ -130,6 +160,10 @@ mod tests {
         let settings = Settings {
             issuer: "https://auth.example.com".to_string(),
             audience: "   ".to_string(),
+            provider: authentication_provider::Settings {
+                jwks_file: Some("tests/jwks.json".into()),
+                ..Default::default()
+            },
             ..Default::default()
         };
         let result = settings.validate();
@@ -143,6 +177,10 @@ mod tests {
             let settings = Settings {
                 issuer: "https://auth.example.com".to_string(),
                 audience: audience.to_string(),
+                provider: authentication_provider::Settings {
+                    jwks_file: Some("tests/jwks.json".into()),
+                    ..Default::default()
+                },
                 ..Default::default()
             };
             let result = settings.validate();
@@ -157,6 +195,10 @@ mod tests {
             let settings = Settings {
                 issuer: "https://auth.example.com".to_string(),
                 audience: audience.to_string(),
+                provider: authentication_provider::Settings {
+                    jwks_file: Some("tests/jwks.json".into()),
+                    ..Default::default()
+                },
                 ..Default::default()
             };
             let result = settings.validate();
