@@ -41,6 +41,12 @@ pub enum Error {
     #[error("username '{0}' invalid")]
     InvalidUsername(String),
 
+    #[error("issuer '{0}' invalid")]
+    InvalidIssuer(String),
+
+    #[error("subject '{0}' invalid")]
+    InvalidSubject(String),
+
     #[error("JSON error")]
     Json(#[from] JsonRejection),
 
@@ -372,6 +378,8 @@ mod tests {
 
     #[test_case(Error::InternalError(anyhow::anyhow!("error")) ; "internal server error")]
     #[test_case(Error::InvalidUsername("Alice!".to_owned()) ; "invalid user name")]
+    #[test_case(Error::InvalidIssuer("   ".to_owned()) ; "invalid issuer")]
+    #[test_case(Error::InvalidSubject("   ".to_owned()) ; "invalid subject")]
     #[test_case(Error::MissingEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "missing environment variable")]
     #[test_case(Error::InvalidEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "invalid environment variable")]
     #[test_case(Error::InvalidSettings {
