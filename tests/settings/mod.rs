@@ -26,6 +26,9 @@ fn should_load_settings_from_toml() {
         [authentication]
         issuer = "https://auth.example.com"
         audience = "zekurix"
+
+        [authentication.provider]
+        jwks_file = "tests/jwks.json"
         "#,
     )
     .unwrap();
@@ -56,6 +59,9 @@ fn should_load_humantime_settings_from_toml() {
         [authentication]
         issuer = "https://auth.example.com"
         audience = "zekurix"
+
+        [authentication.provider]
+        jwks_file = "tests/jwks.json"
         "#,
     )
     .unwrap();
@@ -89,6 +95,9 @@ fn should_override_toml_with_cli_bind() {
         [authentication]
         issuer = "https://auth.example.com"
         audience = "zekurix"
+
+        [authentication.provider]
+        jwks_file = "tests/jwks.json"
         "#,
     )
     .unwrap();
@@ -121,6 +130,9 @@ fn should_return_error_for_invalid_toml() {
         [authentication]
         issuer = "https://auth.example.com"
         audience = "zekurix"
+
+        [authentication.provider]
+        jwks_file = "tests/jwks.json"
         "#,
     )
     .unwrap();
@@ -148,6 +160,9 @@ fn should_return_error_for_unknown_fields_settings() {
         [authentication]
         issuer = "https://auth.example.com"
         audience = "zekurix"
+
+        [authentication.provider]
+        jwks_file = "tests/jwks.json"
         "#,
     )
     .unwrap();
@@ -176,6 +191,9 @@ fn should_return_error_for_unknown_fields_settings_logging() {
         [authentication]
         issuer = "https://auth.example.com"
         audience = "zekurix"
+
+        [authentication.provider]
+        jwks_file = "tests/jwks.json"
         "#,
     )
     .unwrap();
@@ -204,6 +222,9 @@ fn should_return_error_for_unknown_fields_settings_server() {
         [authentication]
         issuer = "https://auth.example.com"
         audience = "zekurix"
+
+        [authentication.provider]
+        jwks_file = "tests/jwks.json"
         "#,
     )
     .unwrap();
@@ -230,6 +251,9 @@ fn should_return_error_for_unknown_fields_settings_database() {
         [authentication]
         issuer = "https://auth.example.com"
         audience = "zekurix"
+
+        [authentication.provider]
+        jwks_file = "tests/jwks.json"
         "#,
     )
     .unwrap();

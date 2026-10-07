@@ -86,3 +86,17 @@ audience = "zekurix"
 # Format: human-readable duration, for example "10s", "30s" or "1m".
 # Default value: "30s".
 clock_skew = "30s"
+
+# Identity provider configuration.
+[authentication.provider]
+# OpenID Connect discovery endpoint.
+# Format: URL.
+# No default value.
+# Either discovery_url or jwks_file must be configured.
+discovery_url = "https://auth.example.com/.well-known/openid-configuration"
+# Local JSON Web Key Set (JWKS) file.
+# This setting is intended for local development, tests and CI environments. For production, prefer discovery_url.
+# Format: file path.
+# No default value.
+# Either discovery_url or jwks_file must be configured.
+# jwks_file = "tests/jwks.json"

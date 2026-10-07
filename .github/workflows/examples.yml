@@ -21,6 +21,8 @@ jobs:
       contents: read
     env:
       ZEKURIX_DATABASE__PASSWORD: change-me
+      ZEKURIX_AUTHENTICATION__ISSUER: https://auth.example.com
+      ZEKURIX_AUTHENTICATION__AUDIENCE: zekurix
 
     steps:
       - name: Harden runner
@@ -39,6 +41,11 @@ jobs:
 
       - name: Verify health endpoint
         run: curl --fail http://127.0.0.1:3000/health
+
+      - name: Dump logs
+        if: always()
+        working-directory: examples/compose/minimal
+        run: docker compose logs --no-color
 
       - name: Stop example
         if: always()
@@ -70,6 +77,11 @@ jobs:
       - name: Verify health endpoint
         run: curl --fail http://127.0.0.1:3000/health
 
+      - name: Dump logs
+        if: always()
+        working-directory: examples/compose/with-env
+        run: docker compose logs --no-color
+
       - name: Stop example
         if: always()
         working-directory: examples/compose/with-env
@@ -99,6 +111,11 @@ jobs:
 
       - name: Verify health endpoint
         run: curl --fail http://127.0.0.1:3000/health
+
+      - name: Dump logs
+        if: always()
+        working-directory: examples/compose/with-env-and-config
+        run: docker compose logs --no-color
 
       - name: Stop example
         if: always()

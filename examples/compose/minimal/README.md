@@ -20,6 +20,8 @@ Set the required environment variables:
  
 ```bash
 export ZEKURIX_DATABASE__PASSWORD=change-me
+export ZEKURIX_AUTHENTICATION__ISSUER=https://auth.example.com
+export ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
 ```
 
 Start the stack:

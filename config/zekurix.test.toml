@@ -23,3 +23,7 @@ migrate = true
 issuer = "https://auth.example.com"
 # JWT audience expected by automated tests.
 audience = "zekurix"
+
+[authentication.provider]
+# Path to the JWKS file used by automated tests.
+jwks_file = "tests/jwks.json"

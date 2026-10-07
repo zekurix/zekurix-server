@@ -4,7 +4,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${ZEKURIX_DATABASE__USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${ZEKURIX_DATABASE__PASSWORD}
+      POSTGRES_PASSWORD: ${ZEKURIX_DATABASE__PASSWORD?required}
       POSTGRES_DB: ${ZEKURIX_DATABASE__DATABASE:-zekurix}
     expose:
       - ${ZEKURIX_DATABASE__PORT:-5432}
