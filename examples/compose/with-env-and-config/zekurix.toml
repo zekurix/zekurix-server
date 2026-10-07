@@ -20,3 +20,14 @@ format = "pretty"
 [database]
 # Enables automatic database migrations at startup.
 migrate = true
+
+[authentication]
+# JWT issuer used for token validation.
+issuer = "https://auth.example.com"
+
+# JWT audience used for token validation.
+audience = "zekurix"
+
+[authentication.provider]
+# JWKS file used for token signature validation.
+jwks_file = "tests/jwks.json"
