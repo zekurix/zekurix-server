@@ -357,6 +357,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1024,
+            "pattern": "^[^\\u0000]*$",
             "example": "https://auth.example.com"
           },
           "subject": {
@@ -364,6 +365,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1024,
+            "pattern": "^[^\\u0000]*$",
             "example": "Alice"
           }
         }

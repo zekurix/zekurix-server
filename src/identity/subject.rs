@@ -22,7 +22,7 @@ impl FromStr for Subject {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        if s.is_empty() || s.len() > 1024 {
+        if s.is_empty() || s.len() > 1024 || s.contains('\0') {
             return Err(Error::InvalidSubject(s.to_string()));
         }
 
@@ -93,6 +93,13 @@ mod tests {
     #[test]
     fn should_reject_too_long_subject() {
         let subject = Subject::new(&"a".repeat(1025));
+
+        assert!(matches!(subject, Err(Error::InvalidSubject(_))));
+    }
+
+    #[test]
+    fn should_reject_subject_containing_null_character() {
+        let subject = Subject::new("foo\0bar");
 
         assert!(matches!(subject, Err(Error::InvalidSubject(_))));
     }

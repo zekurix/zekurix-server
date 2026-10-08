@@ -22,7 +22,7 @@ impl FromStr for Issuer {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        if s.is_empty() || s.len() > 1024 {
+        if s.is_empty() || s.len() > 1024 || s.contains('\0') {
             return Err(Error::InvalidIssuer(s.to_string()));
         }
 
@@ -93,6 +93,13 @@ mod tests {
     #[test]
     fn should_reject_too_long_issuer() {
         let issuer = Issuer::new(&"a".repeat(1025));
+
+        assert!(matches!(issuer, Err(Error::InvalidIssuer(_))));
+    }
+
+    #[test]
+    fn should_reject_issuer_containing_null_character() {
+        let issuer = Issuer::new("foo\0bar");
 
         assert!(matches!(issuer, Err(Error::InvalidIssuer(_))));
     }
