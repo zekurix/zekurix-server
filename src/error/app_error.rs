@@ -7,6 +7,7 @@ use problem_details::ProblemDetails;
 use thiserror::Error;
 
 use super::problem_type;
+use crate::identity::Identity;
 use crate::user::{UserId, Username};
 
 #[derive(Debug, Error)]
@@ -34,6 +35,9 @@ pub enum Error {
 
     #[error("user '{0}' already exists")]
     UserAlreadyExists(Username),
+
+    #[error("identity '{0}' already exists")]
+    IdentityAlreadyExists(Identity),
 
     #[error("user '{0}' not found")]
     UserNotFound(UserId),
@@ -93,6 +97,14 @@ impl From<Error> for ProblemDetails {
                 .with_status(StatusCode::CONFLICT)
                 .with_detail(format!("User '{username}' already exists.")),
 
+            Error::IdentityAlreadyExists(identity) => ProblemDetails::new()
+                .with_type(problem_type::user::ALREADY_EXISTS.as_uri())
+                .with_title("User Already Exists")
+                .with_status(StatusCode::CONFLICT)
+                .with_detail(format!(
+                    "An account associated with identity '{identity}' already exists."
+                )),
+
             Error::UserNotFound(id) => ProblemDetails::new()
                 .with_type(problem_type::user::NOT_FOUND.as_uri())
                 .with_title("User Not Found")
@@ -147,6 +159,7 @@ impl IntoResponse for Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::identity::{Issuer, Subject};
     use axum::{
         body::Body,
         extract::{FromRequest, Json, rejection::MissingPathParams},
@@ -356,6 +369,30 @@ mod tests {
         assert_eq!(
             problem.detail,
             Some("User 'Alice' already exists.".to_string())
+        );
+    }
+
+    #[test]
+    fn identity_already_exists_maps_to_conflict() {
+        let identity = Identity::new(
+            Issuer::new("https://auth.example.com").unwrap(),
+            Subject::new("Alice").unwrap(),
+            UserId::new(),
+        );
+        let error = Error::IdentityAlreadyExists(identity);
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::user::ALREADY_EXISTS.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("User Already Exists".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::CONFLICT));
+        assert_eq!(
+            problem.detail,
+            Some("An account associated with identity 'Alice@https://auth.example.com' already exists.".to_string())
         );
     }
 
