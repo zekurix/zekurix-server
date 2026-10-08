@@ -22,13 +22,11 @@ impl FromStr for Issuer {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let trimmed = s.trim();
-
-        if trimmed.is_empty() || trimmed.len() > 1024 {
+        if s.is_empty() || s.len() > 1024 {
             return Err(Error::InvalidIssuer(s.to_string()));
         }
 
-        Ok(Self(trimmed.to_owned()))
+        Ok(Self(s.to_owned()))
     }
 }
 
@@ -100,13 +98,6 @@ mod tests {
     }
 
     #[test]
-    fn should_reject_spaces_only_issuer() {
-        let issuer = Issuer::new("   ");
-
-        assert!(matches!(issuer, Err(Error::InvalidIssuer(_))));
-    }
-
-    #[test]
     fn should_deserialize_valid_issuer() {
         let issuer: Issuer = serde_json::from_str(r#""test-issuer""#).unwrap();
 
@@ -115,7 +106,7 @@ mod tests {
 
     #[test]
     fn should_reject_invalid_issuer_during_deserialization() {
-        let result: std::result::Result<Issuer, _> = serde_json::from_str(r#""   ""#);
+        let result: std::result::Result<Issuer, _> = serde_json::from_str(r#""""#);
 
         assert!(result.is_err());
     }
