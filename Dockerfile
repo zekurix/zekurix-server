@@ -1,5 +1,5 @@
 ################################################################################
-# Build stage - based on Rust Docker Official image)
+# Build stage - based on Rust Docker Official image
 # This stage compiles the application.
 ################################################################################
 FROM rust:alpine AS build
@@ -21,6 +21,8 @@ RUN --mount=type=bind,source=src,target=src \
 # This stage runs the already-compiled binary with minimal dependencies.
 ################################################################################
 FROM alpine:3.24 AS final
+
+RUN apk upgrade --no-cache
 
 ARG UID=10001
 RUN adduser \
