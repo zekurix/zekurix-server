@@ -13,6 +13,10 @@ async fn should_create_user() {
         .server
         .post("/api/v1/users")
         .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice"
+            },
             "username": "Alice",
         }))
         .await;
@@ -43,7 +47,155 @@ async fn should_reject_invalid_user(username: &str) {
         .server
         .post("/api/v1/users")
         .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice"
+            },
             "username": username,
+        }))
+        .await;
+
+    response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/json/data-error"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
+async fn should_reject_missing_identity() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({
+            "username": "Alice",
+        }))
+        .await;
+
+    response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/json/data-error"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
+async fn should_reject_missing_identity_issuer() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({
+            "identity": {
+                "subject": "Alice"
+            },
+            "username": "Alice",
+        }))
+        .await;
+
+    response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/json/data-error"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
+async fn should_reject_missing_identity_subject() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+            },
+            "username": "Alice",
+        }))
+        .await;
+
+    response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/json/data-error"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
+async fn should_reject_empty_identity_issuer() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({
+            "identity": {
+                "issuer": "",
+                "subject": "Alice"
+            },
+            "username": "Alice",
+        }))
+        .await;
+
+    response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/json/data-error"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
+async fn should_reject_empty_identity_subject() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": ""
+            },
+            "username": "Alice",
         }))
         .await;
 
@@ -69,8 +221,43 @@ async fn should_reject_unknown_fields() {
         .server
         .post("/api/v1/users")
         .json(&serde_json::json!({
-        "username": "Alice",
-        "unknown_field": 42,
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice"
+            },
+            "username": "Alice",
+            "unknown_field": 42,
+        }))
+        .await;
+
+    response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/json/data-error"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
+async fn should_reject_unknown_identity_fields() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice",
+                "unknown_field": 42,
+            },
+            "username": "Alice",
         }))
         .await;
 
@@ -96,6 +283,10 @@ async fn should_return_conflict_for_existing_user() {
         .server
         .post("/api/v1/users")
         .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice"
+            },
             "username": "Alice",
         }))
         .await;
@@ -105,6 +296,10 @@ async fn should_return_conflict_for_existing_user() {
         .server
         .post("/api/v1/users")
         .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice"
+            },
             "username": "Alice",
         }))
         .await;

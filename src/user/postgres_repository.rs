@@ -3,6 +3,7 @@ use sqlx::PgPool;
 use tracing::{error, instrument};
 
 use crate::error::{Error, Result};
+use crate::identity::Identity;
 
 use super::{User, UserId, repository::UserRepository};
 
@@ -32,7 +33,7 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn create(&self, user: User) -> Result<User> {
+    async fn create(&self, user: User, _identity: Identity) -> Result<User> {
         let result = sqlx::query(
             "INSERT INTO users (id, username) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING",
         )

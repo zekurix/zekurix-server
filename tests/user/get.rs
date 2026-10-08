@@ -14,6 +14,10 @@ async fn should_get_user() {
         .server
         .post("/api/v1/users")
         .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice"
+            },
             "username": "Alice",
         }))
         .await;
@@ -40,6 +44,10 @@ async fn should_create_and_get_multiple_users() {
             .server
             .post("/api/v1/users")
             .json(&serde_json::json!({
+                "identity": {
+                    "issuer": "https://auth.example.com",
+                    "subject": username
+                },
                 "username": username,
             }))
             .await;

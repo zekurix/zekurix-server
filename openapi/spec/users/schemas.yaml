@@ -6,6 +6,27 @@ components:
       format: uuid
       example: 01a05d6f-ca97-7801-8c05-097d2e1c727a
 
+    Identity:
+      description: External identity uniquely identifying a user.
+      type: object
+      additionalProperties: false
+      required:
+        - issuer
+        - subject
+      properties:
+        issuer:
+          description: Identity provider issuer.
+          type: string
+          minLength: 1
+          maxLength: 1024
+          example: https://auth.example.com
+        subject:
+          description: Identity provider subject identifier.
+          type: string
+          minLength: 1
+          maxLength: 1024
+          example: Alice
+
     Username:
       description: Username containing 3 to 64 ASCII alphanumeric characters, underscores, or hyphens.
       type: string
@@ -19,8 +40,11 @@ components:
       type: object
       additionalProperties: false
       required:
+        - identity
         - username
       properties:
+        identity:
+          $ref: "#/components/schemas/Identity"
         username:
           $ref: "#/components/schemas/Username"
 

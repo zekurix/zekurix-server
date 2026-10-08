@@ -9,6 +9,7 @@ use axum::{
 
 use crate::Application;
 use crate::error::Result;
+use crate::identity::Identity;
 use crate::router::{ApiJson, ApiPath};
 
 use super::{
@@ -35,7 +36,8 @@ pub async fn create_user(
     Json<UserResponse>,
 )> {
     let user = User::new(params.username);
-    let user = application.repositories.user.create(user).await?;
+    let identity = Identity::new(params.identity.issuer, params.identity.subject, user.id);
+    let user = application.repositories.user.create(user, identity).await?;
 
     Ok((
         StatusCode::CREATED,
