@@ -26,29 +26,56 @@ impl UserRepository for PostgresUserRepository {
             .fetch_optional(&self.pool)
             .await
             .map_err(|err| {
-                error!(error = ?err, "Database error");
+                error!(error = ?err, "failed to select user");
                 Error::InternalError(err.into())
             })?
             .ok_or(Error::UserNotFound(id))
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn create(&self, user: User, _identity: Identity) -> Result<User> {
+    async fn create(&self, user: User, identity: Identity) -> Result<User> {
+        let mut tx = self.pool.begin().await.map_err(|err| {
+            error!(error = ?err, "failed to start transaction");
+            Error::InternalError(err.into())
+        })?;
+
         let result = sqlx::query(
             "INSERT INTO users (id, username) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING",
         )
         .bind(user.id)
         .bind(user.username.clone())
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await
         .map_err(|err| {
-            error!(error = ?err, "Database error");
+            error!(error = ?err, "failed to insert user");
             Error::InternalError(err.into())
         })?;
 
         if result.rows_affected() == 0 {
             return Err(Error::UserAlreadyExists(user.username));
         }
+
+        let result = sqlx::query(
+            "INSERT INTO identities (issuer, subject, user_id) VALUES ($1, $2, $3) ON CONFLICT (issuer, subject) DO NOTHING",
+        )
+        .bind(identity.issuer.clone())
+        .bind(identity.subject.clone())
+        .bind(user.id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|err| {
+            error!(error = ?err, "failed to insert identity");
+            Error::InternalError(err.into())
+        })?;
+
+        if result.rows_affected() == 0 {
+            return Err(Error::IdentityAlreadyExists(identity));
+        }
+
+        tx.commit().await.map_err(|err| {
+            error!(error = ?err, "failed to commit transaction");
+            Error::InternalError(err.into())
+        })?;
 
         Ok(user)
     }

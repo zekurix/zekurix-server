@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::user::UserId;
 
 use super::issuer::Issuer;
@@ -17,5 +19,27 @@ impl Identity {
             subject,
             user_id,
         }
+    }
+}
+
+impl fmt::Display for Identity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}@{}", self.subject, self.issuer)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_display_identity() {
+        let identity = Identity::new(
+            Issuer::new("https://auth.example.com").unwrap(),
+            Subject::new("Alice").unwrap(),
+            UserId::new(),
+        );
+
+        assert_eq!(identity.to_string(), "Alice@https://auth.example.com");
     }
 }
