@@ -343,6 +343,31 @@
           "detail": "An unexpected internal server error occurred."
         }
       },
+      "Identity": {
+        "description": "External identity uniquely identifying a user.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "issuer",
+          "subject"
+        ],
+        "properties": {
+          "issuer": {
+            "description": "Identity provider issuer.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "example": "https://auth.example.com"
+          },
+          "subject": {
+            "description": "Identity provider subject identifier.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "example": "Alice"
+          }
+        }
+      },
       "Username": {
         "description": "Username containing 3 to 64 ASCII alphanumeric characters, underscores, or hyphens.",
         "type": "string",
@@ -356,9 +381,13 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
+          "identity",
           "username"
         ],
         "properties": {
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          },
           "username": {
             "$ref": "#/components/schemas/Username"
           }
