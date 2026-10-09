@@ -48,7 +48,7 @@ paths:
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
 
         "409":
-          description: A user with this username already exists.
+          description: A user with this identity already exists.
           headers:
             X-Request-Id:
               $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"

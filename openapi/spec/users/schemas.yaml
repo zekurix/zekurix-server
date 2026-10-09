@@ -29,26 +29,15 @@ components:
           pattern: ^[^\u0000]*$
           example: Alice
 
-    Username:
-      description: Username containing 3 to 64 ASCII alphanumeric characters, underscores, or hyphens.
-      type: string
-      minLength: 3
-      maxLength: 64
-      pattern: ^[A-Za-z0-9_-]+$
-      example: Alice-123
-
     CreateUserRequest:
       description: Request payload for creating a user.
       type: object
       additionalProperties: false
       required:
         - identity
-        - username
       properties:
         identity:
           $ref: "#/components/schemas/Identity"
-        username:
-          $ref: "#/components/schemas/Username"
 
     UserResponse:
       description: Response containing user details.
@@ -56,9 +45,6 @@ components:
       additionalProperties: false
       required:
         - id
-        - username
       properties:
         id:
           $ref: "#/components/schemas/UserId"
-        username:
-          $ref: "#/components/schemas/Username"

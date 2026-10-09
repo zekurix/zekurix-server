@@ -144,7 +144,7 @@
             "$ref": "#/components/responses/BadRequest"
           },
           "409": {
-            "description": "A user with this username already exists.",
+            "description": "A user with this identity already exists.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/X-Request-Id"
@@ -370,28 +370,16 @@
           }
         }
       },
-      "Username": {
-        "description": "Username containing 3 to 64 ASCII alphanumeric characters, underscores, or hyphens.",
-        "type": "string",
-        "minLength": 3,
-        "maxLength": 64,
-        "pattern": "^[A-Za-z0-9_-]+$",
-        "example": "Alice-123"
-      },
       "CreateUserRequest": {
         "description": "Request payload for creating a user.",
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "identity",
-          "username"
+          "identity"
         ],
         "properties": {
           "identity": {
             "$ref": "#/components/schemas/Identity"
-          },
-          "username": {
-            "$ref": "#/components/schemas/Username"
           }
         }
       },
@@ -406,15 +394,11 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "id",
-          "username"
+          "id"
         ],
         "properties": {
           "id": {
             "$ref": "#/components/schemas/UserId"
-          },
-          "username": {
-            "$ref": "#/components/schemas/Username"
           }
         }
       }

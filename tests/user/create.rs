@@ -1,7 +1,7 @@
 use axum::http::{StatusCode, header};
-use test_case::test_case;
 
 use super::common::UserResponse;
+
 use crate::common::ErrorResponse;
 use crate::common::TestApplication;
 
@@ -16,8 +16,7 @@ async fn should_create_user() {
             "identity": {
                 "issuer": "https://auth.example.com",
                 "subject": "Alice"
-            },
-            "username": "Alice",
+            }
         }))
         .await;
     response.assert_status(StatusCode::CREATED);
@@ -31,42 +30,6 @@ async fn should_create_user() {
     let user: UserResponse = response.json();
 
     assert_eq!(location, format!("/api/v1/users/{}", user.id));
-    assert_eq!(user.username, "Alice");
-}
-
-#[test_case("" ; "empty username")]
-#[test_case("A" ; "one character")]
-#[test_case("AB" ; "two characters")]
-#[test_case("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789012" ; "too long")]
-#[test_case("Alice!" ; "invalid characters")]
-#[tokio::test]
-async fn should_reject_invalid_user(username: &str) {
-    let app = TestApplication::new().await;
-
-    let response = app
-        .server
-        .post("/api/v1/users")
-        .json(&serde_json::json!({
-            "identity": {
-                "issuer": "https://auth.example.com",
-                "subject": "Alice"
-            },
-            "username": username,
-        }))
-        .await;
-
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
 }
 
 #[tokio::test]
@@ -76,9 +39,7 @@ async fn should_reject_missing_identity() {
     let response = app
         .server
         .post("/api/v1/users")
-        .json(&serde_json::json!({
-            "username": "Alice",
-        }))
+        .json(&serde_json::json!({}))
         .await;
 
     response.assert_status_unprocessable_entity();
@@ -105,8 +66,7 @@ async fn should_reject_missing_identity_issuer() {
         .json(&serde_json::json!({
             "identity": {
                 "subject": "Alice"
-            },
-            "username": "Alice",
+            }
         }))
         .await;
 
@@ -134,8 +94,7 @@ async fn should_reject_missing_identity_subject() {
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
-            },
-            "username": "Alice",
+            }
         }))
         .await;
 
@@ -164,8 +123,7 @@ async fn should_reject_empty_identity_issuer() {
             "identity": {
                 "issuer": "",
                 "subject": "Alice"
-            },
-            "username": "Alice",
+            }
         }))
         .await;
 
@@ -194,8 +152,7 @@ async fn should_reject_empty_identity_subject() {
             "identity": {
                 "issuer": "https://auth.example.com",
                 "subject": ""
-            },
-            "username": "Alice",
+            }
         }))
         .await;
 
@@ -225,8 +182,7 @@ async fn should_reject_unknown_fields() {
                 "issuer": "https://auth.example.com",
                 "subject": "Alice"
             },
-            "username": "Alice",
-            "unknown_field": 42,
+            "unknown_field": 42
         }))
         .await;
 
@@ -255,9 +211,8 @@ async fn should_reject_unknown_identity_fields() {
             "identity": {
                 "issuer": "https://auth.example.com",
                 "subject": "Alice",
-                "unknown_field": 42,
-            },
-            "username": "Alice",
+                "unknown_field": 42
+            }
         }))
         .await;
 
@@ -286,8 +241,7 @@ async fn should_return_conflict_for_existing_user() {
             "identity": {
                 "issuer": "https://auth.example.com",
                 "subject": "Alice"
-            },
-            "username": "Alice",
+            }
         }))
         .await;
     response.assert_status(StatusCode::CREATED);
@@ -299,8 +253,7 @@ async fn should_return_conflict_for_existing_user() {
             "identity": {
                 "issuer": "https://auth.example.com",
                 "subject": "Alice"
-            },
-            "username": "Alice",
+            }
         }))
         .await;
     response.assert_status_conflict();
