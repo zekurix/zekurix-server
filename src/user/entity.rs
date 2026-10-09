@@ -11,6 +11,12 @@ impl User {
     }
 }
 
+impl Default for User {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
