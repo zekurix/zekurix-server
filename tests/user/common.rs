@@ -6,5 +6,4 @@ use zekurix_server::user::UserId;
 #[serde(deny_unknown_fields)]
 pub struct UserResponse {
     pub id: UserId,
-    pub username: String,
 }

@@ -8,7 +8,7 @@ use thiserror::Error;
 
 use super::problem_type;
 use crate::identity::Identity;
-use crate::user::{UserId, Username};
+use crate::user::UserId;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -33,17 +33,11 @@ pub enum Error {
     #[error("setting '{setting}' invalid: {reason}")]
     InvalidSettings { setting: String, reason: String },
 
-    #[error("user '{0}' already exists")]
-    UserAlreadyExists(Username),
-
     #[error("identity '{0}' already exists")]
     IdentityAlreadyExists(Identity),
 
     #[error("user '{0}' not found")]
     UserNotFound(UserId),
-
-    #[error("username '{0}' invalid")]
-    InvalidUsername(String),
 
     #[error("issuer '{0}' invalid")]
     InvalidIssuer(String),
@@ -90,12 +84,6 @@ impl From<Error> for ProblemDetails {
                 .with_title("Gateway Timeout")
                 .with_status(StatusCode::GATEWAY_TIMEOUT)
                 .with_detail("Gateway timed out."),
-
-            Error::UserAlreadyExists(username) => ProblemDetails::new()
-                .with_type(problem_type::user::ALREADY_EXISTS.as_uri())
-                .with_title("User Already Exists")
-                .with_status(StatusCode::CONFLICT)
-                .with_detail(format!("User '{username}' already exists.")),
 
             Error::IdentityAlreadyExists(identity) => ProblemDetails::new()
                 .with_type(problem_type::user::ALREADY_EXISTS.as_uri())
@@ -353,26 +341,6 @@ mod tests {
     }
 
     #[test]
-    fn user_already_exists_maps_to_conflict() {
-        let username = Username::new("Alice").unwrap();
-        let error = Error::UserAlreadyExists(username);
-        let problem = ProblemDetails::from(error);
-
-        assert_eq!(
-            problem.r#type,
-            Some(problem_details::ProblemType::from(
-                problem_type::user::ALREADY_EXISTS.as_uri()
-            ))
-        );
-        assert_eq!(problem.title, Some("User Already Exists".to_string()));
-        assert_eq!(problem.status, Some(StatusCode::CONFLICT));
-        assert_eq!(
-            problem.detail,
-            Some("User 'Alice' already exists.".to_string())
-        );
-    }
-
-    #[test]
     fn identity_already_exists_maps_to_conflict() {
         let identity = Identity::new(
             Issuer::new("https://auth.example.com").unwrap(),
@@ -414,7 +382,6 @@ mod tests {
     }
 
     #[test_case(Error::InternalError(anyhow::anyhow!("error")) ; "internal server error")]
-    #[test_case(Error::InvalidUsername("Alice!".to_owned()) ; "invalid user name")]
     #[test_case(Error::InvalidIssuer("   ".to_owned()) ; "invalid issuer")]
     #[test_case(Error::InvalidSubject("   ".to_owned()) ; "invalid subject")]
     #[test_case(Error::MissingEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "missing environment variable")]

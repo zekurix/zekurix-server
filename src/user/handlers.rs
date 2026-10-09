@@ -35,7 +35,7 @@ pub async fn create_user(
     AppendHeaders<[(HeaderName, String); 1]>,
     Json<UserResponse>,
 )> {
-    let user = User::new(params.username);
+    let user = User::new();
     let identity = Identity::new(params.identity.issuer, params.identity.subject, user.id);
     let user = application.repositories.user.create(user, identity).await?;
 

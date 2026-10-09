@@ -17,8 +17,7 @@ async fn should_get_user() {
             "identity": {
                 "issuer": "https://auth.example.com",
                 "subject": "Alice"
-            },
-            "username": "Alice",
+            }
         }))
         .await;
     response.assert_status(StatusCode::CREATED);
@@ -31,24 +30,22 @@ async fn should_get_user() {
     response.assert_status_ok();
     let user_get: UserResponse = response.json();
     assert_eq!(user_get.id, user_post.id);
-    assert_eq!(user_get.username, "Alice");
 }
 
 #[tokio::test]
 async fn should_create_and_get_multiple_users() {
     let app = TestApplication::new().await;
-    let usernames = ["Alice", "Bob", "Charlie"];
+    let subjects = ["Alice", "Bob", "Charlie"];
 
-    for username in usernames {
+    for subject in subjects {
         let response = app
             .server
             .post("/api/v1/users")
             .json(&serde_json::json!({
                 "identity": {
                     "issuer": "https://auth.example.com",
-                    "subject": username
-                },
-                "username": username,
+                    "subject": subject
+                }
             }))
             .await;
         response.assert_status(StatusCode::CREATED);
@@ -61,7 +58,6 @@ async fn should_create_and_get_multiple_users() {
         response.assert_status_ok();
         let user_get: UserResponse = response.json();
         assert_eq!(user_get.id, user_post.id);
-        assert_eq!(user_get.username, username);
     }
 }
 

@@ -55,7 +55,9 @@ async fn should_return_problem_details_for_missing_json_content_type() {
     let response = app
         .server
         .post("/api/v1/users")
-        .bytes(Bytes::from(r#"{"identity": {"issuer": "https://auth.example.com", "subject": "Alice"}, "username":"Alice"}"#))
+        .bytes(Bytes::from(
+            r#"{"identity": {"issuer": "https://auth.example.com", "subject": "Alice"}}"#,
+        ))
         .await;
     response.assert_status(StatusCode::UNSUPPORTED_MEDIA_TYPE);
     assert_eq!(response.content_type(), "application/problem+json");
