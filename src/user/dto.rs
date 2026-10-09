@@ -1,13 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-use crate::identity::dto;
+use crate::identity::{Issuer, Subject};
 
 use super::{User, UserId};
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct Identity {
+    pub issuer: Issuer,
+    pub subject: Subject,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CreateUserRequest {
-    pub identity: dto::Identity,
+    pub identity: Identity,
 }
 
 #[derive(Serialize)]
