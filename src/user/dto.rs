@@ -17,8 +17,6 @@ pub struct UserResponse {
 
 impl From<User> for UserResponse {
     fn from(user: User) -> Self {
-        Self {
-            id: user.id,
-        }
+        Self { id: user.id }
     }
 }
