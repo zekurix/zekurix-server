@@ -10,7 +10,7 @@ use problem_details::ProblemDetails;
 use thiserror::Error;
 
 use super::problem_type;
-use crate::identity::Identity;
+use crate::identity::{Identity, Issuer, Subject};
 use crate::user::UserId;
 
 #[derive(Debug, Error)]
@@ -38,6 +38,9 @@ pub enum Error {
 
     #[error("identity '{0}' already exists")]
     IdentityAlreadyExists(Identity),
+
+    #[error("identity '{subject}@{issuer}' not found")]
+    IdentityNotFound { issuer: Issuer, subject: Subject },
 
     #[error("user '{0}' not found")]
     UserNotFound(UserId),
@@ -482,8 +485,12 @@ mod tests {
     }
 
     #[test_case(Error::InternalError(anyhow::anyhow!("error")) ; "internal server error")]
-    #[test_case(Error::InvalidIssuer("   ".to_owned()) ; "invalid issuer")]
-    #[test_case(Error::InvalidSubject("   ".to_owned()) ; "invalid subject")]
+    #[test_case(Error::IdentityNotFound {
+            issuer: Issuer::new("issuer").unwrap(),
+            subject: Subject::new("subject").unwrap(),
+        } ; "identity not found")]
+    #[test_case(Error::InvalidIssuer("".to_owned()) ; "invalid issuer")]
+    #[test_case(Error::InvalidSubject("".to_owned()) ; "invalid subject")]
     #[test_case(Error::MissingEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "missing environment variable")]
     #[test_case(Error::InvalidEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "invalid environment variable")]
     #[test_case(Error::InvalidSettings {

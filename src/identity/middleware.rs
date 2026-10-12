@@ -9,6 +9,8 @@ use axum::{
 use crate::Application;
 use crate::error::{Error, Result};
 
+use super::{Issuer, Subject, repository::IdentityRepository};
+
 fn bearer_token(request: &Request) -> Result<&str> {
     let header = request
         .headers()
@@ -32,6 +34,9 @@ pub async fn authenticate(
 ) -> Result<Response> {
     tracing::debug!("Authenticating request: {:?}", request);
     let token = bearer_token(&request)?;
-    let _claims = application.identity_service.decode(token)?;
+    let claims = application.identity_service.decode(token)?;
+    let issuer = Issuer::new(&claims.iss)?;
+    let subject = Subject::new(&claims.sub)?;
+    let _identity = application.repositories.identity.find(&issuer, &subject).await;
     Ok(next.run(request).await)
 }
