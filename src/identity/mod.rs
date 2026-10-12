@@ -1,4 +1,5 @@
 mod claims;
+mod current_user_id;
 mod entity;
 mod issuer;
 mod middleware;
@@ -7,6 +8,7 @@ mod repository;
 mod service;
 mod subject;
 
+pub use current_user_id::CurrentUserId;
 pub use entity::Identity;
 pub use issuer::Issuer;
 pub use middleware::authenticate;
