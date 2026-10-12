@@ -5,6 +5,7 @@ use tokio::signal;
 use tracing::{debug, info};
 
 use crate::database::postgres::PostgresDatabase;
+use crate::identity;
 use crate::router::routes;
 use crate::secrets::Secrets;
 use crate::settings::Settings;
@@ -41,6 +42,7 @@ pub struct Application {
     pub settings: Settings,
     pub secrets: Secrets,
     pub database: PostgresDatabase,
+    pub identity_service: identity::Service,
     pub repositories: Repositories,
 }
 
@@ -51,12 +53,14 @@ impl Application {
 
         let secrets = Secrets::load()?;
         let database = PostgresDatabase::init(&settings.database, &secrets.database).await?;
+        let identity_service = identity::Service::new(&settings.authentication);
         let repositories = Repositories::new(database.pool.clone());
 
         let application = Self {
             settings,
             secrets,
             database,
+            identity_service,
             repositories,
         };
 

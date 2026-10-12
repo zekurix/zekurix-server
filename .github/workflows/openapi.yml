@@ -107,6 +107,7 @@ jobs:
           schemathesis run \
             --phases examples,coverage,fuzzing \
             --report junit \
+            --header "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJhZG1pbiIsImF1ZCI6Inpla3VyaXgiLCJleHAiOjQxMDI0NDQ4MDB9.g-ncq_624hW87Y2Fn7n1B7YvR0_zxW6PbaCWt8PtSAw"
             http://localhost:3000/openapi.json
 
       - name: Upload test results
@@ -170,6 +171,7 @@ jobs:
             --phases stateful \
             --max-examples 25 \
             --report junit \
+            --header "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJhZG1pbiIsImF1ZCI6Inpla3VyaXgiLCJleHAiOjQxMDI0NDQ4MDB9.g-ncq_624hW87Y2Fn7n1B7YvR0_zxW6PbaCWt8PtSAw"
             http://localhost:3000/openapi.json
 
       - name: Upload test results

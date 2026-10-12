@@ -84,7 +84,6 @@
     },
     "/api/v1/users": {
       "post": {
-        "security": [],
         "tags": [
           "users"
         ],
@@ -178,7 +177,6 @@
     },
     "/api/v1/users/{id}": {
       "get": {
-        "security": [],
         "tags": [
           "users"
         ],

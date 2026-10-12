@@ -17,6 +17,7 @@ clap = { version = "4.6.5", features = ["derive", "env"] }
 dotenvy = "0.15.7"
 figment = { version = "0.10.19", features = ["env", "toml"] }
 humantime-serde = "1.1.1"
+jsonwebtoken = { version = "11.1.0", features = ["rust_crypto"] }
 problem_details = { version = "0.10.0", features = ["axum"] }
 secrecy = { version = "0.10.3", features = ["serde"] }
 serde = { version = "1.0.229", features = ["derive"] }
@@ -35,7 +36,6 @@ uuid = { version = "1.24.0", features = ["v7", "serde"] }
 assert_cmd = "2.2.2"
 axum-test = "21.1.0"
 http-body-util = "0.1.4"
-jsonwebtoken = { version = "11.1.0", features = ["rust_crypto"] }
 postgres = "0.19.14"
 predicates = "3.1.4"
 proptest = "1.11.0"

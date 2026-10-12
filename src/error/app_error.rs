@@ -59,6 +59,9 @@ pub enum Error {
 
     #[error("Invalid authorization header")]
     InvalidAuthorizationHeader,
+
+    #[error("Invalid token")]
+    InvalidToken,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -153,6 +156,12 @@ impl From<Error> for ProblemDetails {
                 .with_title("Invalid Authorization Header")
                 .with_status(StatusCode::UNAUTHORIZED)
                 .with_detail("The Authorization header is invalid."),
+
+            Error::InvalidToken => ProblemDetails::new()
+                .with_type(problem_type::http::UNAUTHORIZED.as_uri())
+                .with_title("Invalid Token")
+                .with_status(StatusCode::UNAUTHORIZED)
+                .with_detail("The access token is invalid."),
 
             _ => internal_server_error(),
         }
@@ -437,6 +446,25 @@ mod tests {
     }
 
     #[test]
+    fn invalid_token_maps_to_unauthorized() {
+        let error = Error::InvalidToken;
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::UNAUTHORIZED.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Invalid Token".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::UNAUTHORIZED));
+        assert_eq!(
+            problem.detail,
+            Some("The access token is invalid.".to_string())
+        );
+    }
+
+    #[test]
     fn user_not_found_maps_to_not_found() {
         let id = UserId::new();
         let error = Error::UserNotFound(id);
@@ -481,6 +509,7 @@ mod tests {
 
     #[test_case(Error::AuthenticationRequired ; "authentication required")]
     #[test_case(Error::InvalidAuthorizationHeader ; "invalid authorization header")]
+    #[test_case(Error::InvalidToken ; "invalid token")]
     fn test_unauthorized_error_includes_www_authenticate_header(error: Error) {
         let response = error.into_response();
 

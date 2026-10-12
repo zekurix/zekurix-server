@@ -26,12 +26,12 @@ fn bearer_token(request: &Request) -> Result<&str> {
 }
 
 pub async fn authenticate(
-    State(_application): State<Arc<Application>>,
+    State(application): State<Arc<Application>>,
     /*mut */ request: Request,
     next: Next,
 ) -> Result<Response> {
     tracing::debug!("Authenticating request: {:?}", request);
-    let _token = bearer_token(&request);
-    // let token = bearer_token(&request)?;
+    let token = bearer_token(&request)?;
+    let _claims = application.identity_service.decode(token)?;
     Ok(next.run(request).await)
 }

@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http::{StatusCode, header};
 
 use crate::common::ErrorResponse;
 use crate::common::TestApplication;
@@ -7,7 +7,11 @@ use crate::common::TestApplication;
 async fn should_return_problem_details_for_path_rejection() {
     let app = TestApplication::new().await;
 
-    let response = app.server.get("/api/v1/users/invalid-uuid").await;
+    let response = app
+        .server
+        .get("/api/v1/users/invalid-uuid")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
+        .await;
     response.assert_status(StatusCode::BAD_REQUEST);
     assert_eq!(response.content_type(), "application/problem+json");
 
