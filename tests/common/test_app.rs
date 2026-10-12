@@ -6,6 +6,7 @@ use zekurix_server::router::routes;
 use zekurix_server::secrets::Secrets;
 
 use super::temp_database::TempDatabase;
+use super::test_auth::TestAuth;
 
 use crate::settings::fixtures::test_settings;
 
@@ -13,6 +14,7 @@ pub struct TestApplication {
     // The database is dropped when the TestApp is dropped, so we need to keep it around for the lifetime of the test.
     _temp_database: TempDatabase,
     pub server: TestServer,
+    pub auth: TestAuth,
 }
 
 impl TestApplication {
@@ -28,6 +30,7 @@ impl TestApplication {
             .unwrap();
         settings.database.database = temp_database.database().to_string();
 
+        let auth = TestAuth::new(&settings.authentication);
         let application = Application::new(settings).await.unwrap();
         let router = routes::router(application);
         let server = TestServer::new(router);
@@ -35,6 +38,7 @@ impl TestApplication {
         TestApplication {
             _temp_database: temp_database,
             server,
+            auth,
         }
     }
 }

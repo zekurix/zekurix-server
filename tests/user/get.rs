@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http::{StatusCode, header};
 
 use zekurix_server::user::UserId;
 
@@ -13,6 +13,7 @@ async fn should_get_user() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
@@ -26,6 +27,7 @@ async fn should_get_user() {
     let response = app
         .server
         .get(&format!("/api/v1/users/{}", user_post.id))
+        .add_header(header::AUTHORIZATION, app.auth.header("Alice"))
         .await;
     response.assert_status_ok();
     let user_get: UserResponse = response.json();
@@ -41,6 +43,7 @@ async fn should_create_and_get_multiple_users() {
         let response = app
             .server
             .post("/api/v1/users")
+            .add_header(header::AUTHORIZATION, app.auth.header("admin"))
             .json(&serde_json::json!({
                 "identity": {
                     "issuer": "https://auth.example.com",
@@ -54,6 +57,7 @@ async fn should_create_and_get_multiple_users() {
         let response = app
             .server
             .get(&format!("/api/v1/users/{}", user_post.id))
+            .add_header(header::AUTHORIZATION, app.auth.header(subject))
             .await;
         response.assert_status_ok();
         let user_get: UserResponse = response.json();
@@ -66,7 +70,11 @@ async fn should_return_not_found_for_invalid_user_id() {
     let app = TestApplication::new().await;
 
     let user_id = UserId::new();
-    let response = app.server.get(&format!("/api/v1/users/{}", user_id)).await;
+    let response = app
+        .server
+        .get(&format!("/api/v1/users/{}", user_id))
+        .add_header(header::AUTHORIZATION, app.auth.header("Alice"))
+        .await;
     response.assert_status_not_found();
 
     assert_eq!(response.content_type(), "application/problem+json");

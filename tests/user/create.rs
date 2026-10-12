@@ -12,6 +12,7 @@ async fn should_create_user() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
@@ -39,6 +40,7 @@ async fn should_reject_missing_identity() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({}))
         .await;
 
@@ -63,6 +65,7 @@ async fn should_reject_missing_identity_issuer() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "subject": "Alice"
@@ -91,6 +94,7 @@ async fn should_reject_missing_identity_subject() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
@@ -119,6 +123,7 @@ async fn should_reject_empty_identity_issuer() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "",
@@ -148,6 +153,7 @@ async fn should_reject_empty_identity_subject() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
@@ -177,6 +183,7 @@ async fn should_reject_unknown_fields() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
@@ -207,6 +214,7 @@ async fn should_reject_unknown_identity_fields() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
@@ -237,6 +245,7 @@ async fn should_return_conflict_for_existing_user() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
@@ -249,6 +258,7 @@ async fn should_return_conflict_for_existing_user() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
                 "issuer": "https://auth.example.com",
@@ -277,6 +287,7 @@ async fn should_return_unprocessable_entity_for_invalid_payload() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({}))
         .await;
     response.assert_status_unprocessable_entity();
