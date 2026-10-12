@@ -22,9 +22,9 @@ struct Claims {
 impl TestAuth {
     pub fn new(settings: &Settings) -> Self {
         TestAuth {
-            issuer: settings.issuer.to_string(),
-            audience: settings.audience.to_string(),
-            secret: settings.issuer.to_string(),
+            issuer: settings.issuer.clone(),
+            audience: settings.audience.clone(),
+            secret: settings.issuer.repeat(2).clone(),
         }
     }
 

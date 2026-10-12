@@ -1,4 +1,7 @@
-use axum::{body::Bytes, http::StatusCode};
+use axum::{
+    body::Bytes,
+    http::{StatusCode, header},
+};
 
 use crate::common::ErrorResponse;
 use crate::common::TestApplication;
@@ -10,6 +13,7 @@ async fn should_return_problem_details_for_json_data_error() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!(42))
         .await;
     response.assert_status_unprocessable_entity();
@@ -32,6 +36,7 @@ async fn should_return_problem_details_for_json_syntax_error() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .bytes(Bytes::from("not a json"))
         .add_header("content-type", "application/json")
         .await;
@@ -55,6 +60,7 @@ async fn should_return_problem_details_for_missing_json_content_type() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .bytes(Bytes::from(
             r#"{"identity": {"issuer": "https://auth.example.com", "subject": "Alice"}}"#,
         ))
@@ -79,6 +85,7 @@ async fn should_return_problem_details_for_json_bytes_rejection() {
     let response = app
         .server
         .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .bytes(Bytes::from(vec![b'a'; 3_000_000]))
         .add_header("content-type", "application/json")
         .await;

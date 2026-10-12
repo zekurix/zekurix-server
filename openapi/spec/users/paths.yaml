@@ -1,7 +1,6 @@
 paths:
   /users:
     post:
-      security: []
       tags:
         - users
       summary: Create a new user.
@@ -47,6 +46,9 @@ paths:
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
 
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
         "409":
           description: A user with this identity already exists.
           headers:
@@ -74,7 +76,6 @@ paths:
 
   /users/{id}:
     get:
-      security: []
       tags:
         - users
       summary: Retrieve a user by ID.
@@ -98,6 +99,9 @@ paths:
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
 
         "404":
           description: User not found.

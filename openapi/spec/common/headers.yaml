@@ -4,3 +4,9 @@ components:
       description: Request correlation identifier.
       schema:
         type: string
+
+    WWW-Authenticate:
+      description: Authentication challenge indicating that a Bearer token is required.
+      schema:
+        type: string
+        example: Bearer
