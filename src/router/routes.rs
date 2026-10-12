@@ -4,6 +4,7 @@ use axum::{
     BoxError, Router,
     error_handling::HandleErrorLayer,
     http::{Method, Request, Uri},
+    middleware,
 };
 use tower::{ServiceBuilder, timeout::error::Elapsed};
 use tower_http::{
@@ -15,6 +16,7 @@ use tracing::{info_span, warn};
 
 use crate::error::Error;
 use crate::health;
+use crate::identity::authenticate;
 use crate::openapi;
 use crate::user;
 
@@ -37,15 +39,17 @@ async fn http_method_not_allowed(uri: Uri, method: Method) -> Error {
     Error::HttpMethodNotAllowed { uri, method }
 }
 
-fn api_v1_router() -> Router<Arc<Application>> {
-    Router::new().nest("/users", user::router())
+fn api_v1_router(application: Arc<Application>) -> Router<Arc<Application>> {
+    Router::new()
+        .nest("/users", user::router())
+        .route_layer(middleware::from_fn_with_state(application, authenticate))
 }
 
 pub fn router(application: Arc<Application>) -> Router {
     Router::new()
         .merge(openapi::router())
         .nest("/health", health::router())
-        .nest("/api/v1", api_v1_router())
+        .nest("/api/v1", api_v1_router(application.clone()))
         .layer(
             ServiceBuilder::new()
                 .set_x_request_id(MakeRequestUuid)

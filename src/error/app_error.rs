@@ -1,6 +1,9 @@
 use axum::{
     extract::rejection::{JsonRejection, PathRejection},
-    http::{Method, StatusCode, Uri},
+    http::{
+        Method, StatusCode, Uri,
+        header::{self, HeaderValue},
+    },
     response::{IntoResponse, Response},
 };
 use problem_details::ProblemDetails;
@@ -50,6 +53,12 @@ pub enum Error {
 
     #[error("Path error")]
     Path(#[from] PathRejection),
+
+    #[error("Authentication required")]
+    AuthenticationRequired,
+
+    #[error("Invalid authorization header")]
+    InvalidAuthorizationHeader,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -133,6 +142,18 @@ impl From<Error> for ProblemDetails {
                 .with_status(rejection.status())
                 .with_detail(rejection.body_text()),
 
+            Error::AuthenticationRequired => ProblemDetails::new()
+                .with_type(problem_type::http::UNAUTHORIZED.as_uri())
+                .with_title("Authentication required")
+                .with_status(StatusCode::UNAUTHORIZED)
+                .with_detail("Authentication is required to access this resource."),
+
+            Error::InvalidAuthorizationHeader => ProblemDetails::new()
+                .with_type(problem_type::http::UNAUTHORIZED.as_uri())
+                .with_title("Invalid Authorization Header")
+                .with_status(StatusCode::UNAUTHORIZED)
+                .with_detail("The Authorization header is invalid."),
+
             _ => internal_server_error(),
         }
     }
@@ -140,7 +161,17 @@ impl From<Error> for ProblemDetails {
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        ProblemDetails::from(self).into_response()
+        let problem = ProblemDetails::from(self);
+        let is_unauthorized = problem.status == Some(StatusCode::UNAUTHORIZED);
+        let mut response = problem.into_response();
+
+        if is_unauthorized {
+            response
+                .headers_mut()
+                .insert(header::WWW_AUTHENTICATE, HeaderValue::from_static("Bearer"));
+        }
+
+        response
     }
 }
 
@@ -365,6 +396,47 @@ mod tests {
     }
 
     #[test]
+    fn authentication_required_maps_to_unauthorized() {
+        let error = Error::AuthenticationRequired;
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::UNAUTHORIZED.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Authentication required".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::UNAUTHORIZED));
+        assert_eq!(
+            problem.detail,
+            Some("Authentication is required to access this resource.".to_string())
+        );
+    }
+
+    #[test]
+    fn invalid_authorization_header_maps_to_unauthorized() {
+        let error = Error::InvalidAuthorizationHeader;
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::UNAUTHORIZED.as_uri()
+            ))
+        );
+        assert_eq!(
+            problem.title,
+            Some("Invalid Authorization Header".to_string())
+        );
+        assert_eq!(problem.status, Some(StatusCode::UNAUTHORIZED));
+        assert_eq!(
+            problem.detail,
+            Some("The Authorization header is invalid.".to_string())
+        );
+    }
+
+    #[test]
     fn user_not_found_maps_to_not_found() {
         let id = UserId::new();
         let error = Error::UserNotFound(id);
@@ -405,5 +477,28 @@ mod tests {
             problem.detail,
             Some("An unexpected internal server error occurred.".to_string())
         );
+    }
+
+    #[test_case(Error::AuthenticationRequired ; "authentication required")]
+    #[test_case(Error::InvalidAuthorizationHeader ; "invalid authorization header")]
+    fn test_unauthorized_error_includes_www_authenticate_header(error: Error) {
+        let response = error.into_response();
+
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        assert!(response.headers().contains_key(header::WWW_AUTHENTICATE));
+        assert_eq!(
+            response.headers().get(header::WWW_AUTHENTICATE).unwrap(),
+            "Bearer"
+        );
+    }
+
+    #[test]
+    fn test_non_unauthorized_error_no_www_authenticate_header() {
+        // Arrange
+        let error = Error::InternalError(anyhow::anyhow!("error"));
+        let response = error.into_response();
+
+        assert_ne!(response.status(), StatusCode::UNAUTHORIZED);
+        assert!(!response.headers().contains_key(header::WWW_AUTHENTICATE));
     }
 }

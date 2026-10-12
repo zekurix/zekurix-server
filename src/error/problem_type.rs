@@ -26,6 +26,9 @@ pub mod http {
 
     pub const GATEWAY_TIMEOUT: ProblemType =
         ProblemType::new("https://api.zekurix.com/problems/http/gateway-timeout");
+
+    pub const UNAUTHORIZED: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/http/unauthorized");
 }
 
 pub mod json {
@@ -70,6 +73,7 @@ mod tests {
     #[test_case(http::NOT_FOUND, "http/not-found" ; "http not found")]
     #[test_case(http::METHOD_NOT_ALLOWED, "http/method-not-allowed" ; "http method not allowed")]
     #[test_case(http::GATEWAY_TIMEOUT, "http/gateway-timeout" ; "http gateway timeout")]
+    #[test_case(http::UNAUTHORIZED, "http/unauthorized" ; "http unauthorized")]
     #[test_case(json::DATA_ERROR, "json/data-error" ; "json data error")]
     #[test_case(json::SYNTAX_ERROR, "json/syntax-error" ; "json syntax error")]
     #[test_case(json::MISSING_CONTENT_TYPE, "json/missing-content-type" ; "json missing content type")]
