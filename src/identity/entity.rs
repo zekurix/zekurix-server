@@ -5,7 +5,7 @@ use crate::user::UserId;
 use super::issuer::Issuer;
 use super::subject::Subject;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, sqlx::FromRow)]
 pub struct Identity {
     pub issuer: Issuer,
     pub subject: Subject,
