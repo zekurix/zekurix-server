@@ -11,5 +11,6 @@ pub use entity::Identity;
 pub use issuer::Issuer;
 pub use middleware::authenticate;
 pub use postgres_repository::PostgresIdentityRepository;
+pub use repository::IdentityRepository;
 pub use service::Service;
 pub use subject::Subject;

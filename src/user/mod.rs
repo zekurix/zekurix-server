@@ -10,4 +10,5 @@ pub mod handlers;
 pub use entity::User;
 pub use id::UserId;
 pub use postgres_repository::PostgresUserRepository;
+pub use repository::UserRepository;
 pub use routes::router;
