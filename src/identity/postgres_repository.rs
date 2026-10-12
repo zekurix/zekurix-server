@@ -20,18 +20,20 @@ impl PostgresIdentityRepository {
 impl IdentityRepository for PostgresIdentityRepository {
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
     async fn find(&self, issuer: &Issuer, subject: &Subject) -> Result<Identity> {
-        sqlx::query_as::<_, Identity>("SELECT (issuer, subject) FROM identities WHERE issuer = $1 AND subject = $2")
-            .bind(issuer)
-            .bind(subject)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(|err| {
-                error!(error = ?err, "failed to select identities");
-                Error::InternalError(err.into())
-            })?
-            .ok_or(Error::IdentityNotFound {
-                issuer: issuer.clone(),
-                subject: subject.clone(),
-            })
+        sqlx::query_as::<_, Identity>(
+            "SELECT (issuer, subject) FROM identities WHERE issuer = $1 AND subject = $2",
+        )
+        .bind(issuer)
+        .bind(subject)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|err| {
+            error!(error = ?err, "failed to select identities");
+            Error::InternalError(err.into())
+        })?
+        .ok_or(Error::IdentityNotFound {
+            issuer: issuer.clone(),
+            subject: subject.clone(),
+        })
     }
 }

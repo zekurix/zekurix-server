@@ -37,6 +37,10 @@ pub async fn authenticate(
     let claims = application.identity_service.decode(token)?;
     let issuer = Issuer::new(&claims.iss)?;
     let subject = Subject::new(&claims.sub)?;
-    let _identity = application.repositories.identity.find(&issuer, &subject).await;
+    let _identity = application
+        .repositories
+        .identity
+        .find(&issuer, &subject)
+        .await;
     Ok(next.run(request).await)
 }
