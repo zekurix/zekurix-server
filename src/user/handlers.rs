@@ -13,9 +13,8 @@ use crate::identity::Identity;
 use crate::router::{ApiJson, ApiPath};
 
 use super::{
-    User, UserId,
+    User, UserId, UserRepository,
     dto::{CreateUserRequest, UserResponse},
-    repository::UserRepository,
 };
 
 pub async fn get_user(
