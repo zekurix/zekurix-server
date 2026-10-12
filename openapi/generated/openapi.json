@@ -142,6 +142,9 @@
           "400": {
             "$ref": "#/components/responses/BadRequest"
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "409": {
             "description": "A user with this identity already exists.",
             "headers": {
@@ -210,6 +213,9 @@
           "400": {
             "$ref": "#/components/responses/BadRequest"
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
             "description": "User not found.",
             "headers": {
@@ -268,6 +274,13 @@
         "description": "Request correlation identifier.",
         "schema": {
           "type": "string"
+        }
+      },
+      "WWW-Authenticate": {
+        "description": "Authentication challenge indicating that a Bearer token is required.",
+        "schema": {
+          "type": "string",
+          "example": "Bearer"
         }
       }
     },
@@ -422,6 +435,24 @@
         "headers": {
           "X-Request-Id": {
             "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Authentication is required or the provided access token is invalid.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          },
+          "WWW-Authenticate": {
+            "$ref": "#/components/headers/WWW-Authenticate"
           }
         },
         "content": {

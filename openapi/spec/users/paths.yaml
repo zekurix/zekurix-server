@@ -46,6 +46,9 @@ paths:
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
 
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
         "409":
           description: A user with this identity already exists.
           headers:
@@ -96,6 +99,9 @@ paths:
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
 
         "404":
           description: User not found.

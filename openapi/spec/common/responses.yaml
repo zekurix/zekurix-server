@@ -10,6 +10,18 @@ components:
           schema:
             $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
 
+    Unauthorized:
+      description: Authentication is required or the provided access token is invalid.
+      headers:
+        X-Request-Id:
+          $ref: "./headers.yaml#/components/headers/X-Request-Id"
+        WWW-Authenticate:
+          $ref: "./headers.yaml#/components/headers/WWW-Authenticate"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
+
     PayloadTooLarge:
       description: The request payload exceeds the maximum accepted size.
       headers:
