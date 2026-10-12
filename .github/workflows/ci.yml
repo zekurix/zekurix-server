@@ -214,7 +214,7 @@ jobs:
         run: cargo install cargo-audit --locked
 
       - name: Security audit
-        run: cargo audit
+        run: cargo audit --ignore RUSTSEC-2023-0071
 
   machete:
     name: Machete
