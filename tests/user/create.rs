@@ -292,3 +292,29 @@ async fn should_return_unprocessable_entity_for_invalid_payload() {
         .await;
     response.assert_status_unprocessable_entity();
 }
+
+#[tokio::test]
+async fn should_require_authentication_for_create_user() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice"
+            }
+        }))
+        .await;
+    response.assert_status_unauthorized();
+    assert_eq!(response.content_type(), "application/problem+json");
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/http/unauthorized"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
+    assert!(!body.detail.is_empty());
+}
