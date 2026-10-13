@@ -74,6 +74,40 @@ paths:
         "504":
           $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
 
+  /users/me:
+    get:
+      tags:
+        - users
+      summary: Retrieve the current authenticated user.
+      description: Returns the details of the authenticated user.
+      operationId: getCurrentUser
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+
+      responses:
+        "200":
+          description: Current user retrieved successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.yaml#/components/schemas/UserResponse"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
   /users/{id}:
     get:
       tags:

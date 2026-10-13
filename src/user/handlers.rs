@@ -9,13 +9,22 @@ use axum::{
 
 use crate::Application;
 use crate::error::Result;
-use crate::identity::Identity;
+use crate::identity::{CurrentUserId, Identity};
 use crate::router::{ApiJson, ApiPath};
 
 use super::{
     User, UserId, UserRepository,
     dto::{CreateUserRequest, UserResponse},
 };
+
+pub async fn get_current_user(
+    State(application): State<Arc<Application>>,
+    CurrentUserId(id): CurrentUserId,
+) -> Result<Json<UserResponse>> {
+    let user = application.repositories.user.find(id).await?;
+
+    Ok(Json(user.into()))
+}
 
 pub async fn get_user(
     State(application): State<Arc<Application>>,

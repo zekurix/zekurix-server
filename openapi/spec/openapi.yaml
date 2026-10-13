@@ -39,6 +39,9 @@ paths:
   /api/v1/users:
     $ref: "./users/paths.yaml#/paths/~1users"
 
+  /api/v1/users/me:
+    $ref: "./users/paths.yaml#/paths/~1users~1me"
+
   /api/v1/users/{id}:
     $ref: "./users/paths.yaml#/paths/~1users~1{id}"
 

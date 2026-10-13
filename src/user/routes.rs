@@ -12,5 +12,6 @@ use super::handlers;
 pub fn router() -> Router<Arc<Application>> {
     Router::new()
         .route("/", post(handlers::create_user))
+        .route("/me", get(handlers::get_current_user))
         .route("/{id}", get(handlers::get_user))
 }
