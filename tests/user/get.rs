@@ -88,3 +88,37 @@ async fn should_return_not_found_for_invalid_user_id() {
     assert_eq!(body.status, StatusCode::NOT_FOUND.as_u16());
     assert!(!body.detail.is_empty());
 }
+
+#[tokio::test]
+async fn should_require_authentication_for_get_current_user() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
+        .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://auth.example.com",
+                "subject": "Alice"
+            }
+        }))
+        .await;
+    response.assert_status(StatusCode::CREATED);
+    let user_post: UserResponse = response.json();
+
+    let response = app
+        .server
+        .get(&format!("/api/v1/users/{}", user_post.id))
+        .await;
+    response.assert_status_unauthorized();
+    assert_eq!(response.content_type(), "application/problem+json");
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/http/unauthorized"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
+    assert!(!body.detail.is_empty());
+}
