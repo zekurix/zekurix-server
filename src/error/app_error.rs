@@ -114,6 +114,18 @@ impl From<Error> for ProblemDetails {
                 .with_status(StatusCode::NOT_FOUND)
                 .with_detail(format!("User '{id}' was not found.")),
 
+            Error::InvalidIssuer(_) => ProblemDetails::new()
+                .with_type(problem_type::http::UNAUTHORIZED.as_uri())
+                .with_title("Invalid Identity Issuer")
+                .with_status(StatusCode::UNAUTHORIZED)
+                .with_detail("The identity issuer is invalid."),
+
+            Error::InvalidSubject(_) => ProblemDetails::new()
+                .with_type(problem_type::http::UNAUTHORIZED.as_uri())
+                .with_title("Invalid Identity Subject")
+                .with_status(StatusCode::UNAUTHORIZED)
+                .with_detail("The identity subject is invalid."),
+
             Error::Json(rejection) => match rejection {
                 JsonRejection::JsonDataError(_) => ProblemDetails::new()
                     .with_type(problem_type::json::DATA_ERROR.as_uri())
@@ -468,6 +480,44 @@ mod tests {
     }
 
     #[test]
+    fn invalid_issuer_maps_to_unauthorized() {
+        let error = Error::InvalidIssuer("Invalid Issuer".to_string());
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::UNAUTHORIZED.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Invalid Identity Issuer".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::UNAUTHORIZED));
+        assert_eq!(
+            problem.detail,
+            Some("The identity issuer is invalid.".to_string())
+        );
+    }
+
+    #[test]
+    fn invalid_subject_maps_to_unauthorized() {
+        let error = Error::InvalidSubject("Invalid Subject".to_string());
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::UNAUTHORIZED.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Invalid Identity Subject".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::UNAUTHORIZED));
+        assert_eq!(
+            problem.detail,
+            Some("The identity subject is invalid.".to_string())
+        );
+    }
+
+    #[test]
     fn user_not_found_maps_to_not_found() {
         let id = UserId::new();
         let error = Error::UserNotFound(id);
@@ -489,8 +539,6 @@ mod tests {
             issuer: Issuer::new("issuer").unwrap(),
             subject: Subject::new("subject").unwrap(),
         } ; "identity not found")]
-    #[test_case(Error::InvalidIssuer("".to_owned()) ; "invalid issuer")]
-    #[test_case(Error::InvalidSubject("".to_owned()) ; "invalid subject")]
     #[test_case(Error::MissingEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "missing environment variable")]
     #[test_case(Error::InvalidEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "invalid environment variable")]
     #[test_case(Error::InvalidSettings {

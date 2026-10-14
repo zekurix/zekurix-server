@@ -1,14 +1,16 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use jsonwebtoken::{EncodingKey, Header, encode};
+use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
 use serde::Serialize;
 
 use zekurix_server::settings::authentication::Settings;
 
+#[derive(Clone)]
 pub struct TestAuth {
-    issuer: String,
-    audience: String,
-    secret: String,
+    pub issuer: String,
+    pub audience: String,
+    pub secret: String,
+    pub clock_skew: Duration,
 }
 
 #[derive(Serialize)]
@@ -24,7 +26,8 @@ impl TestAuth {
         TestAuth {
             issuer: settings.issuer.clone(),
             audience: settings.audience.clone(),
-            secret: settings.issuer.repeat(2).clone(),
+            secret: settings.issuer.repeat(2),
+            clock_skew: settings.clock_skew,
         }
     }
 
@@ -44,7 +47,7 @@ impl TestAuth {
         };
 
         encode(
-            &Header::default(),
+            &Header::new(Algorithm::HS256),
             &claims,
             &EncodingKey::from_secret(self.secret.as_bytes()),
         )
