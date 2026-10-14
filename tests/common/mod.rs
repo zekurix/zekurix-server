@@ -5,3 +5,4 @@ mod test_auth;
 
 pub use error_response::ErrorResponse;
 pub use test_app::TestApplication;
+pub use test_auth::TestAuth;
