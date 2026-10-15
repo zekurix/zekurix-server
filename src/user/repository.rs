@@ -5,6 +5,7 @@ use crate::identity::Identity;
 
 use super::{User, UserId};
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait UserRepository: Send + Sync {
     async fn find(&self, id: UserId) -> Result<User>;

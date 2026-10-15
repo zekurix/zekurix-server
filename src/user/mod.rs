@@ -12,3 +12,6 @@ pub use id::UserId;
 pub use postgres_repository::PostgresUserRepository;
 pub use repository::UserRepository;
 pub use routes::router;
+
+#[cfg(test)]
+pub use repository::MockUserRepository;
