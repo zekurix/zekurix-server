@@ -13,7 +13,7 @@ use crate::identity::{CurrentUserId, Identity};
 use crate::router::{ApiJson, ApiPath};
 
 use super::{
-    User, UserId, UserRepository,
+    User, UserId,
     dto::{CreateUserRequest, UserResponse},
 };
 
