@@ -33,6 +33,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn should_create_identity() {
+        let issuer = Issuer::new("issuer").unwrap();
+        let subject = Subject::new("subject").unwrap();
+        let user_id = UserId::new();
+
+        let identity = Identity::new(issuer.clone(), subject.clone(), user_id);
+
+        assert_eq!(identity.issuer, issuer);
+        assert_eq!(identity.subject, subject);
+        assert_eq!(identity.user_id, user_id);
+    }
+
+    #[test]
     fn should_display_identity() {
         let identity = Identity::new(
             Issuer::new("https://auth.example.com").unwrap(),
