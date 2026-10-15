@@ -159,7 +159,10 @@ mod tests {
             let service = service_without_repository_expectations();
             let mut claims = build_valid_claims();
 
-            claims.as_object_mut().unwrap().insert("other".to_owned(), json!("value"));
+            claims
+                .as_object_mut()
+                .unwrap()
+                .insert("other".to_owned(), json!("value"));
             let token = encode_claims(&claims);
 
             let claims = service.decode(&token).unwrap();
