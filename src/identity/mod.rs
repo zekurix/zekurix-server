@@ -16,3 +16,6 @@ pub use postgres_repository::PostgresIdentityRepository;
 pub use repository::IdentityRepository;
 pub use service::AuthenticationService;
 pub use subject::Subject;
+
+#[cfg(test)]
+pub use repository::MockIdentityRepository;
