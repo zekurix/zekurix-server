@@ -27,3 +27,18 @@ impl From<User> for UserResponse {
         Self { id: user.id }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_convert_user_to_user_response() {
+        let id = UserId::new();
+        let user = User { id };
+
+        let response = UserResponse::from(user);
+
+        assert_eq!(response.id, id);
+    }
+}
