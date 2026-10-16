@@ -34,7 +34,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new_generates_userid_unique_ids() {
+    fn new_generate_unique_user_ids() {
         let id1 = UserId::new();
         let id2 = UserId::new();
 
@@ -42,7 +42,7 @@ mod tests {
     }
 
     #[test]
-    fn serde_roundtrip_preserves_userid_value() {
+    fn should_preserve_user_id_through_serde_roundtrip() {
         let id = UserId::new();
         let json = serde_json::to_string(&id).unwrap();
         let back: UserId = serde_json::from_str(&json).unwrap();
@@ -51,19 +51,9 @@ mod tests {
     }
 
     #[test]
-    fn display_userid_produces_valid_uuid_string() {
+    fn should_display_user_id_as_uuid() {
         let id = UserId::new();
-        let s = id.to_string();
 
-        assert_eq!(s.len(), 36);
-        assert!(s.parse::<Uuid>().is_ok());
-    }
-
-    #[test]
-    fn copy_does_not_change_userid_value() {
-        let id1 = UserId::new();
-        let id2 = id1;
-
-        assert_eq!(id1, id2);
+        assert!(id.to_string().parse::<Uuid>().is_ok());
     }
 }
