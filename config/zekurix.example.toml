@@ -86,6 +86,17 @@ audience = "zekurix"
 # Format: human-readable duration, for example "10s", "30s" or "1m".
 # Default value: "30s".
 clock_skew = "30s"
+# Allowed JWT signing algorithms.
+# Format: non-empty array of strings.
+# Allowed values: "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512", "EdDSA".
+# If omitted, defaults to ["RS256", "PS256", "ES256", "EdDSA"].
+# An empty array or an array containing duplicate values is invalid.
+allowed_algorithms = [
+  "RS256",
+  "PS256",
+  "ES256",
+  "EdDSA",
+]
 
 # Identity provider configuration.
 [authentication.provider]
