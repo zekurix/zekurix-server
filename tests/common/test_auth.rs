@@ -9,7 +9,9 @@ use zekurix_server::settings::authentication::Settings;
 pub struct TestAuth {
     pub issuer: String,
     pub audience: String,
-    pub secret: String,
+    pub algorithm: Algorithm,
+    pub kid: String,
+    pub encoding_key: EncodingKey,
     pub clock_skew: Duration,
 }
 
@@ -22,11 +24,76 @@ struct Claims {
 }
 
 impl TestAuth {
+    fn algorithm(settings: &Settings) -> Algorithm {
+        let jwks_file = settings
+            .provider
+            .jwks_file
+            .as_ref()
+            .expect("JWKS file must be configured for test authentication");
+        let jwks = std::fs::read_to_string(jwks_file).expect("failed to read JWKS file");
+        let jwks: serde_json::Value =
+            serde_json::from_str(&jwks).expect("failed to parse JWKS file");
+        let algorithm = jwks["keys"][0]["alg"]
+            .as_str()
+            .expect("JWKS must contain an algorithm in its first key");
+
+        algorithm
+            .parse()
+            .expect("JWKS contains an unsupported signing algorithm")
+    }
+
+    fn kid(settings: &Settings) -> String {
+        let jwks_file = settings
+            .provider
+            .jwks_file
+            .as_ref()
+            .expect("JWKS file must be configured for test authentication");
+        let jwks = std::fs::read_to_string(jwks_file).expect("failed to read JWKS file");
+        let jwks: serde_json::Value =
+            serde_json::from_str(&jwks).expect("failed to parse JWKS file");
+
+        jwks["keys"][0]["kid"]
+            .as_str()
+            .expect("JWKS must contain a key ID in its first key")
+            .to_owned()
+    }
+
+    fn encoding_key(settings: &Settings) -> EncodingKey {
+        let jwks_file = settings
+            .provider
+            .jwks_file
+            .as_ref()
+            .expect("JWKS file must be configured for test authentication");
+        let private_key_file = jwks_file.with_file_name("private.pem");
+        let private_key =
+            std::fs::read(&private_key_file).expect("failed to read test private key");
+
+        match Self::algorithm(settings) {
+            Algorithm::ES256 | Algorithm::ES384 => {
+                EncodingKey::from_ec_pem(&private_key).expect("invalid EC private key")
+            }
+            Algorithm::RS256
+            | Algorithm::RS384
+            | Algorithm::RS512
+            | Algorithm::PS256
+            | Algorithm::PS384
+            | Algorithm::PS512 => {
+                EncodingKey::from_rsa_pem(&private_key).expect("invalid RSA private key")
+            }
+            Algorithm::EdDSA => {
+                EncodingKey::from_ed_pem(&private_key).expect("invalid EdDSA private key")
+            }
+            _ => panic!("unsupported private key signing algorithm"),
+        }
+    }
+
     pub fn new(settings: &Settings) -> Self {
         TestAuth {
             issuer: settings.issuer.clone(),
             audience: settings.audience.clone(),
-            secret: settings.issuer.repeat(2),
+            algorithm: Self::algorithm(settings),
+            kid: Self::kid(settings),
+            encoding_key: Self::encoding_key(settings),
             clock_skew: settings.clock_skew,
         }
     }
@@ -46,15 +113,10 @@ impl TestAuth {
             exp,
         };
 
-        let mut header = Header::new(Algorithm::HS256);
-        header.kid = Some("test".to_string());
+        let mut header = Header::new(self.algorithm);
+        header.kid = Some(self.kid.clone());
 
-        encode(
-            &header,
-            &claims,
-            &EncodingKey::from_secret(self.secret.as_bytes()),
-        )
-        .expect("failed to generate test JWT")
+        encode(&header, &claims, &self.encoding_key).expect("failed to generate test JWT")
     }
 
     pub fn header(&self, subject: &str) -> String {

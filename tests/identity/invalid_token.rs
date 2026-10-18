@@ -29,7 +29,7 @@ async fn should_reject_token_with_invalid_signature() {
 
     let claims = build_valid_claims(app.auth.clone(), "Alice");
     let token = encode(
-        &Header::new(Algorithm::HS256),
+        &Header::new(app.auth.algorithm),
         &claims,
         &EncodingKey::from_secret("invalid key".as_bytes()),
     )
@@ -45,9 +45,9 @@ async fn should_reject_token_with_unexpected_algorithm() {
 
     let claims = build_valid_claims(app.auth.clone(), "Alice");
     let token = encode(
-        &Header::new(Algorithm::HS384),
+        &Header::new(Algorithm::HS256),
         &claims,
-        &EncodingKey::from_secret(app.auth.secret.as_bytes()),
+        &app.auth.encoding_key,
     )
     .expect("failed to generate test JWT");
     let header = build_valid_header(&token);
