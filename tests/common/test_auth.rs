@@ -46,8 +46,11 @@ impl TestAuth {
             exp,
         };
 
+        let mut header = Header::new(Algorithm::HS256);
+        header.kid = Some("test".to_string());
+
         encode(
-            &Header::new(Algorithm::HS256),
+            &header,
             &claims,
             &EncodingKey::from_secret(self.secret.as_bytes()),
         )
