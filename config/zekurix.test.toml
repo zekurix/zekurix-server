@@ -26,4 +26,4 @@ audience = "zekurix"
 
 [authentication.provider]
 # Path to the JWKS file used by automated tests.
-jwks_file = "tests/jwks.json"
+jwks_file = "tests/keys/authentication/jwks.json"
