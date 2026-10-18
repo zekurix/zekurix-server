@@ -22,7 +22,7 @@ Set the required environment variables:
 export ZEKURIX_DATABASE__PASSWORD=change-me
 export ZEKURIX_AUTHENTICATION__ISSUER=https://auth.example.com
 export ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
-export ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE=tests/jwks.json
+export ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE=tests/keys/authentication/jwks.json
 ```
 
 Start the stack:

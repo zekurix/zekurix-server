@@ -126,7 +126,7 @@ mod tests {
             issuer: "https://auth.example.com".to_string(),
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
-                jwks_file: Some("tests/jwks.json".into()),
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
             ..Default::default()
@@ -142,7 +142,7 @@ mod tests {
             issuer: "".to_string(),
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
-                jwks_file: Some("tests/jwks.json".into()),
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
             ..Default::default()
@@ -158,7 +158,7 @@ mod tests {
             issuer: "   ".to_string(),
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
-                jwks_file: Some("tests/jwks.json".into()),
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
             ..Default::default()
@@ -175,7 +175,7 @@ mod tests {
                 issuer: issuer.to_string(),
                 audience: "zekurix".to_string(),
                 provider: authentication_provider::Settings {
-                    jwks_file: Some("tests/jwks.json".into()),
+                    jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -193,7 +193,7 @@ mod tests {
                 issuer: issuer.to_string(),
                 audience: "zekurix".to_string(),
                 provider: authentication_provider::Settings {
-                    jwks_file: Some("tests/jwks.json".into()),
+                    jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -211,7 +211,7 @@ mod tests {
             issuer: "https://auth.example.com".to_string(),
             audience: "".to_string(),
             provider: authentication_provider::Settings {
-                jwks_file: Some("tests/jwks.json".into()),
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
             ..Default::default()
@@ -227,7 +227,7 @@ mod tests {
             issuer: "https://auth.example.com".to_string(),
             audience: "   ".to_string(),
             provider: authentication_provider::Settings {
-                jwks_file: Some("tests/jwks.json".into()),
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
             ..Default::default()
@@ -244,7 +244,7 @@ mod tests {
                 issuer: "https://auth.example.com".to_string(),
                 audience: audience.to_string(),
                 provider: authentication_provider::Settings {
-                    jwks_file: Some("tests/jwks.json".into()),
+                    jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -262,7 +262,7 @@ mod tests {
                 issuer: "https://auth.example.com".to_string(),
                 audience: audience.to_string(),
                 provider: authentication_provider::Settings {
-                    jwks_file: Some("tests/jwks.json".into()),
+                    jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -296,7 +296,7 @@ mod tests {
             audience: "zekurix".to_string(),
             allowed_algorithms: vec![],
             provider: authentication_provider::Settings {
-                jwks_file: Some("tests/jwks.json".into()),
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
             ..Default::default()
@@ -313,7 +313,7 @@ mod tests {
             audience: "zekurix".to_string(),
             allowed_algorithms: vec![Algorithm::Rs256, Algorithm::Rs256],
             provider: authentication_provider::Settings {
-                jwks_file: Some("tests/jwks.json".into()),
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
             ..Default::default()
