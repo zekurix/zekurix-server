@@ -9,6 +9,8 @@ use crate::user::{User, UserId, UserRepository};
 use super::claims::Claims;
 use super::{Identity, IdentityRepository, Issuer, Subject};
 
+const JWKS: &str = include_str!("jwks.json");
+
 pub struct AuthenticationService {
     validation: Validation,
     decoding_key: DecodingKey,
@@ -22,9 +24,7 @@ impl AuthenticationService {
         identity_repository: Arc<dyn IdentityRepository>,
         user_repository: Arc<dyn UserRepository>,
     ) -> Self {
-        let secret = settings.issuer.repeat(2);
-
-        let mut validation = Validation::new(Algorithm::HS256);
+        let mut validation = Validation::new(Algorithm::ES256);
         validation.set_required_spec_claims(&["iss", "sub", "aud", "exp"]);
         validation.leeway = settings.clock_skew.as_secs();
         validation.validate_exp = true;
@@ -33,8 +33,18 @@ impl AuthenticationService {
         validation.set_audience(std::slice::from_ref(&settings.audience));
         validation.set_issuer(std::slice::from_ref(&settings.issuer));
 
+        let jwk_set: jsonwebtoken::jwk::JwkSet =
+            serde_json::from_str(JWKS).expect("invalid jwks.json");
+
+        let jwk = jwk_set
+            .keys
+            .first()
+            .expect("jwks.json does not contain any key");
+
+        let decoding_key = DecodingKey::from_jwk(jwk).expect("invalid JWK");
+
         Self {
-            decoding_key: DecodingKey::from_secret(secret.as_bytes()),
+            decoding_key,
             validation,
             identity_repository,
             user_repository,
@@ -75,6 +85,8 @@ impl AuthenticationService {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+    use std::path::Path;
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     use jsonwebtoken::{EncodingKey, Header, encode};
@@ -107,7 +119,9 @@ mod tests {
     }
 
     fn encoding_key() -> EncodingKey {
-        EncodingKey::from_secret(ISSUER.repeat(2).as_bytes())
+        let private_key = fs::read(Path::new("tests/keys/authentication/private.pem")).unwrap();
+
+        EncodingKey::from_ec_pem(&private_key).unwrap()
     }
 
     fn build_valid_claims() -> Value {
@@ -121,7 +135,7 @@ mod tests {
     }
 
     fn encode_claims(claims: &Value) -> String {
-        encode(&Header::new(Algorithm::HS256), claims, &encoding_key()).unwrap()
+        encode(&Header::new(Algorithm::ES256), claims, &encoding_key()).unwrap()
     }
 
     fn service(
@@ -206,9 +220,9 @@ mod tests {
             let service = service_without_repository_expectations();
 
             let token = encode(
-                &Header::new(Algorithm::HS384),
+                &Header::new(Algorithm::HS256),
                 &build_valid_claims(),
-                &encoding_key(),
+                &EncodingKey::from_secret(b"invalid-secret"),
             )
             .unwrap();
 

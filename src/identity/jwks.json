@@ -1,0 +1,17 @@
+{
+  "keys": [
+    {
+      "kid": "test",
+      "crv": "P-256",
+      "ext": true,
+      "key_ops": [
+        "verify"
+      ],
+      "kty": "EC",
+      "x": "yNc4a4U2Bi2CWIE7GXrtCzTZHrpCOEbDZhxViK58MTM",
+      "y": "k6pCVYazDNUshcYV-f4Ct-0qa9riZlKJCj3RTPtWr8o",
+      "alg": "ES256",
+      "use": "sig"
+    }
+  ]
+}

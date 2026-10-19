@@ -2,7 +2,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use axum::http::{StatusCode, header};
 use axum_test::TestResponse;
-use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
+use jsonwebtoken::{Header, encode};
 use serde::Serialize;
 
 use crate::common::ErrorResponse;
@@ -45,9 +45,9 @@ pub fn build_valid_claims(context: TestAuth, subject: &str) -> TestClaims {
 
 pub fn build_valid_token(context: TestAuth, claims: TestClaims) -> String {
     encode(
-        &Header::new(Algorithm::HS256),
+        &Header::new(context.algorithm),
         &claims,
-        &EncodingKey::from_secret(context.secret.as_bytes()),
+        &context.encoding_key,
     )
     .expect("failed to generate test JWT")
 }

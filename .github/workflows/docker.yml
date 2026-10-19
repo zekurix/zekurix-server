@@ -88,6 +88,10 @@ jobs:
       - name: Start services
         run: docker compose up -d --wait
 
+      - name: Dump logs
+        if: always()
+        run: docker compose logs --no-color
+
       - name: Stop services
         run: docker compose down -v
 
@@ -121,6 +125,10 @@ jobs:
 
       - name: Start services
         run: docker compose --profile full up --build -d --wait
+
+      - name: Dump logs
+        if: always()
+        run: docker compose logs --no-color
 
       - name: Stop services
         run: docker compose --profile full down -v
