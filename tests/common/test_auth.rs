@@ -1,6 +1,6 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
+use jsonwebtoken::{Algorithm, EncodingKey, Header, encode, jwk::JwkSet};
 use serde::Serialize;
 
 use zekurix_server::settings::authentication::Settings;
@@ -24,76 +24,87 @@ struct Claims {
 }
 
 impl TestAuth {
-    fn algorithm(settings: &Settings) -> Algorithm {
+    fn read_jwks(settings: &Settings) -> JwkSet {
         let jwks_file = settings
             .provider
             .jwks_file
             .as_ref()
             .expect("JWKS file must be configured for test authentication");
-        let jwks = std::fs::read_to_string(jwks_file).expect("failed to read JWKS file");
-        let jwks: serde_json::Value =
-            serde_json::from_str(&jwks).expect("failed to parse JWKS file");
-        let algorithm = jwks["keys"][0]["alg"]
-            .as_str()
-            .expect("JWKS must contain an algorithm in its first key");
 
-        algorithm
-            .parse()
-            .expect("JWKS contains an unsupported signing algorithm")
+        let jwks = std::fs::read_to_string(jwks_file).expect("failed to read JWKS file");
+
+        serde_json::from_str(&jwks).expect("failed to parse JWKS file")
     }
 
-    fn kid(settings: &Settings) -> String {
-        let jwks_file = settings
-            .provider
-            .jwks_file
-            .as_ref()
-            .expect("JWKS file must be configured for test authentication");
-        let jwks = std::fs::read_to_string(jwks_file).expect("failed to read JWKS file");
-        let jwks: serde_json::Value =
-            serde_json::from_str(&jwks).expect("failed to parse JWKS file");
-
-        jwks["keys"][0]["kid"]
-            .as_str()
-            .expect("JWKS must contain a key ID in its first key")
-            .to_owned()
-    }
-
-    fn encoding_key(settings: &Settings) -> EncodingKey {
+    fn read_private_key(settings: &Settings) -> Vec<u8> {
         let jwks_file = settings
             .provider
             .jwks_file
             .as_ref()
             .expect("JWKS file must be configured for test authentication");
         let private_key_file = jwks_file.with_file_name("private.pem");
-        let private_key =
-            std::fs::read(&private_key_file).expect("failed to read test private key");
+        std::fs::read(&private_key_file).expect("failed to read test private key")
+    }
 
-        match Self::algorithm(settings) {
+    fn jwk(jwks: &JwkSet) -> &jsonwebtoken::jwk::Jwk {
+        jwks.keys
+            .first()
+            .expect("JWKS must contain at least one key")
+    }
+
+    fn algorithm(jwks: &JwkSet) -> Algorithm {
+        Self::jwk(jwks)
+            .common
+            .key_algorithm
+            .as_ref()
+            .expect("JWKS key must contain an algorithm")
+            .to_string()
+            .parse()
+            .expect("JWKS contains an unsupported signing algorithm")
+    }
+
+    fn kid(jwks: &JwkSet) -> String {
+        Self::jwk(jwks)
+            .common
+            .key_id
+            .clone()
+            .expect("JWKS key must contain a key ID")
+    }
+
+    fn encoding_key(private_key: &[u8], algorithm: Algorithm) -> EncodingKey {
+        match algorithm {
             Algorithm::ES256 | Algorithm::ES384 => {
-                EncodingKey::from_ec_pem(&private_key).expect("invalid EC private key")
+                EncodingKey::from_ec_pem(private_key).expect("invalid EC private key")
             }
+
             Algorithm::RS256
             | Algorithm::RS384
             | Algorithm::RS512
             | Algorithm::PS256
             | Algorithm::PS384
             | Algorithm::PS512 => {
-                EncodingKey::from_rsa_pem(&private_key).expect("invalid RSA private key")
+                EncodingKey::from_rsa_pem(private_key).expect("invalid RSA private key")
             }
+
             Algorithm::EdDSA => {
-                EncodingKey::from_ed_pem(&private_key).expect("invalid EdDSA private key")
+                EncodingKey::from_ed_pem(private_key).expect("invalid EdDSA private key")
             }
+
             _ => panic!("unsupported private key signing algorithm"),
         }
     }
 
     pub fn new(settings: &Settings) -> Self {
+        let jwks = Self::read_jwks(settings);
+        let private_key = Self::read_private_key(settings);
+        let algorithm = Self::algorithm(&jwks);
+
         TestAuth {
             issuer: settings.issuer.clone(),
             audience: settings.audience.clone(),
-            algorithm: Self::algorithm(settings),
-            kid: Self::kid(settings),
-            encoding_key: Self::encoding_key(settings),
+            algorithm,
+            kid: Self::kid(&jwks),
+            encoding_key: Self::encoding_key(&private_key, algorithm),
             clock_skew: settings.clock_skew,
         }
     }
