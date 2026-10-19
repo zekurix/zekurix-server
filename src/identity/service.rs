@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use std::{fs, path::Path};
 
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 
@@ -9,6 +8,8 @@ use crate::user::{User, UserId, UserRepository};
 
 use super::claims::Claims;
 use super::{Identity, IdentityRepository, Issuer, Subject};
+
+const JWKS: &str = include_str!("jwks.json");
 
 pub struct AuthenticationService {
     validation: Validation,
@@ -32,11 +33,8 @@ impl AuthenticationService {
         validation.set_audience(std::slice::from_ref(&settings.audience));
         validation.set_issuer(std::slice::from_ref(&settings.issuer));
 
-        let jwks = fs::read_to_string(Path::new("tests/keys/authentication/jwks.json"))
-            .expect("unable to read tests/keys/authentication/jwks.json");
-
         let jwk_set: jsonwebtoken::jwk::JwkSet =
-            serde_json::from_str(&jwks).expect("invalid jwks.json");
+            serde_json::from_str(JWKS).expect("invalid jwks.json");
 
         let jwk = jwk_set
             .keys
@@ -87,6 +85,8 @@ impl AuthenticationService {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+    use std::path::Path;
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     use jsonwebtoken::{EncodingKey, Header, encode};
