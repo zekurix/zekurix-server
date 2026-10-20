@@ -6,7 +6,7 @@ use crate::error::{Error, Result};
 use crate::settings::authentication::Settings;
 use crate::user::{User, UserId, UserRepository};
 
-use super::claims::Claims;
+use super::jwt::Claims;
 use super::{Identity, IdentityRepository, Issuer, Subject};
 
 const JWKS: &str = include_str!("jwks.json");
