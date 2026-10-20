@@ -1,7 +1,7 @@
-mod claims;
 mod current_user_id;
 mod entity;
 mod issuer;
+mod jwt;
 mod middleware;
 mod postgres_repository;
 mod repository;
