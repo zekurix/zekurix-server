@@ -65,6 +65,9 @@ pub enum Error {
 
     #[error("Invalid token")]
     InvalidToken,
+
+    #[error("failed to load JWKS")]
+    JwksLoadFailed(#[source] anyhow::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -534,17 +537,18 @@ mod tests {
         assert_eq!(problem.detail, Some(format!("User '{id}' was not found.")));
     }
 
-    #[test_case(Error::InternalError(anyhow::anyhow!("error")) ; "internal server error")]
+    #[test_case(Error::InternalError(anyhow::anyhow!("error")); "internal server error")]
     #[test_case(Error::IdentityNotFound {
             issuer: Issuer::new("issuer").unwrap(),
             subject: Subject::new("subject").unwrap(),
-        } ; "identity not found")]
-    #[test_case(Error::MissingEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "missing environment variable")]
-    #[test_case(Error::InvalidEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()) ; "invalid environment variable")]
+        }; "identity not found")]
+    #[test_case(Error::MissingEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()); "missing environment variable")]
+    #[test_case(Error::InvalidEnvironmentVariable("ZEKURIX_DATABASE__PASSWORD".to_owned()); "invalid environment variable")]
     #[test_case(Error::InvalidSettings {
             setting: "setting".to_owned(),
             reason: "reason".to_owned(),
-        } ; "invalid settings")]
+        }; "invalid settings")]
+    #[test_case(Error::JwksLoadFailed(anyhow::anyhow!("error")); "jwks load failed")]
     fn other_error_maps_to_internal_server_error(error: Error) {
         let problem = ProblemDetails::from(error);
 
@@ -578,7 +582,6 @@ mod tests {
 
     #[test]
     fn test_non_unauthorized_error_no_www_authenticate_header() {
-        // Arrange
         let error = Error::InternalError(anyhow::anyhow!("error"));
         let response = error.into_response();
 
