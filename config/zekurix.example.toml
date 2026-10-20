@@ -111,3 +111,40 @@ discovery_url = "https://auth.example.com/.well-known/openid-configuration"
 # No default value.
 # Either discovery_url or jwks_file must be configured.
 # jwks_file = "tests/keys/authentication/jwks.json"
+
+# Maximum duration during startup spent retrying JWKS loading.
+# If no usable JWKS can be loaded before this timeout, the application exits.
+# Format: human-readable duration, for example "10s", "30s" or "1m"; must be greater than zero.
+# Default value: "30s".
+startup_retry_timeout = "30s"
+
+# Delay between startup retry attempts.
+# Format: human-readable duration, for example "500ms", "1s" or "3s"; must be greater than zero
+# and not exceed startup_retry_timeout.
+# Default value: "1s".
+startup_retry_interval = "1s"
+
+# Interval between successful JWKS refresh attempts.
+# Format: human-readable duration, for example "30m", "1h" or "1d"; must be greater than zero.
+# Default value: "1h".
+refresh_interval = "1h"
+
+# Delay between refresh retry attempts after a failure.
+# Format: human-readable duration, for example "30s", "1m" or "30m"; must be greater than zero.
+# Default value: "1m".
+refresh_retry_interval = "1m"
+
+# Maximum duration for which previously loaded keys remain usable
+# after refresh failures.
+# Once this duration expires, previously loaded keys are discarded
+# and a new successful refresh is required before JWT validation
+# can continue.
+# Format: human-readable duration, for example "10m", "1h" or "1d".
+# Default value: "1h".
+stale_keys_ttl = "1h"
+
+# Maximum time allowed when communicating with the identity provider.
+# This timeout applies to all network operations required to retrieve and refresh signing keys.
+# Format: human-readable duration, for example "5s", "10s" or "1m"; must be greater than zero.
+# Default value: "10s".
+request_timeout = "10s"
