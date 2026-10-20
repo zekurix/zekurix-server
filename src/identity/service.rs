@@ -6,7 +6,6 @@ use crate::error::{Error, Result};
 use crate::settings::authentication::Settings;
 use crate::user::{User, UserId, UserRepository};
 
-use super::jwks::{JwksProvider, create_jwks_provider};
 use super::jwt::Claims;
 use super::{Identity, IdentityRepository, Issuer, Subject};
 
@@ -17,7 +16,6 @@ pub struct AuthenticationService {
     decoding_key: DecodingKey,
     identity_repository: Arc<dyn IdentityRepository>,
     user_repository: Arc<dyn UserRepository>,
-    jwks_provider: Arc<dyn JwksProvider>,
 }
 
 impl AuthenticationService {
@@ -45,19 +43,15 @@ impl AuthenticationService {
 
         let decoding_key = DecodingKey::from_jwk(jwk).expect("invalid JWK");
 
-        let jwks_provider = create_jwks_provider(&settings.provider);
-
         Self {
             decoding_key,
             validation,
             identity_repository,
             user_repository,
-            jwks_provider,
         }
     }
 
     pub async fn authenticate(&self, token: &str) -> Result<UserId> {
-        let _ = self.jwks_provider.load().await; // fake to use the code
         let claims = self.decode(token)?;
         let issuer = Issuer::new(&claims.iss)?;
         let subject = Subject::new(&claims.sub)?;
