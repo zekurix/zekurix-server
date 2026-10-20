@@ -141,7 +141,7 @@ mod tests {
     fn validate_should_succeed_when_only_jwks_file_is_configured() {
         let settings = Settings {
             discovery_url: None,
-            jwks_file: Some("tests/jwks.json".into()),
+            jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()
         };
 
@@ -168,7 +168,7 @@ mod tests {
                     .parse()
                     .unwrap(),
             ),
-            jwks_file: Some("tests/jwks.json".into()),
+            jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()
         };
         let result = settings.validate();
