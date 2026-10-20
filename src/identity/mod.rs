@@ -12,6 +12,7 @@ mod subject;
 pub use current_user_id::CurrentUserId;
 pub use entity::Identity;
 pub use issuer::Issuer;
+pub use jwks::JwksService;
 pub use middleware::authenticate;
 pub use postgres_repository::PostgresIdentityRepository;
 pub use repository::IdentityRepository;
