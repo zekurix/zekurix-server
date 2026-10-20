@@ -139,9 +139,9 @@ refresh_retry_interval = "1m"
 # Once this duration expires, previously loaded keys are discarded
 # and a new successful refresh is required before JWT validation
 # can continue.
-# Format: human-readable duration, for example "10m", "1h" or "1d".
-# Default value: "1h".
-stale_keys_ttl = "1h"
+# Format: human-readable duration, for example "10m", "6h" or "1d".
+# Default value: "6h".
+stale_keys_ttl = "6h"
 
 # Maximum time allowed when communicating with the identity provider.
 # This timeout applies to all network operations required to retrieve and refresh signing keys.

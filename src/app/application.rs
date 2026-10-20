@@ -54,7 +54,7 @@ impl Application {
         let secrets = Secrets::load()?;
         let database = PostgresDatabase::init(&settings.database, &secrets.database).await?;
         let repositories = Repositories::new(database.pool.clone());
-        let services = Services::new(&settings, &repositories);
+        let services = Services::new(&settings, &repositories).await?;
 
         let application = Self {
             settings,
