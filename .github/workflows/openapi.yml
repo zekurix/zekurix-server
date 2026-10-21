@@ -85,7 +85,7 @@ jobs:
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
           ZEKURIX_AUTHENTICATION__ISSUER="https://auth.example.com"
           ZEKURIX_AUTHENTICATION__AUDIENCE="zekurix"
-          ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE="tests/jwks.json"
+          ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE="tests/keys/authentication/jwks.json"
           EOF
 
       - name: Start services
@@ -148,7 +148,7 @@ jobs:
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
           ZEKURIX_AUTHENTICATION__ISSUER="https://auth.example.com"
           ZEKURIX_AUTHENTICATION__AUDIENCE="zekurix"
-          ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE="tests/jwks.json"
+          ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE="tests/keys/authentication/jwks.json"
           EOF
 
       - name: Start services
