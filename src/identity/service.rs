@@ -40,6 +40,10 @@ impl AuthenticationService {
             .keys
             .first()
             .expect("jwks.json does not contain any key");
+        let vk = super::jwks::VerificationKey::new(jwk.clone()).expect("invalid JWK");
+        let _ = vk.kid;
+        let _ = vk.algorithm;
+        let _ = vk.decoding_key;
 
         let decoding_key = DecodingKey::from_jwk(jwk).expect("invalid JWK");
 

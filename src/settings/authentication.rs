@@ -25,8 +25,6 @@ pub enum Algorithm {
     Es256,
     #[serde(rename = "ES384")]
     Es384,
-    #[serde(rename = "ES512")]
-    Es512,
     #[serde(rename = "EdDSA")]
     EdDsa,
 }
@@ -42,7 +40,6 @@ impl fmt::Display for Algorithm {
             Algorithm::Ps512 => "PS512",
             Algorithm::Es256 => "ES256",
             Algorithm::Es384 => "ES384",
-            Algorithm::Es512 => "ES512",
             Algorithm::EdDsa => "EdDSA",
         })
     }
@@ -333,7 +330,6 @@ mod tests {
         assert_eq!(Algorithm::Ps512.to_string(), "PS512");
         assert_eq!(Algorithm::Es256.to_string(), "ES256");
         assert_eq!(Algorithm::Es384.to_string(), "ES384");
-        assert_eq!(Algorithm::Es512.to_string(), "ES512");
         assert_eq!(Algorithm::EdDsa.to_string(), "EdDSA");
     }
 }
