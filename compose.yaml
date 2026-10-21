@@ -44,6 +44,7 @@ services:
       ZEKURIX_DATABASE__MIGRATE: ${ZEKURIX_DATABASE__MIGRATE:-true}
     volumes:
       - ./zekurix.toml:/zekurix.toml:ro
+      - ./${ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE}:/${ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE}:ro
 
 volumes:
   postgres-data:

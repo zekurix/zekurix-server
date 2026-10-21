@@ -34,7 +34,7 @@ impl Default for Settings {
             startup_retry_interval: Duration::from_secs(1),
             refresh_interval: Duration::from_hours(1),
             refresh_retry_interval: Duration::from_mins(1),
-            stale_keys_ttl: Duration::from_hours(1),
+            stale_keys_ttl: Duration::from_hours(6),
             request_timeout: Duration::from_secs(10),
         }
     }

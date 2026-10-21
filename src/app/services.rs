@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use crate::error::Result;
 use crate::identity::AuthenticationService;
 use crate::identity::JwksService;
 use crate::settings::Settings;
@@ -5,13 +8,13 @@ use crate::settings::Settings;
 use super::repositories::Repositories;
 
 pub struct Services {
-    pub jwks: JwksService,
+    pub jwks: Arc<JwksService>,
     pub authentication: AuthenticationService,
 }
 
 impl Services {
-    pub fn new(settings: &Settings, repositories: &Repositories) -> Self {
-        let jwks = JwksService::new(&settings.authentication.provider);
+    pub async fn new(settings: &Settings, repositories: &Repositories) -> Result<Self> {
+        let jwks = JwksService::start(&settings.authentication.provider).await?;
 
         let authentication = AuthenticationService::new(
             &settings.authentication,
@@ -19,9 +22,9 @@ impl Services {
             repositories.user.clone(),
         );
 
-        Self {
+        Ok(Self {
             jwks,
             authentication,
-        }
+        })
     }
 }
