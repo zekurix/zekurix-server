@@ -66,8 +66,11 @@ pub enum Error {
     #[error("Invalid token")]
     InvalidToken,
 
-    #[error("failed to load JWKS")]
+    #[error("Failed to load JWKS")]
     JwksLoadFailed(#[source] anyhow::Error),
+
+    #[error("Invalid JWK")]
+    InvalidJwk(#[source] anyhow::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -549,6 +552,7 @@ mod tests {
             reason: "reason".to_owned(),
         }; "invalid settings")]
     #[test_case(Error::JwksLoadFailed(anyhow::anyhow!("error")); "jwks load failed")]
+    #[test_case(Error::InvalidJwk(anyhow::anyhow!("error")); "invalid jwk")]
     fn other_error_maps_to_internal_server_error(error: Error) {
         let problem = ProblemDetails::from(error);
 

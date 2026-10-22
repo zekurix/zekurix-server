@@ -34,6 +34,8 @@ services:
       - .env
     environment:
       ZEKURIX_DATABASE__HOST: postgres
+    volumes:
+      - ./jwks.json:/${ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE}:ro
 
 volumes:
   postgres-data:
