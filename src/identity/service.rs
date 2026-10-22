@@ -53,6 +53,13 @@ impl AuthenticationService {
     }
 
     pub async fn authenticate(&self, token: &str) -> Result<UserId> {
+        let store =
+            super::jwks::VerificationKeyStore::new(super::jwks::VerificationKeySet::default());
+        store
+            .replace(super::jwks::VerificationKeySet::default())
+            .await;
+        let _ = store.current().await;
+
         let claims = self.decode(token)?;
         let issuer = Issuer::new(&claims.iss)?;
         let subject = Subject::new(&claims.sub)?;

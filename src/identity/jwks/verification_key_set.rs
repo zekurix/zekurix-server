@@ -3,6 +3,7 @@ use tracing::debug;
 
 use super::VerificationKey;
 
+#[derive(Debug, Clone, Default)]
 pub struct VerificationKeySet {
     pub keys: Vec<VerificationKey>,
 }
