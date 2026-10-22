@@ -6,6 +6,7 @@ use tracing::{debug, error, warn};
 
 use crate::error::{Error, Result};
 
+#[derive(Debug, Clone)]
 pub struct VerificationKey {
     pub kid: Option<String>,
     pub algorithm: Option<Algorithm>,
