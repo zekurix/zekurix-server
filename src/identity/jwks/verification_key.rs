@@ -2,6 +2,7 @@ use jsonwebtoken::{
     Algorithm, DecodingKey,
     jwk::{Jwk, KeyAlgorithm},
 };
+use tracing::{debug, error, warn};
 
 use crate::error::{Error, Result};
 
@@ -27,15 +28,35 @@ impl VerificationKey {
                 KeyAlgorithm::ES384 => Some(Algorithm::ES384),
                 KeyAlgorithm::EdDSA => Some(Algorithm::EdDSA),
                 _ => {
+                    warn!(
+                        ?kid,
+                        ?key_algorithm,
+                        "ignoring JWK with unsupported algorithm"
+                    );
                     return Err(Error::InvalidJwk(anyhow::anyhow!(
                         "unsupported JWK key algorithm"
                     )));
                 }
             },
-            None => None,
+
+            None => {
+                debug!(?kid, "JWK does not specify an algorithm");
+                None
+            }
         };
 
-        let decoding_key = DecodingKey::from_jwk(&jwk).map_err(|e| Error::InvalidJwk(e.into()))?;
+        let decoding_key = DecodingKey::from_jwk(&jwk).map_err(|error| {
+            error!(
+               ?kid,
+               ?algorithm,
+               %error,
+               "failed to create decoding key from JWK"
+            );
+
+            Error::InvalidJwk(error.into())
+        })?;
+
+        debug!(?kid, ?algorithm, "verification key created");
 
         Ok(Self {
             kid,
