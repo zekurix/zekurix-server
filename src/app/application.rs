@@ -11,6 +11,7 @@ use crate::settings::Settings;
 
 use super::repositories::Repositories;
 use super::services::Services;
+use super::stores::Stores;
 
 async fn shutdown_signal() {
     let ctrl_c = async {
@@ -43,6 +44,7 @@ pub struct Application {
     pub secrets: Secrets,
     pub database: PostgresDatabase,
     pub repositories: Repositories,
+    pub stores: Stores,
     pub services: Services,
 }
 
@@ -54,13 +56,15 @@ impl Application {
         let secrets = Secrets::load()?;
         let database = PostgresDatabase::init(&settings.database, &secrets.database).await?;
         let repositories = Repositories::new(database.pool.clone());
-        let services = Services::new(&settings, &repositories).await?;
+        let stores = Stores::new();
+        let services = Services::new(&settings, &repositories, &stores).await?;
 
         let application = Self {
             settings,
             secrets,
             database,
             repositories,
+            stores,
             services,
         };
 

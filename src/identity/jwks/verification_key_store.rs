@@ -25,6 +25,10 @@ impl VerificationKeyStore {
         let mut guard = self.current.write().await;
         *guard = Arc::new(new);
     }
+
+    pub async fn clear(&self) {
+        self.replace(VerificationKeySet::default()).await;
+    }
 }
 
 #[cfg(test)]
@@ -79,6 +83,28 @@ mod tests {
         assert_eq!(previous.keys[0].kid.as_deref(), Some("initial"));
         assert_eq!(current.keys[0].kid.as_deref(), Some("replacement"));
         assert!(!Arc::ptr_eq(&previous, &current));
+    }
+
+    #[tokio::test]
+    async fn clear_removes_keys_without_changing_existing_snapshots() {
+        let store = VerificationKeyStore::new(key_set("initial"));
+        let previous = store.current().await;
+
+        store.clear().await;
+
+        let current = store.current().await;
+        assert!(current.keys.is_empty());
+        assert_eq!(previous.keys[0].kid.as_deref(), Some("initial"));
+        assert!(!Arc::ptr_eq(&previous, &current));
+    }
+
+    #[tokio::test]
+    async fn clear_on_empty_store_keeps_key_set_empty() {
+        let store = VerificationKeyStore::default();
+
+        store.clear().await;
+
+        assert!(store.current().await.keys.is_empty());
     }
 
     #[tokio::test]
