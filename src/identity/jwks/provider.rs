@@ -8,6 +8,7 @@ use crate::settings::authentication_provider::Settings;
 
 use super::{FileJwksProvider, RemoteJwksProvider};
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait JwksProvider: Send + Sync {
     async fn load(&self) -> Result<JwkSet>;

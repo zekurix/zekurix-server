@@ -14,3 +14,6 @@ pub use service::JwksService;
 pub use verification_key::VerificationKey;
 pub use verification_key_set::VerificationKeySet;
 pub use verification_key_store::VerificationKeyStore;
+
+#[cfg(test)]
+pub use provider::MockJwksProvider;

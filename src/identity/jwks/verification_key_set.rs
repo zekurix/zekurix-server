@@ -28,6 +28,14 @@ impl VerificationKeySet {
         Self { keys }
     }
 
+    pub fn len(&self) -> usize {
+        self.keys.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.keys.is_empty()
+    }
+
     pub fn find_candidates(
         &self,
         kid: Option<&str>,
@@ -89,7 +97,7 @@ mod tests {
             ]
         })));
 
-        assert_eq!(set.keys.len(), 2);
+        assert_eq!(set.len(), 2);
         assert_eq!(set.keys[0].kid.as_deref(), Some("key-1"));
         assert_eq!(set.keys[1].kid.as_deref(), Some("key-2"));
     }
@@ -115,7 +123,7 @@ mod tests {
             ]
         })));
 
-        assert_eq!(set.keys.len(), 1);
+        assert_eq!(set.len(), 1);
         assert_eq!(set.keys[0].kid.as_deref(), Some("valid"));
     }
 
