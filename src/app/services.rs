@@ -29,6 +29,7 @@ impl Services {
             &settings.authentication,
             repositories.identity.clone(),
             repositories.user.clone(),
+            stores.verification_key.clone(),
         );
 
         Ok(Self {
