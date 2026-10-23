@@ -6,8 +6,8 @@ use crate::error::{Error, Result};
 use crate::settings::authentication::Settings;
 use crate::user::{User, UserId, UserRepository};
 
-use super::jwt::Claims;
-use super::{Identity, IdentityRepository, Issuer, Subject};
+use super::jwt::{Claims, JwtVerifier};
+use super::{Identity, IdentityRepository, Issuer, Subject, VerificationKeyStore};
 
 const JWKS: &str = include_str!("jwks/jwks.json");
 
@@ -16,6 +16,7 @@ pub struct AuthenticationService {
     decoding_key: DecodingKey,
     identity_repository: Arc<dyn IdentityRepository>,
     user_repository: Arc<dyn UserRepository>,
+    jwt_verifier: JwtVerifier,
 }
 
 impl AuthenticationService {
@@ -23,6 +24,7 @@ impl AuthenticationService {
         settings: &Settings,
         identity_repository: Arc<dyn IdentityRepository>,
         user_repository: Arc<dyn UserRepository>,
+        key_store: Arc<VerificationKeyStore>,
     ) -> Self {
         let mut validation = Validation::new(Algorithm::ES256);
         validation.set_required_spec_claims(&["iss", "sub", "aud", "exp"]);
@@ -44,15 +46,19 @@ impl AuthenticationService {
         let _ = vks.find_candidates(None, Algorithm::RS256);
         let decoding_key = vk.decoding_key.clone();
 
+        let jwt_verifier = JwtVerifier::new(settings, key_store);
+
         Self {
             decoding_key,
             validation,
             identity_repository,
             user_repository,
+            jwt_verifier,
         }
     }
 
     pub async fn authenticate(&self, token: &str) -> Result<UserId> {
+        let _ = self.jwt_verifier.verify("token").await;
         let store =
             super::jwks::VerificationKeyStore::new(super::jwks::VerificationKeySet::default());
         store
@@ -102,6 +108,7 @@ mod tests {
     use serde_json::{Value, json};
 
     use crate::identity::MockIdentityRepository;
+    use crate::identity::VerificationKeySet;
     use crate::settings::authentication_provider;
     use crate::user::MockUserRepository;
 
@@ -158,6 +165,7 @@ mod tests {
             &settings(),
             Arc::new(identity_repository),
             Arc::new(user_repository),
+            Arc::new(VerificationKeyStore::new(VerificationKeySet::default())),
         )
     }
 

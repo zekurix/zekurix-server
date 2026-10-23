@@ -45,6 +45,22 @@ impl fmt::Display for Algorithm {
     }
 }
 
+impl From<Algorithm> for jsonwebtoken::Algorithm {
+    fn from(algorithm: Algorithm) -> Self {
+        match algorithm {
+            Algorithm::Rs256 => Self::RS256,
+            Algorithm::Rs384 => Self::RS384,
+            Algorithm::Rs512 => Self::RS512,
+            Algorithm::Ps256 => Self::PS256,
+            Algorithm::Ps384 => Self::PS384,
+            Algorithm::Ps512 => Self::PS512,
+            Algorithm::Es256 => Self::ES256,
+            Algorithm::Es384 => Self::ES384,
+            Algorithm::EdDsa => Self::EdDSA,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Settings {
@@ -331,5 +347,24 @@ mod tests {
         assert_eq!(Algorithm::Es256.to_string(), "ES256");
         assert_eq!(Algorithm::Es384.to_string(), "ES384");
         assert_eq!(Algorithm::EdDsa.to_string(), "EdDSA");
+    }
+
+    #[test]
+    fn algorithm_converts_to_jsonwebtoken_algorithm() {
+        let cases = [
+            (Algorithm::Rs256, jsonwebtoken::Algorithm::RS256),
+            (Algorithm::Rs384, jsonwebtoken::Algorithm::RS384),
+            (Algorithm::Rs512, jsonwebtoken::Algorithm::RS512),
+            (Algorithm::Ps256, jsonwebtoken::Algorithm::PS256),
+            (Algorithm::Ps384, jsonwebtoken::Algorithm::PS384),
+            (Algorithm::Ps512, jsonwebtoken::Algorithm::PS512),
+            (Algorithm::Es256, jsonwebtoken::Algorithm::ES256),
+            (Algorithm::Es384, jsonwebtoken::Algorithm::ES384),
+            (Algorithm::EdDsa, jsonwebtoken::Algorithm::EdDSA),
+        ];
+
+        for (algorithm, expected) in cases {
+            assert_eq!(jsonwebtoken::Algorithm::from(algorithm), expected);
+        }
     }
 }
