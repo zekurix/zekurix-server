@@ -58,7 +58,7 @@ impl AuthenticationService {
     }
 
     pub async fn authenticate(&self, token: &str) -> Result<UserId> {
-        let _ = self.jwt_verifier.verify("token");
+        let _ = self.jwt_verifier.verify("token").await;
         let store =
             super::jwks::VerificationKeyStore::new(super::jwks::VerificationKeySet::default());
         store
