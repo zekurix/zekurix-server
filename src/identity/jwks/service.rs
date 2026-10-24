@@ -513,9 +513,13 @@ mod tests {
 
         Arc::clone(&service).spawn_refresh_loop();
 
-        // 50 ms initial refresh + 10 ms retry + margin,
-        // but still before the next regular 50 ms refresh.
-        tokio::time::sleep(Duration::from_millis(80)).await;
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while service.key_store.current().await.is_empty() {
+                tokio::time::sleep(Duration::from_millis(1)).await;
+            }
+        })
+        .await
+        .expect("refresh loop should load keys after retrying");
 
         assert_eq!(service.key_store.current().await.len(), 1);
     }

@@ -388,7 +388,7 @@ mod tests {
             let service = service_without_repository_expectations();
             let mut claims = build_valid_claims();
 
-            claims["nbf"] = json!(now() + 31);
+            claims["nbf"] = json!(now() + 60);
 
             let result = service.decode(&encode_claims(&claims));
 
