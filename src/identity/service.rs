@@ -1,22 +1,16 @@
 use std::sync::Arc;
 
-use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
-
 use crate::error::{Error, Result};
 use crate::settings::authentication::Settings;
 use crate::user::{User, UserId, UserRepository};
 
-use super::jwt::{Claims, JwtVerifier};
+use super::jwt::JwtVerifier;
 use super::{Identity, IdentityRepository, Issuer, Subject, VerificationKeyStore};
 
-const JWKS: &str = include_str!("jwks/jwks.json");
-
 pub struct AuthenticationService {
-    validation: Validation,
-    decoding_key: DecodingKey,
+    jwt_verifier: JwtVerifier,
     identity_repository: Arc<dyn IdentityRepository>,
     user_repository: Arc<dyn UserRepository>,
-    jwt_verifier: JwtVerifier,
 }
 
 impl AuthenticationService {
@@ -26,47 +20,15 @@ impl AuthenticationService {
         identity_repository: Arc<dyn IdentityRepository>,
         user_repository: Arc<dyn UserRepository>,
     ) -> Self {
-        let mut validation = Validation::new(Algorithm::ES256);
-        validation.set_required_spec_claims(&["iss", "sub", "aud", "exp"]);
-        validation.leeway = settings.clock_skew.as_secs();
-        validation.validate_exp = true;
-        validation.validate_nbf = true;
-        validation.validate_aud = true;
-        validation.set_audience(std::slice::from_ref(&settings.audience));
-        validation.set_issuer(std::slice::from_ref(&settings.issuer));
-
-        let jwk_set: jsonwebtoken::jwk::JwkSet =
-            serde_json::from_str(JWKS).expect("invalid jwks.json");
-
-        let vks = super::jwks::VerificationKeySet::new(jwk_set);
-        let vk = vks
-            .keys
-            .first()
-            .expect("jwks.json does not contain any key");
-        let _ = vks.find_candidates(None, Algorithm::RS256);
-        let decoding_key = vk.decoding_key.clone();
-
-        let jwt_verifier = JwtVerifier::new(settings, key_store);
-
         Self {
-            decoding_key,
-            validation,
+            jwt_verifier: JwtVerifier::new(settings, key_store),
             identity_repository,
             user_repository,
-            jwt_verifier,
         }
     }
 
     pub async fn authenticate(&self, token: &str) -> Result<UserId> {
-        let _ = self.jwt_verifier.verify("token").await;
-        let store =
-            super::jwks::VerificationKeyStore::new(super::jwks::VerificationKeySet::default());
-        store
-            .replace(super::jwks::VerificationKeySet::default())
-            .await;
-        let _ = store.current().await;
-
-        let claims = self.decode(token)?;
+        let claims = self.jwt_verifier.verify(token).await?;
         let issuer = Issuer::new(&claims.iss)?;
         let subject = Subject::new(&claims.sub)?;
         self.find_or_create_user(issuer, subject).await
@@ -89,12 +51,6 @@ impl AuthenticationService {
             Err(error) => Err(error),
         }
     }
-
-    fn decode(&self, token: &str) -> Result<Claims> {
-        decode::<Claims>(token, &self.decoding_key, &self.validation)
-            .map(|token| token.claims)
-            .map_err(|_| Error::InvalidToken)
-    }
 }
 
 #[cfg(test)]
@@ -103,20 +59,21 @@ mod tests {
     use std::path::Path;
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use jsonwebtoken::{EncodingKey, Header, encode};
+    use jsonwebtoken::{Algorithm, EncodingKey, Header, encode, jwk::JwkSet};
     use mockall::predicate::eq;
     use serde_json::{Value, json};
 
     use crate::identity::MockIdentityRepository;
     use crate::identity::VerificationKeySet;
-    use crate::settings::authentication_provider;
     use crate::user::MockUserRepository;
 
     use super::*;
 
-    const ISSUER: &str = "test-issuer";
+    const ISSUER: &str = "https://auth.example.com";
     const AUDIENCE: &str = "zekurix";
     const SUBJECT: &str = "Alice";
+    const JWKS: &str = include_str!("../../tests/keys/authentication/jwks.json");
+    const PRIVATE_KEY_PATH: &str = "tests/keys/authentication/private.pem";
 
     fn now() -> u64 {
         SystemTime::now()
@@ -129,16 +86,12 @@ mod tests {
         Settings {
             issuer: ISSUER.to_owned(),
             audience: AUDIENCE.to_owned(),
-            provider: authentication_provider::Settings {
-                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
-                ..Default::default()
-            },
             ..Default::default()
         }
     }
 
     fn encoding_key() -> EncodingKey {
-        let private_key = fs::read(Path::new("tests/keys/authentication/private.pem")).unwrap();
+        let private_key = fs::read(Path::new(PRIVATE_KEY_PATH)).unwrap();
 
         EncodingKey::from_ec_pem(&private_key).unwrap()
     }
@@ -161,9 +114,18 @@ mod tests {
         identity_repository: MockIdentityRepository,
         user_repository: MockUserRepository,
     ) -> AuthenticationService {
+        service_with_settings(&settings(), identity_repository, user_repository)
+    }
+
+    fn service_with_settings(
+        settings: &Settings,
+        identity_repository: MockIdentityRepository,
+        user_repository: MockUserRepository,
+    ) -> AuthenticationService {
+        let jwks: JwkSet = serde_json::from_str(JWKS).unwrap();
         AuthenticationService::new(
-            &settings(),
-            Arc::new(VerificationKeyStore::new(VerificationKeySet::default())),
+            settings,
+            Arc::new(VerificationKeyStore::new(VerificationKeySet::new(jwks))),
             Arc::new(identity_repository),
             Arc::new(user_repository),
         )
@@ -173,534 +135,287 @@ mod tests {
         service(MockIdentityRepository::new(), MockUserRepository::new())
     }
 
-    mod decode {
-        use super::*;
-        use test_case::test_case;
+    #[tokio::test]
+    async fn should_return_existing_user_id() {
+        let issuer = Issuer::new(ISSUER).unwrap();
+        let subject = Subject::new(SUBJECT).unwrap();
+        let user_id = UserId::new();
 
-        #[test]
-        fn should_decode_valid_token() {
-            let service = service_without_repository_expectations();
-            let token = encode_claims(&build_valid_claims());
+        let identity = Identity::new(issuer.clone(), subject.clone(), user_id);
 
-            let claims = service.decode(&token).unwrap();
+        let mut identity_repository = MockIdentityRepository::new();
+        identity_repository
+            .expect_find()
+            .with(eq(issuer.clone()), eq(subject.clone()))
+            .times(1)
+            .return_once(move |_, _| Ok(identity));
 
-            assert_eq!(claims.iss, ISSUER);
-            assert_eq!(claims.sub, SUBJECT);
-        }
+        let mut user_repository = MockUserRepository::new();
+        user_repository.expect_create().times(0);
 
-        #[test]
-        fn should_decode_valid_token_with_unknown_claims() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
+        let service = service(identity_repository, user_repository);
 
-            claims
-                .as_object_mut()
-                .unwrap()
-                .insert("other".to_owned(), json!("value"));
-            let token = encode_claims(&claims);
+        let result = service.find_or_create_user(issuer, subject).await.unwrap();
 
-            let claims = service.decode(&token).unwrap();
-
-            assert_eq!(claims.iss, ISSUER);
-            assert_eq!(claims.sub, SUBJECT);
-        }
-
-        #[test_case(""; "empty token")]
-        #[test_case("invalid"; "invalid token")]
-        #[test_case("header.payload"; "missing token segment")]
-        #[test_case("header.payload.signature.extra"; "too many token segments")]
-        #[test_case(".."; "empty segments")]
-        #[test_case("header..signature"; "empty payload")]
-        #[test_case("header.payload."; "empty signature")]
-        fn should_reject_invalid_token(token: &str) {
-            let service = service_without_repository_expectations();
-
-            let result = service.decode(token);
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_with_invalid_signature() {
-            let service = service_without_repository_expectations();
-            let token = encode(
-                &Header::new(Algorithm::HS256),
-                &build_valid_claims(),
-                &EncodingKey::from_secret(b"invalid-secret"),
-            )
-            .unwrap();
-
-            let result = service.decode(&token);
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_with_invalid_algorithm() {
-            let service = service_without_repository_expectations();
-
-            let token = encode(
-                &Header::new(Algorithm::HS256),
-                &build_valid_claims(),
-                &EncodingKey::from_secret(b"invalid-secret"),
-            )
-            .unwrap();
-
-            let result = service.decode(&token);
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_without_issuer() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims.as_object_mut().unwrap().remove("iss");
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_without_subject() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims.as_object_mut().unwrap().remove("sub");
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_without_audience() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims.as_object_mut().unwrap().remove("aud");
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_without_expiration() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims.as_object_mut().unwrap().remove("exp");
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_accept_token_without_not_before() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims.as_object_mut().unwrap().remove("nbf");
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(result.is_ok());
-        }
-
-        #[test]
-        fn should_reject_token_with_invalid_issuer() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims["iss"] = json!("other-issuer");
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_with_invalid_audience() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims["aud"] = json!("other-audience");
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_with_invalid_issuer_type() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims["iss"] = json!(123);
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_token_with_invalid_subject_type() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims["sub"] = json!(123);
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_reject_expired_token_outside_leeway() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims["exp"] = json!(now() - 31);
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_accept_expired_token_within_leeway() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims["exp"] = json!(now() - 29);
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(result.is_ok());
-        }
-
-        #[test]
-        fn should_reject_token_used_before_nbf_outside_leeway() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims["nbf"] = json!(now() + 60);
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
-
-        #[test]
-        fn should_accept_token_used_before_nbf_within_leeway() {
-            let service = service_without_repository_expectations();
-            let mut claims = build_valid_claims();
-
-            claims["nbf"] = json!(now() + 29);
-
-            let result = service.decode(&encode_claims(&claims));
-
-            assert!(result.is_ok());
-        }
+        assert_eq!(result, user_id);
     }
 
-    mod find_or_create_user {
-        use super::*;
+    #[tokio::test]
+    async fn should_create_user_when_identity_does_not_exist() {
+        let issuer = Issuer::new(ISSUER).unwrap();
+        let subject = Subject::new(SUBJECT).unwrap();
 
-        #[tokio::test]
-        async fn should_return_existing_user_id() {
-            let issuer = Issuer::new(ISSUER).unwrap();
-            let subject = Subject::new(SUBJECT).unwrap();
-            let user_id = UserId::new();
-
-            let identity = Identity::new(issuer.clone(), subject.clone(), user_id);
-
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository
-                .expect_find()
-                .with(eq(issuer.clone()), eq(subject.clone()))
-                .times(1)
-                .return_once(move |_, _| Ok(identity));
-
-            let mut user_repository = MockUserRepository::new();
-            user_repository.expect_create().times(0);
-
-            let service = service(identity_repository, user_repository);
-
-            let result = service.find_or_create_user(issuer, subject).await.unwrap();
-
-            assert_eq!(result, user_id);
-        }
-
-        #[tokio::test]
-        async fn should_create_user_when_identity_does_not_exist() {
-            let issuer = Issuer::new(ISSUER).unwrap();
-            let subject = Subject::new(SUBJECT).unwrap();
-
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository
-                .expect_find()
-                .with(eq(issuer.clone()), eq(subject.clone()))
-                .times(1)
-                .returning(|issuer, subject| {
-                    Err(Error::IdentityNotFound {
-                        issuer: issuer.clone(),
-                        subject: subject.clone(),
-                    })
-                });
-
-            let expected_issuer = issuer.clone();
-            let expected_subject = subject.clone();
-
-            let expected_user = User::new();
-            let expected_user_id = expected_user.id;
-
-            let mut user_repository = MockUserRepository::new();
-            user_repository
-                .expect_create()
-                .withf(move |user, identity| {
-                    identity.issuer == expected_issuer
-                        && identity.subject == expected_subject
-                        && identity.user_id == user.id
+        let mut identity_repository = MockIdentityRepository::new();
+        identity_repository
+            .expect_find()
+            .with(eq(issuer.clone()), eq(subject.clone()))
+            .times(1)
+            .returning(|issuer, subject| {
+                Err(Error::IdentityNotFound {
+                    issuer: issuer.clone(),
+                    subject: subject.clone(),
                 })
-                .times(1)
-                .return_once(move |_user, _identity| Ok(expected_user));
+            });
 
-            let service = service(identity_repository, user_repository);
+        let expected_issuer = issuer.clone();
+        let expected_subject = subject.clone();
 
-            let user_id = service.find_or_create_user(issuer, subject).await.unwrap();
+        let expected_user = User::new();
+        let expected_user_id = expected_user.id;
 
-            assert_eq!(user_id, expected_user_id);
-        }
+        let mut user_repository = MockUserRepository::new();
+        user_repository
+            .expect_create()
+            .withf(move |user, identity| {
+                identity.issuer == expected_issuer
+                    && identity.subject == expected_subject
+                    && identity.user_id == user.id
+            })
+            .times(1)
+            .return_once(move |_user, _identity| Ok(expected_user));
 
-        #[tokio::test]
-        async fn should_propagate_identity_repository_error() {
-            let issuer = Issuer::new(ISSUER).unwrap();
-            let subject = Subject::new(SUBJECT).unwrap();
+        let service = service(identity_repository, user_repository);
 
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository
-                .expect_find()
-                .times(1)
-                .returning(|_, _| Err(Error::InternalError(anyhow::anyhow!("repository failure"))));
+        let user_id = service.find_or_create_user(issuer, subject).await.unwrap();
 
-            let mut user_repository = MockUserRepository::new();
-            user_repository.expect_create().times(0);
-
-            let service = service(identity_repository, user_repository);
-
-            let result = service.find_or_create_user(issuer, subject).await;
-
-            assert!(matches!(result, Err(Error::InternalError(_))));
-        }
-
-        #[tokio::test]
-        async fn should_propagate_user_creation_error() {
-            let issuer = Issuer::new(ISSUER).unwrap();
-            let subject = Subject::new(SUBJECT).unwrap();
-
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository
-                .expect_find()
-                .times(1)
-                .returning(|issuer, subject| {
-                    Err(Error::IdentityNotFound {
-                        issuer: issuer.clone(),
-                        subject: subject.clone(),
-                    })
-                });
-
-            let mut user_repository = MockUserRepository::new();
-            user_repository
-                .expect_create()
-                .times(1)
-                .returning(|_, _| Err(Error::InternalError(anyhow::anyhow!("repository failure"))));
-
-            let service = service(identity_repository, user_repository);
-
-            let result = service.find_or_create_user(issuer, subject).await;
-
-            assert!(matches!(result, Err(Error::InternalError(_))));
-        }
+        assert_eq!(user_id, expected_user_id);
     }
 
-    mod authenticate {
-        use super::*;
+    #[tokio::test]
+    async fn should_authenticate_existing_identity() {
+        let user_id = UserId::new();
+        let token = encode_claims(&build_valid_claims());
 
-        #[tokio::test]
-        async fn should_authenticate_existing_identity() {
-            let user_id = UserId::new();
-            let token = encode_claims(&build_valid_claims());
+        let mut identity_repository = MockIdentityRepository::new();
+        identity_repository
+            .expect_find()
+            .withf(|issuer, subject| issuer.as_str() == ISSUER && subject.as_str() == SUBJECT)
+            .times(1)
+            .return_once(move |issuer, subject| {
+                Ok(Identity::new(issuer.clone(), subject.clone(), user_id))
+            });
 
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository
-                .expect_find()
-                .withf(|issuer, subject| issuer.as_str() == ISSUER && subject.as_str() == SUBJECT)
-                .times(1)
-                .return_once(move |issuer, subject| {
-                    Ok(Identity::new(issuer.clone(), subject.clone(), user_id))
-                });
+        let mut user_repository = MockUserRepository::new();
+        user_repository.expect_create().times(0);
 
-            let mut user_repository = MockUserRepository::new();
-            user_repository.expect_create().times(0);
+        let service = service(identity_repository, user_repository);
 
-            let service = service(identity_repository, user_repository);
+        let result = service.authenticate(&token).await.unwrap();
 
-            let result = service.authenticate(&token).await.unwrap();
+        assert_eq!(result, user_id);
+    }
 
-            assert_eq!(result, user_id);
-        }
+    #[tokio::test]
+    async fn should_provision_user_for_unknown_identity() {
+        let token = encode_claims(&build_valid_claims());
 
-        #[tokio::test]
-        async fn should_provision_user_for_unknown_identity() {
-            let token = encode_claims(&build_valid_claims());
-
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository
-                .expect_find()
-                .times(1)
-                .returning(|issuer, subject| {
-                    Err(Error::IdentityNotFound {
-                        issuer: issuer.clone(),
-                        subject: subject.clone(),
-                    })
-                });
-
-            let mut user_repository = MockUserRepository::new();
-            user_repository
-                .expect_create()
-                .withf(|user, identity| {
-                    identity.issuer.as_str() == ISSUER
-                        && identity.subject.as_str() == SUBJECT
-                        && identity.user_id == user.id
+        let mut identity_repository = MockIdentityRepository::new();
+        identity_repository
+            .expect_find()
+            .times(1)
+            .returning(|issuer, subject| {
+                Err(Error::IdentityNotFound {
+                    issuer: issuer.clone(),
+                    subject: subject.clone(),
                 })
-                .times(1)
-                .returning(|user, _| Ok(user));
+            });
 
-            let service = service(identity_repository, user_repository);
+        let mut user_repository = MockUserRepository::new();
+        user_repository
+            .expect_create()
+            .withf(|user, identity| {
+                identity.issuer.as_str() == ISSUER
+                    && identity.subject.as_str() == SUBJECT
+                    && identity.user_id == user.id
+            })
+            .times(1)
+            .returning(|user, _| Ok(user));
 
-            let result = service.authenticate(&token).await;
+        let service = service(identity_repository, user_repository);
 
-            assert!(result.is_ok());
-        }
+        let result = service.authenticate(&token).await;
 
-        #[tokio::test]
-        async fn should_reject_invalid_token_without_querying_repository() {
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository.expect_find().times(0);
+        assert!(result.is_ok());
+    }
 
-            let mut user_repository = MockUserRepository::new();
-            user_repository.expect_create().times(0);
+    #[tokio::test]
+    async fn should_reject_invalid_token_without_querying_repository() {
+        let mut identity_repository = MockIdentityRepository::new();
+        identity_repository.expect_find().times(0);
 
-            let service = service(identity_repository, user_repository);
+        let mut user_repository = MockUserRepository::new();
+        user_repository.expect_create().times(0);
 
-            let result = service.authenticate("invalid-token").await;
+        let service = service(identity_repository, user_repository);
 
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
+        let result = service.authenticate("invalid-token").await;
 
-        #[tokio::test]
-        async fn should_reject_empty_issuer() {
-            let mut claims = build_valid_claims();
-            claims["iss"] = json!("");
+        assert!(matches!(result, Err(Error::InvalidToken)));
+    }
 
-            let token = encode_claims(&claims);
-            let service = service_without_repository_expectations();
+    #[tokio::test]
+    async fn should_reject_empty_issuer() {
+        let mut claims = build_valid_claims();
+        claims["iss"] = json!("");
 
-            let result = service.authenticate(&token).await;
+        let token = encode_claims(&claims);
+        let mut settings = settings();
+        settings.issuer.clear();
+        let service = service_with_settings(
+            &settings,
+            MockIdentityRepository::new(),
+            MockUserRepository::new(),
+        );
 
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
+        let result = service.authenticate(&token).await;
 
-        #[tokio::test]
-        async fn should_reject_empty_subject() {
-            let mut claims = build_valid_claims();
-            claims["sub"] = json!("");
+        assert!(matches!(result, Err(Error::InvalidIssuer(_))));
+    }
 
-            let token = encode_claims(&claims);
-            let service = service_without_repository_expectations();
+    #[tokio::test]
+    async fn should_reject_issuer_exceeding_maximum_length() {
+        let issuer = "a".repeat(1025);
+        let mut claims = build_valid_claims();
+        claims["iss"] = json!(&issuer);
 
-            let result = service.authenticate(&token).await;
+        let token = encode_claims(&claims);
+        let mut settings = settings();
+        settings.issuer = issuer;
+        let service = service_with_settings(
+            &settings,
+            MockIdentityRepository::new(),
+            MockUserRepository::new(),
+        );
 
-            assert!(matches!(result, Err(Error::InvalidSubject(_))));
-        }
+        let result = service.authenticate(&token).await;
 
-        #[tokio::test]
-        async fn should_reject_subject_containing_null_character() {
-            let mut claims = build_valid_claims();
-            claims["sub"] = json!("Alice\0Bob");
+        assert!(matches!(result, Err(Error::InvalidIssuer(_))));
+    }
 
-            let token = encode_claims(&claims);
-            let service = service_without_repository_expectations();
+    #[tokio::test]
+    async fn should_reject_issuer_containing_null_character() {
+        let issuer = "auth\0issuer";
+        let mut claims = build_valid_claims();
+        claims["iss"] = json!(issuer);
 
-            let result = service.authenticate(&token).await;
+        let token = encode_claims(&claims);
+        let mut settings = settings();
+        settings.issuer = issuer.to_owned();
+        let service = service_with_settings(
+            &settings,
+            MockIdentityRepository::new(),
+            MockUserRepository::new(),
+        );
 
-            assert!(matches!(result, Err(Error::InvalidSubject(_))));
-        }
+        let result = service.authenticate(&token).await;
 
-        #[tokio::test]
-        async fn should_reject_subject_exceeding_maximum_length() {
-            let mut claims = build_valid_claims();
-            claims["sub"] = json!("a".repeat(1025));
+        assert!(matches!(result, Err(Error::InvalidIssuer(_))));
+    }
 
-            let token = encode_claims(&claims);
-            let service = service_without_repository_expectations();
+    #[tokio::test]
+    async fn should_reject_empty_subject() {
+        let mut claims = build_valid_claims();
+        claims["sub"] = json!("");
 
-            let result = service.authenticate(&token).await;
+        let token = encode_claims(&claims);
+        let service = service_without_repository_expectations();
 
-            assert!(matches!(result, Err(Error::InvalidSubject(_))));
-        }
+        let result = service.authenticate(&token).await;
 
-        #[tokio::test]
-        async fn should_propagate_identity_repository_error() {
-            let token = encode_claims(&build_valid_claims());
+        assert!(matches!(result, Err(Error::InvalidSubject(_))));
+    }
 
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository
-                .expect_find()
-                .times(1)
-                .returning(|_, _| Err(Error::InvalidToken));
+    #[tokio::test]
+    async fn should_reject_subject_containing_null_character() {
+        let mut claims = build_valid_claims();
+        claims["sub"] = json!("Alice\0Bob");
 
-            let mut user_repository = MockUserRepository::new();
-            user_repository.expect_create().times(0);
+        let token = encode_claims(&claims);
+        let service = service_without_repository_expectations();
 
-            let service = service(identity_repository, user_repository);
+        let result = service.authenticate(&token).await;
 
-            let result = service.authenticate(&token).await;
+        assert!(matches!(result, Err(Error::InvalidSubject(_))));
+    }
 
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
+    #[tokio::test]
+    async fn should_reject_subject_exceeding_maximum_length() {
+        let mut claims = build_valid_claims();
+        claims["sub"] = json!("a".repeat(1025));
 
-        #[tokio::test]
-        async fn should_propagate_user_creation_error() {
-            let token = encode_claims(&build_valid_claims());
+        let token = encode_claims(&claims);
+        let service = service_without_repository_expectations();
 
-            let mut identity_repository = MockIdentityRepository::new();
-            identity_repository
-                .expect_find()
-                .times(1)
-                .returning(|issuer, subject| {
-                    Err(Error::IdentityNotFound {
-                        issuer: issuer.clone(),
-                        subject: subject.clone(),
-                    })
-                });
+        let result = service.authenticate(&token).await;
 
-            let mut user_repository = MockUserRepository::new();
-            user_repository
-                .expect_create()
-                .times(1)
-                .returning(|_, _| Err(Error::InvalidToken));
+        assert!(matches!(result, Err(Error::InvalidSubject(_))));
+    }
 
-            let service = service(identity_repository, user_repository);
+    #[tokio::test]
+    async fn should_propagate_identity_repository_error() {
+        let token = encode_claims(&build_valid_claims());
 
-            let result = service.authenticate(&token).await;
+        let mut identity_repository = MockIdentityRepository::new();
+        identity_repository
+            .expect_find()
+            .times(1)
+            .returning(|_, _| Err(Error::InvalidToken));
 
-            assert!(matches!(result, Err(Error::InvalidToken)));
-        }
+        let mut user_repository = MockUserRepository::new();
+        user_repository.expect_create().times(0);
+
+        let service = service(identity_repository, user_repository);
+
+        let result = service.authenticate(&token).await;
+
+        assert!(matches!(result, Err(Error::InvalidToken)));
+    }
+
+    #[tokio::test]
+    async fn should_propagate_user_creation_error() {
+        let token = encode_claims(&build_valid_claims());
+
+        let mut identity_repository = MockIdentityRepository::new();
+        identity_repository
+            .expect_find()
+            .times(1)
+            .returning(|issuer, subject| {
+                Err(Error::IdentityNotFound {
+                    issuer: issuer.clone(),
+                    subject: subject.clone(),
+                })
+            });
+
+        let mut user_repository = MockUserRepository::new();
+        user_repository
+            .expect_create()
+            .times(1)
+            .returning(|_, _| Err(Error::InvalidToken));
+
+        let service = service(identity_repository, user_repository);
+
+        let result = service.authenticate(&token).await;
+
+        assert!(matches!(result, Err(Error::InvalidToken)));
     }
 }

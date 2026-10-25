@@ -84,6 +84,7 @@ mod tests {
 
     use jsonwebtoken::{Algorithm, EncodingKey, Header, encode, jwk::JwkSet};
     use serde_json::json;
+    use test_case::test_case;
 
     use super::*;
     use crate::identity::{VerificationKeySet, VerificationKeyStore};
@@ -219,11 +220,18 @@ mod tests {
         assert!(!verifier.validation_map.contains_key(&Algorithm::EdDSA));
     }
 
+    #[test_case(""; "empty token")]
+    #[test_case("invalid"; "invalid token")]
+    #[test_case("header.payload"; "missing token segment")]
+    #[test_case("header.payload.signature.extra"; "too many token segments")]
+    #[test_case(".."; "empty segments")]
+    #[test_case("header..signature"; "empty payload")]
+    #[test_case("header.payload."; "empty signature")]
     #[tokio::test]
-    async fn should_reject_malformed_token() {
+    async fn should_reject_malformed_token(token: &str) {
         let verifier = verifier(jwks());
 
-        let result = verifier.verify("not-a-jwt").await;
+        let result = verifier.verify(token).await;
 
         assert!(matches!(result, Err(Error::InvalidToken)));
     }
