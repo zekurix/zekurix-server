@@ -27,9 +27,9 @@ impl Services {
 
         let authentication = AuthenticationService::new(
             &settings.authentication,
+            stores.verification_key.clone(),
             repositories.identity.clone(),
             repositories.user.clone(),
-            stores.verification_key.clone(),
         );
 
         Ok(Self {
