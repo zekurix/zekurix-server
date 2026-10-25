@@ -22,9 +22,9 @@ pub struct AuthenticationService {
 impl AuthenticationService {
     pub fn new(
         settings: &Settings,
+        key_store: Arc<VerificationKeyStore>,
         identity_repository: Arc<dyn IdentityRepository>,
         user_repository: Arc<dyn UserRepository>,
-        key_store: Arc<VerificationKeyStore>,
     ) -> Self {
         let mut validation = Validation::new(Algorithm::ES256);
         validation.set_required_spec_claims(&["iss", "sub", "aud", "exp"]);
@@ -163,9 +163,9 @@ mod tests {
     ) -> AuthenticationService {
         AuthenticationService::new(
             &settings(),
+            Arc::new(VerificationKeyStore::new(VerificationKeySet::default())),
             Arc::new(identity_repository),
             Arc::new(user_repository),
-            Arc::new(VerificationKeyStore::new(VerificationKeySet::default())),
         )
     }
 

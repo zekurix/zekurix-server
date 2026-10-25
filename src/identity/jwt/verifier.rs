@@ -1,6 +1,7 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
-use jsonwebtoken::{Validation, decode, decode_header};
+use jsonwebtoken::{Algorithm, Validation, decode, decode_header};
 use tracing::trace;
 
 use crate::error::{Error, Result};
@@ -11,7 +12,7 @@ use super::Claims;
 
 pub struct JwtVerifier {
     store: Arc<VerificationKeyStore>,
-    validation: Validation,
+    validation_map: HashMap<Algorithm, Validation>,
 }
 
 impl JwtVerifier {
@@ -21,37 +22,50 @@ impl JwtVerifier {
             .iter()
             .copied()
             .map(Into::into)
-            .collect::<Vec<jsonwebtoken::Algorithm>>();
+            .collect::<Vec<Algorithm>>();
 
-        // Settings validate() method called previously ensures allowed_algorithms
-        // is not empty, so algorithms[0] is safe.
-        assert!(
-            !algorithms.is_empty(),
-            "allowed_algorithms must not be empty"
-        );
+        let validation_map = algorithms
+            .iter()
+            .copied()
+            .map(|algorithm| {
+                let mut validation = Validation::new(algorithm);
+                validation.set_required_spec_claims(&["iss", "sub", "aud", "exp"]);
+                validation.leeway = settings.clock_skew.as_secs();
+                validation.validate_exp = true;
+                validation.validate_nbf = true;
+                validation.validate_aud = true;
+                validation.set_audience(std::slice::from_ref(&settings.audience));
+                validation.set_issuer(std::slice::from_ref(&settings.issuer));
 
-        let mut validation = Validation::new(algorithms[0]);
-        validation.algorithms = algorithms;
-        validation.set_required_spec_claims(&["iss", "sub", "aud", "exp"]);
-        validation.leeway = settings.clock_skew.as_secs();
-        validation.validate_exp = true;
-        validation.validate_nbf = true;
-        validation.validate_aud = true;
-        validation.set_audience(std::slice::from_ref(&settings.audience));
-        validation.set_issuer(std::slice::from_ref(&settings.issuer));
+                (algorithm, validation)
+            })
+            .collect();
 
-        Self { store, validation }
+        Self {
+            store,
+            validation_map,
+        }
     }
 
     pub async fn verify(&self, token: &str) -> Result<Claims> {
         let header = decode_header(token).map_err(|_| Error::InvalidToken)?;
-
+        let validation = self
+            .validation_map
+            .get(&header.alg)
+            .ok_or(Error::InvalidToken)?;
         let keys = self.store.current().await;
         let candidates = keys.find_candidates(header.kid.as_deref(), header.alg);
 
         for key in candidates {
-            if let Ok(token_data) = decode::<Claims>(token, &key.decoding_key, &self.validation) {
-                return Ok(token_data.claims);
+            match decode::<Claims>(token, &key.decoding_key, validation) {
+                Ok(token_data) => {
+                    return Ok(token_data.claims);
+                }
+                Err(error) => trace!(
+                    kid = key.kid.as_deref(),
+                    error = %error,
+                    "JWT verification failed for candidate key"
+                ),
             }
         }
 
@@ -60,7 +74,6 @@ impl JwtVerifier {
             algorithm = ?header.alg,
             "JWT verification failed"
         );
-
         Err(Error::InvalidToken)
     }
 }
@@ -167,6 +180,45 @@ mod tests {
         serde_json::from_value(jwks).unwrap()
     }
 
+    #[test]
+    fn should_create_validation_for_each_allowed_algorithm() {
+        let store = Arc::new(VerificationKeyStore::new(VerificationKeySet::new(jwks())));
+        let mut settings = settings_with_clock_skew(Duration::ZERO);
+        settings.allowed_algorithms = vec![
+            SettingsAlgorithm::Es256,
+            SettingsAlgorithm::Es384,
+            SettingsAlgorithm::Rs256,
+        ];
+        let verifier = JwtVerifier::new(&settings, store);
+
+        assert_eq!(verifier.validation_map.len(), 3);
+        assert_eq!(
+            verifier
+                .validation_map
+                .get(&Algorithm::ES256)
+                .unwrap()
+                .algorithms,
+            vec![Algorithm::ES256]
+        );
+        assert_eq!(
+            verifier
+                .validation_map
+                .get(&Algorithm::ES384)
+                .unwrap()
+                .algorithms,
+            vec![Algorithm::ES384]
+        );
+        assert_eq!(
+            verifier
+                .validation_map
+                .get(&Algorithm::RS256)
+                .unwrap()
+                .algorithms,
+            vec![Algorithm::RS256]
+        );
+        assert!(!verifier.validation_map.contains_key(&Algorithm::EdDSA));
+    }
+
     #[tokio::test]
     async fn should_reject_malformed_token() {
         let verifier = verifier(jwks());
@@ -191,6 +243,18 @@ mod tests {
         let store = Arc::new(VerificationKeyStore::new(VerificationKeySet::new(jwks())));
         let mut settings = settings_with_clock_skew(Duration::ZERO);
         settings.allowed_algorithms = vec![SettingsAlgorithm::Es384, SettingsAlgorithm::Es256];
+        let verifier = JwtVerifier::new(&settings, store);
+
+        let claims = verifier.verify(&token(Some("test"))).await.unwrap();
+
+        assert_eq!(claims.sub, "Alice");
+    }
+
+    #[tokio::test]
+    async fn should_verify_token_using_allowed_algorithm_from_different_family() {
+        let store = Arc::new(VerificationKeyStore::new(VerificationKeySet::new(jwks())));
+        let mut settings = settings_with_clock_skew(Duration::ZERO);
+        settings.allowed_algorithms = vec![SettingsAlgorithm::Rs256, SettingsAlgorithm::Es256];
         let verifier = JwtVerifier::new(&settings, store);
 
         let claims = verifier.verify(&token(Some("test"))).await.unwrap();
