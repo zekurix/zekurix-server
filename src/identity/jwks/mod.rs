@@ -6,12 +6,13 @@ mod verification_key;
 mod verification_key_set;
 mod verification_key_store;
 
-pub use file_provider::FileJwksProvider;
+use file_provider::FileJwksProvider;
+use provider::create_jwks_provider;
+use remote_provider::RemoteJwksProvider;
+use verification_key::VerificationKey;
+
 pub use provider::JwksProvider;
-pub use provider::create_jwks_provider;
-pub use remote_provider::RemoteJwksProvider;
 pub use service::JwksService;
-pub use verification_key::VerificationKey;
 pub use verification_key_set::VerificationKeySet;
 pub use verification_key_store::VerificationKeyStore;
 
