@@ -44,12 +44,10 @@ pub fn build_valid_claims(context: TestAuth, subject: &str) -> TestClaims {
 }
 
 pub fn build_valid_token(context: TestAuth, claims: TestClaims) -> String {
-    encode(
-        &Header::new(context.algorithm),
-        &claims,
-        &context.encoding_key,
-    )
-    .expect("failed to generate test JWT")
+    let mut header = Header::new(context.algorithm);
+    header.kid = Some(context.kid.clone());
+
+    encode(&header, &claims, &context.encoding_key).expect("failed to generate test JWT")
 }
 
 pub fn build_valid_header(token: &str) -> String {
