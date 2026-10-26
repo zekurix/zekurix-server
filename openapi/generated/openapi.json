@@ -76,6 +76,21 @@
               }
             }
           },
+          "503": {
+            "description": "Application is unhealthy and temporarily unavailable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
           "504": {
             "$ref": "#/components/responses/GatewayTimeout"
           }
@@ -341,9 +356,11 @@
           "status": {
             "type": "string",
             "enum": [
-              "ok"
+              "ok",
+              "degraded",
+              "unhealthy"
             ],
-            "description": "Current health status of the application.",
+            "description": "Current health status of the application:\n- `ok`: All components are operating normally.\n- `degraded`: One or more components are experiencing issues, but the application remains operational.\n- `unhealthy`: One or more critical components prevent the application from operating correctly.\n",
             "example": "ok"
           },
           "version": {
