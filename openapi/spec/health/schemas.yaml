@@ -12,7 +12,13 @@ components:
           type: string
           enum:
             - ok
-          description: Current health status of the application.
+            - degraded
+            - unhealthy
+          description: |
+            Current health status of the application:
+            - `ok`: All components are operating normally.
+            - `degraded`: One or more components are experiencing issues, but the application remains operational.
+            - `unhealthy`: One or more critical components prevent the application from operating correctly.
           example: ok
         version:
           type: string
