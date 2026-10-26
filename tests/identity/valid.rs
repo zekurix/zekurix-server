@@ -1,6 +1,7 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use axum::http::header;
+use jsonwebtoken::{Header, encode};
 
 use crate::common::TestApplication;
 
@@ -94,6 +95,24 @@ async fn should_accept_token_with_valid_nbf_within_leeway() {
             .as_secs() as usize,
     );
     let token = build_valid_token(app.auth.clone(), claims);
+    let header = build_valid_header(&token);
+
+    assert_valid_auth_header(app, &header).await;
+}
+
+#[tokio::test]
+async fn should_accept_token_without_kid() {
+    let app = TestApplication::new().await;
+
+    let claims = build_valid_claims(app.auth.clone(), "Alice");
+
+    let token = encode(
+        &Header::new(app.auth.algorithm),
+        &claims,
+        &app.auth.encoding_key,
+    )
+    .expect("failed to generate test JWT");
+
     let header = build_valid_header(&token);
 
     assert_valid_auth_header(app, &header).await;

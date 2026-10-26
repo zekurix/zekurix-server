@@ -45,12 +45,31 @@ async fn should_reject_token_with_unexpected_algorithm() {
     let app = TestApplication::new().await;
 
     let claims = build_valid_claims(app.auth.clone(), "Alice");
+
+    let mut header = Header::new(Algorithm::HS256);
+    header.kid = Some(app.auth.kid.clone());
     let token = encode(
-        &Header::new(Algorithm::HS256),
+        &header,
         &claims,
         &EncodingKey::from_secret("invalid key".as_bytes()),
     )
     .expect("failed to generate test JWT");
+    let header = build_valid_header(&token);
+
+    assert_invalid_auth_header(app, &header).await;
+}
+
+#[tokio::test]
+async fn should_reject_token_with_unknown_kid() {
+    let app = TestApplication::new().await;
+
+    let claims = build_valid_claims(app.auth.clone(), "Alice");
+
+    let mut header = Header::new(app.auth.algorithm);
+    header.kid = Some("unknown".to_string());
+    let token =
+        encode(&header, &claims, &app.auth.encoding_key).expect("failed to generate test JWT");
+
     let header = build_valid_header(&token);
 
     assert_invalid_auth_header(app, &header).await;
