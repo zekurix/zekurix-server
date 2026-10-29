@@ -28,13 +28,12 @@ import argparse
 import json
 import os
 import sys
+import tomllib
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
-
-import tomllib
 
 CONFIG_PATH_ENV = "ZEKURIX_CONFIG_PATH"
 ISSUER_ENV = "ZEKURIX_AUTHENTICATION__ISSUER"
