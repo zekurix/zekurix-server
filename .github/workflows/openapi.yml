@@ -119,8 +119,10 @@ jobs:
           schemathesis run \
             --phases examples,coverage,fuzzing \
             --report junit \
-            --header "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            --header "Authorization: Bearer $AUTH_TOKEN" \
             http://localhost:3000/openapi.json
+        env:
+          AUTH_TOKEN: ${{ steps.auth.outputs.token }}
 
       - name: Upload test results
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -199,8 +201,10 @@ jobs:
             --phases stateful \
             --max-examples 25 \
             --report junit \
-            --header "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            --header "Authorization: Bearer $AUTH_TOKEN" \
             http://localhost:3000/openapi.json
+        env:
+          AUTH_TOKEN: ${{ steps.auth.outputs.token }}
 
       - name: Upload test results
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
