@@ -2281,9 +2281,9 @@ dependencies = [
 
 [[package]]
 name = "problem_details"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8787ca67c7582bfae20c7635cd73063419856d269127d538dbd9387371f4df71"
+checksum = "6aa844208f6060a0e8f7005be86bf704101b84a5536fe84d9484323da36404eb"
 dependencies = [
  "axum",
  "http",
