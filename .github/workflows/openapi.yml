@@ -119,7 +119,7 @@ jobs:
 
       - name: Dump logs
         if: always()
-        run: docker compose logs --no-color
+        run: docker compose --profile full logs --no-color
 
       - name: Cleanup
         if: always()
@@ -187,7 +187,7 @@ jobs:
 
       - name: Dump logs
         if: always()
-        run: docker compose logs --no-color
+        run: docker compose --profile full logs --no-color
 
       - name: Cleanup
         if: always()
