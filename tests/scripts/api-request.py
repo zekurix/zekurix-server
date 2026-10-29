@@ -39,7 +39,7 @@ CONFIG_PATH_ENV = "ZEKURIX_CONFIG_PATH"
 ISSUER_ENV = "ZEKURIX_AUTHENTICATION__ISSUER"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = PROJECT_ROOT / ".env"
-CLIENT_ID = "zekurix-test-api-request-id"
+CLIENT_ID = "zekurix-test-api-request"
 CLIENT_SECRET = "zekurix-test-api-request-secret"
 TIMEOUT = 10.0
 

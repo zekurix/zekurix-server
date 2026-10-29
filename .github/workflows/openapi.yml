@@ -83,9 +83,7 @@ jobs:
         run: |
           cat > .env <<EOF
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          ZEKURIX_AUTHENTICATION__ISSUER=https://auth.example.com
           ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
-          ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE=tests/keys/authentication/jwks.json
           EOF
 
       - name: Start services
@@ -102,12 +100,26 @@ jobs:
       - name: Install Schemathesis
         run: uv tool install schemathesis
 
+      - name: Get admin token
+        id: auth
+        run: |
+          TOKEN=$(curl --fail --silent \
+            http://localhost:3001/my-issuer/token \
+            -d 'grant_type=client_credentials' \
+            -d 'client_id=zekurix-schemathesis' \
+            -d 'client_secret=zekurix-schemathesis-secret' \
+            -d 'username=admin' \
+            | jq -r '.access_token')
+          test -n "$TOKEN"
+          test "$TOKEN" != "null"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
       - name: Run Schemathesis
         run: |
           schemathesis run \
             --phases examples,coverage,fuzzing \
             --report junit \
-            --header "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJhZG1pbiIsImF1ZCI6Inpla3VyaXgiLCJleHAiOjI1MjQ2MDgwMDB9.6DPX0v3-Q3hAeS0JkF7Wyrc-yKrDXA4V0us_CA7piytgEbh5skLpmk23EEatn36sb08rKM-YC27JfoHRsX2vdA" \
+            --header "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
             http://localhost:3000/openapi.json
 
       - name: Upload test results
@@ -150,9 +162,7 @@ jobs:
         run: |
           cat > .env <<EOF
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          ZEKURIX_AUTHENTICATION__ISSUER=https://auth.example.com
           ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
-          ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE=tests/keys/authentication/jwks.json
           EOF
 
       - name: Start services
@@ -169,13 +179,27 @@ jobs:
       - name: Install Schemathesis
         run: uv tool install schemathesis
 
+      - name: Get admin token
+        id: auth
+        run: |
+          TOKEN=$(curl --fail --silent \
+            http://localhost:3001/my-issuer/token \
+            -d 'grant_type=client_credentials' \
+            -d 'client_id=zekurix-schemathesis' \
+            -d 'client_secret=zekurix-schemathesis-secret' \
+            -d 'username=admin' \
+            | jq -r '.access_token')
+          test -n "$TOKEN"
+          test "$TOKEN" != "null"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
       - name: Run Schemathesis
         run: |
           schemathesis run \
             --phases stateful \
             --max-examples 25 \
             --report junit \
-            --header "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJhZG1pbiIsImF1ZCI6Inpla3VyaXgiLCJleHAiOjI1MjQ2MDgwMDB9.6DPX0v3-Q3hAeS0JkF7Wyrc-yKrDXA4V0us_CA7piytgEbh5skLpmk23EEatn36sb08rKM-YC27JfoHRsX2vdA" \
+            --header "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
             http://localhost:3000/openapi.json
 
       - name: Upload test results
