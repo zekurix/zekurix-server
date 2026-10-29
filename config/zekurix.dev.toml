@@ -18,3 +18,11 @@ format = "pretty"
 # Automatically apply database migrations at startup to keep the local
 # development database schema up to date.
 migrate = true
+
+[authentication]
+# JWT issuer exposed by the local mock OAuth2 server.
+issuer = "http://localhost:3001/my-issuer"
+
+[authentication.provider]
+# Retrieve JWKS from the local mock OAuth2 server used during development.
+discovery_url = "http://localhost:3001/my-issuer/jwks"

@@ -22,6 +22,41 @@ services:
       timeout: 5s
       retries: 10
 
+  mock-oauth2-server:
+    image: ghcr.io/navikt/mock-oauth2-server:6.1.3@sha256:95159e47ce682b41841e2671c36ebfa509d82b62c8b8fb4f18b772ccea3e404d
+    restart: always
+    ports:
+      - 3001:8080
+    environment:
+      JSON_CONFIG: >-
+        {
+          "tokenCallbacks": [
+            {
+              "issuerId": "my-issuer",
+              "requestMappings": [
+                {
+                  "requestParam": "username",
+                  "match": "*",
+                  "claims": {
+                    "aud": ["${ZEKURIX_AUTHENTICATION__AUDIENCE?required}"],
+                    "sub": "$${username}"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - --quiet
+        - http://localhost:8080/my-issuer/jwks
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
   zekurix:
     profiles:
       - full
@@ -31,6 +66,8 @@ services:
     restart: always
     depends_on:
       postgres:
+        condition: service_healthy
+      mock-oauth2-server:
         condition: service_healthy
     ports:
       - ${ZEKURIX_SERVER__PORT:-3000}:${ZEKURIX_SERVER__PORT:-3000}
@@ -42,9 +79,10 @@ services:
       ZEKURIX_DATABASE__HOST: postgres
       ZEKURIX_DATABASE__USERNAME: ${ZEKURIX_DATABASE__USERNAME:-postgres}
       ZEKURIX_DATABASE__MIGRATE: ${ZEKURIX_DATABASE__MIGRATE:-true}
+      ZEKURIX_AUTHENTICATION__ISSUER: http://localhost:3001/my-issuer
+      ZEKURIX_AUTHENTICATION__PROVIDER__DISCOVERY_URL: http://mock-oauth2-server:8080/my-issuer/jwks
     volumes:
       - ./zekurix.toml:/zekurix.toml:ro
-      - ./${ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE}:/${ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE}:ro
 
 volumes:
   postgres-data:
