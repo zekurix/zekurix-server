@@ -76,7 +76,7 @@ migrate = false
 # Format: string matching the JWT "iss" claim. Typically an HTTPS URL.
 # Default value: none.
 # This setting is required.
-issuer = "https://auth.example.com"
+issuer = "https://auth.example.com/my-issuer"
 # JWT audience expected by Zekurix.
 # Format: string.
 # Default value: none.
@@ -104,7 +104,7 @@ allowed_algorithms = [
 # Format: URL.
 # No default value.
 # Either discovery_url or jwks_file must be configured.
-discovery_url = "https://auth.example.com/.well-known/openid-configuration"
+discovery_url = "https://auth.example.com/my-issuer/jwks"
 # Local JSON Web Key Set (JWKS) file.
 # This setting is intended for local development, tests and CI environments. For production, prefer discovery_url.
 # Format: file path.

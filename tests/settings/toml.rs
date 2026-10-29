@@ -22,12 +22,7 @@ fn should_load_dev_configuration() {
         .env("ZEKURIX_DISABLE_DOTENV", "true")
         .env("ZEKURIX_DATABASE__USERNAME", "postgres")
         .env("ZEKURIX_DATABASE__PASSWORD", "change-me")
-        .env("ZEKURIX_AUTHENTICATION__ISSUER", "https://auth.example.com")
         .env("ZEKURIX_AUTHENTICATION__AUDIENCE", "zekurix")
-        .env(
-            "ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE",
-            "tests/jwks.json",
-        )
         .arg("--config")
         .arg("config/zekurix.dev.toml")
         .arg("--dry-run")

@@ -14,7 +14,7 @@ async fn should_get_current_user_after_admin_creation() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer.clone(),
                 "subject": "Alice"
             }
         }))

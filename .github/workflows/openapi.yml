@@ -83,9 +83,7 @@ jobs:
         run: |
           cat > .env <<EOF
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          ZEKURIX_AUTHENTICATION__ISSUER="https://auth.example.com"
-          ZEKURIX_AUTHENTICATION__AUDIENCE="zekurix"
-          ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE="tests/keys/authentication/jwks.json"
+          ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
           EOF
 
       - name: Start services
@@ -102,13 +100,29 @@ jobs:
       - name: Install Schemathesis
         run: uv tool install schemathesis
 
+      - name: Get admin token
+        id: auth
+        run: |
+          TOKEN=$(curl --fail --silent \
+            http://localhost:3001/my-issuer/token \
+            -d 'grant_type=client_credentials' \
+            -d 'client_id=zekurix-schemathesis' \
+            -d 'client_secret=zekurix-schemathesis-secret' \
+            -d 'username=admin' \
+            | jq -r '.access_token')
+          test -n "$TOKEN"
+          test "$TOKEN" != "null"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
       - name: Run Schemathesis
         run: |
           schemathesis run \
             --phases examples,coverage,fuzzing \
             --report junit \
-            --header "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJhZG1pbiIsImF1ZCI6Inpla3VyaXgiLCJleHAiOjI1MjQ2MDgwMDB9.6DPX0v3-Q3hAeS0JkF7Wyrc-yKrDXA4V0us_CA7piytgEbh5skLpmk23EEatn36sb08rKM-YC27JfoHRsX2vdA" \
+            --header "Authorization: Bearer $AUTH_TOKEN" \
             http://localhost:3000/openapi.json
+        env:
+          AUTH_TOKEN: ${{ steps.auth.outputs.token }}
 
       - name: Upload test results
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -116,6 +130,10 @@ jobs:
         with:
           name: schemathesis-results
           path: schemathesis-report/
+
+      - name: Dump logs
+        if: always()
+        run: docker compose --profile full logs --no-color
 
       - name: Cleanup
         if: always()
@@ -146,9 +164,7 @@ jobs:
         run: |
           cat > .env <<EOF
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          ZEKURIX_AUTHENTICATION__ISSUER="https://auth.example.com"
-          ZEKURIX_AUTHENTICATION__AUDIENCE="zekurix"
-          ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE="tests/keys/authentication/jwks.json"
+          ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
           EOF
 
       - name: Start services
@@ -165,14 +181,30 @@ jobs:
       - name: Install Schemathesis
         run: uv tool install schemathesis
 
+      - name: Get admin token
+        id: auth
+        run: |
+          TOKEN=$(curl --fail --silent \
+            http://localhost:3001/my-issuer/token \
+            -d 'grant_type=client_credentials' \
+            -d 'client_id=zekurix-schemathesis' \
+            -d 'client_secret=zekurix-schemathesis-secret' \
+            -d 'username=admin' \
+            | jq -r '.access_token')
+          test -n "$TOKEN"
+          test "$TOKEN" != "null"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
       - name: Run Schemathesis
         run: |
           schemathesis run \
             --phases stateful \
             --max-examples 25 \
             --report junit \
-            --header "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJhZG1pbiIsImF1ZCI6Inpla3VyaXgiLCJleHAiOjI1MjQ2MDgwMDB9.6DPX0v3-Q3hAeS0JkF7Wyrc-yKrDXA4V0us_CA7piytgEbh5skLpmk23EEatn36sb08rKM-YC27JfoHRsX2vdA" \
+            --header "Authorization: Bearer $AUTH_TOKEN" \
             http://localhost:3000/openapi.json
+        env:
+          AUTH_TOKEN: ${{ steps.auth.outputs.token }}
 
       - name: Upload test results
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -181,7 +213,10 @@ jobs:
           name: schemathesis-stateful-results
           path: schemathesis-report/
 
+      - name: Dump logs
+        if: always()
+        run: docker compose --profile full logs --no-color
+
       - name: Cleanup
         if: always()
         run: docker compose --profile full down -v --remove-orphans
-
