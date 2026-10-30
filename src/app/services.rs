@@ -6,12 +6,14 @@ use crate::error::Result;
 use crate::health::{HealthCheck, HealthStatus};
 use crate::identity::AuthenticationService;
 use crate::identity::JwksService;
+use crate::openapi::OpenApiService;
 use crate::settings::Settings;
 
 use super::repositories::Repositories;
 use super::stores::Stores;
 
 pub struct Services {
+    pub openapi: OpenApiService,
     pub jwks: Arc<JwksService>,
     pub authentication: AuthenticationService,
 }
@@ -22,6 +24,8 @@ impl Services {
         repositories: &Repositories,
         stores: &Stores,
     ) -> Result<Self> {
+        let openapi = OpenApiService::new(&settings.authentication)?;
+
         let jwks = JwksService::start(
             &settings.authentication.provider,
             stores.verification_key.clone(),
@@ -36,6 +40,7 @@ impl Services {
         );
 
         Ok(Self {
+            openapi,
             jwks,
             authentication,
         })
