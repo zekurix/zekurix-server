@@ -121,15 +121,15 @@ impl From<Error> for ProblemDetails {
                 .with_detail(format!("User '{id}' was not found.")),
 
             Error::InvalidIssuer(_) => ProblemDetails::new()
-                .with_type(problem_type::http::UNAUTHORIZED.as_uri())
+                .with_type(problem_type::identity::INVALID_ISSUER.as_uri())
                 .with_title("Invalid Identity Issuer")
-                .with_status(StatusCode::UNAUTHORIZED)
+                .with_status(StatusCode::UNPROCESSABLE_ENTITY)
                 .with_detail("The identity issuer is invalid."),
 
             Error::InvalidSubject(_) => ProblemDetails::new()
-                .with_type(problem_type::http::UNAUTHORIZED.as_uri())
+                .with_type(problem_type::identity::INVALID_SUBJECT.as_uri())
                 .with_title("Invalid Identity Subject")
-                .with_status(StatusCode::UNAUTHORIZED)
+                .with_status(StatusCode::UNPROCESSABLE_ENTITY)
                 .with_detail("The identity subject is invalid."),
 
             Error::Json(rejection) => match rejection {
@@ -486,18 +486,18 @@ mod tests {
     }
 
     #[test]
-    fn invalid_issuer_maps_to_unauthorized() {
+    fn invalid_issuer_maps_to_unprocessable_entity() {
         let error = Error::InvalidIssuer("Invalid Issuer".to_string());
         let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
             Some(problem_details::ProblemType::from(
-                problem_type::http::UNAUTHORIZED.as_uri()
+                problem_type::identity::INVALID_ISSUER.as_uri()
             ))
         );
         assert_eq!(problem.title, Some("Invalid Identity Issuer".to_string()));
-        assert_eq!(problem.status, Some(StatusCode::UNAUTHORIZED));
+        assert_eq!(problem.status, Some(StatusCode::UNPROCESSABLE_ENTITY));
         assert_eq!(
             problem.detail,
             Some("The identity issuer is invalid.".to_string())
@@ -505,18 +505,18 @@ mod tests {
     }
 
     #[test]
-    fn invalid_subject_maps_to_unauthorized() {
+    fn invalid_subject_maps_to_unprocessable_entity() {
         let error = Error::InvalidSubject("Invalid Subject".to_string());
         let problem = ProblemDetails::from(error);
 
         assert_eq!(
             problem.r#type,
             Some(problem_details::ProblemType::from(
-                problem_type::http::UNAUTHORIZED.as_uri()
+                problem_type::identity::INVALID_SUBJECT.as_uri()
             ))
         );
         assert_eq!(problem.title, Some("Invalid Identity Subject".to_string()));
-        assert_eq!(problem.status, Some(StatusCode::UNAUTHORIZED));
+        assert_eq!(problem.status, Some(StatusCode::UNPROCESSABLE_ENTITY));
         assert_eq!(
             problem.detail,
             Some("The identity subject is invalid.".to_string())

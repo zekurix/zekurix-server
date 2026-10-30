@@ -20,7 +20,7 @@ components:
           minLength: 1
           maxLength: 1024
           pattern: ^[^\u0000]*$
-          example: https://auth.example.com
+          const: https://auth.example.com/my-issuer
         subject:
           description: Identity provider subject identifier.
           type: string

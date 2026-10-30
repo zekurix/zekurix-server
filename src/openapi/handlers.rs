@@ -1,10 +1,18 @@
-use axum::{http::header, response::IntoResponse};
+use std::sync::Arc;
 
-const OPENAPI_JSON: &str = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/openapi/generated/openapi.min.json"
-));
+use axum::{
+    body::Body,
+    extract::State,
+    http::{StatusCode, header},
+    response::IntoResponse,
+};
 
-pub async fn get_openapi() -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "application/json")], OPENAPI_JSON)
+use crate::Application;
+
+pub async fn get_openapi(State(application): State<Arc<Application>>) -> impl IntoResponse {
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "application/json")],
+        Body::from(application.services.openapi.document()),
+    )
 }

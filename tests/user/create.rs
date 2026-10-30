@@ -15,7 +15,7 @@ async fn should_create_user() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": "Alice"
             }
         }))
@@ -97,7 +97,7 @@ async fn should_reject_missing_identity_subject() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
             }
         }))
         .await;
@@ -156,7 +156,7 @@ async fn should_reject_empty_identity_subject() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": ""
             }
         }))
@@ -186,7 +186,7 @@ async fn should_reject_unknown_fields() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": "Alice"
             },
             "unknown_field": 42
@@ -217,7 +217,7 @@ async fn should_reject_unknown_identity_fields() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": "Alice",
                 "unknown_field": 42
             }
@@ -248,7 +248,7 @@ async fn should_return_conflict_for_existing_user() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": "Alice"
             }
         }))
@@ -261,7 +261,7 @@ async fn should_return_conflict_for_existing_user() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": "Alice"
             }
         }))
@@ -302,7 +302,7 @@ async fn should_require_authentication_for_create_user() {
         .post("/api/v1/users")
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": "Alice"
             }
         }))
@@ -316,5 +316,35 @@ async fn should_require_authentication_for_create_user() {
     );
     assert!(!body.title.is_empty());
     assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
+    assert!(!body.detail.is_empty());
+}
+
+#[tokio::test]
+async fn should_reject_identity_with_invalid_issuer() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
+        .json(&serde_json::json!({
+            "identity": {
+                "issuer": "https://invalid-issuer.example.com",
+                "subject": "Alice"
+            }
+        }))
+        .await;
+
+    response.assert_status_unprocessable_entity();
+
+    assert_eq!(response.content_type(), "application/problem+json");
+
+    let body: ErrorResponse = response.json();
+    assert_eq!(
+        body.r#type.as_str(),
+        "https://api.zekurix.com/problems/identity/invalid-issuer"
+    );
+    assert!(!body.title.is_empty());
+    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
     assert!(!body.detail.is_empty());
 }
