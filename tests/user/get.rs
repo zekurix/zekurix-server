@@ -16,7 +16,7 @@ async fn should_get_user() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": "Alice"
             }
         }))
@@ -46,7 +46,7 @@ async fn should_create_and_get_multiple_users() {
             .add_header(header::AUTHORIZATION, app.auth.header("admin"))
             .json(&serde_json::json!({
                 "identity": {
-                    "issuer": "https://auth.example.com",
+                    "issuer": app.auth.issuer,
                     "subject": subject
                 }
             }))
@@ -99,7 +99,7 @@ async fn should_require_authentication_for_get_current_user() {
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .json(&serde_json::json!({
             "identity": {
-                "issuer": "https://auth.example.com",
+                "issuer": app.auth.issuer,
                 "subject": "Alice"
             }
         }))

@@ -29,8 +29,8 @@ impl AuthenticationService {
 
     pub async fn authenticate(&self, token: &str) -> Result<UserId> {
         let claims = self.jwt_verifier.verify(token).await?;
-        let issuer = Issuer::new(&claims.iss)?;
-        let subject = Subject::new(&claims.sub)?;
+        let issuer = Issuer::new(&claims.iss).map_err(|_| Error::InvalidToken)?;
+        let subject = Subject::new(&claims.sub).map_err(|_| Error::InvalidToken)?;
         self.find_or_create_user(issuer, subject).await
     }
 
@@ -289,7 +289,7 @@ mod tests {
 
         let result = service.authenticate(&token).await;
 
-        assert!(matches!(result, Err(Error::InvalidIssuer(_))));
+        assert!(matches!(result, Err(Error::InvalidToken)));
     }
 
     #[tokio::test]
@@ -309,7 +309,7 @@ mod tests {
 
         let result = service.authenticate(&token).await;
 
-        assert!(matches!(result, Err(Error::InvalidIssuer(_))));
+        assert!(matches!(result, Err(Error::InvalidToken)));
     }
 
     #[tokio::test]
@@ -329,7 +329,7 @@ mod tests {
 
         let result = service.authenticate(&token).await;
 
-        assert!(matches!(result, Err(Error::InvalidIssuer(_))));
+        assert!(matches!(result, Err(Error::InvalidToken)));
     }
 
     #[tokio::test]
@@ -342,7 +342,7 @@ mod tests {
 
         let result = service.authenticate(&token).await;
 
-        assert!(matches!(result, Err(Error::InvalidSubject(_))));
+        assert!(matches!(result, Err(Error::InvalidToken)));
     }
 
     #[tokio::test]
@@ -355,7 +355,7 @@ mod tests {
 
         let result = service.authenticate(&token).await;
 
-        assert!(matches!(result, Err(Error::InvalidSubject(_))));
+        assert!(matches!(result, Err(Error::InvalidToken)));
     }
 
     #[tokio::test]
@@ -368,7 +368,7 @@ mod tests {
 
         let result = service.authenticate(&token).await;
 
-        assert!(matches!(result, Err(Error::InvalidSubject(_))));
+        assert!(matches!(result, Err(Error::InvalidToken)));
     }
 
     #[tokio::test]

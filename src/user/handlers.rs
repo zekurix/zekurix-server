@@ -8,7 +8,7 @@ use axum::{
 };
 
 use crate::Application;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::identity::{CurrentUserId, Identity};
 use crate::router::{ApiJson, ApiPath};
 
@@ -43,6 +43,10 @@ pub async fn create_user(
     AppendHeaders<[(HeaderName, String); 1]>,
     Json<UserResponse>,
 )> {
+    if params.identity.issuer.as_str() != application.settings.authentication.issuer {
+        return Err(Error::InvalidIssuer(params.identity.issuer.to_string()));
+    }
+
     let user = User::new();
     let identity = Identity::new(params.identity.issuer, params.identity.subject, user.id);
     let user = application.repositories.user.create(user, identity).await?;

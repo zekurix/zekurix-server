@@ -64,6 +64,16 @@ pub mod user {
         ProblemType::new("https://api.zekurix.com/problems/user/already-exists");
 }
 
+pub mod identity {
+    use super::ProblemType;
+
+    pub const INVALID_ISSUER: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/identity/invalid-issuer");
+
+    pub const INVALID_SUBJECT: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/identity/invalid-subject");
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -81,6 +91,8 @@ mod tests {
     #[test_case(path::REJECTION, "path/rejection" ; "path rejection")]
     #[test_case(user::NOT_FOUND, "user/not-found" ; "user not found")]
     #[test_case(user::ALREADY_EXISTS, "user/already-exists" ; "user already exists")]
+    #[test_case(identity::INVALID_ISSUER, "identity/invalid-issuer" ; "identity invalid issuer")]
+    #[test_case(identity::INVALID_SUBJECT, "identity/invalid-subject" ; "identity invalid subject")]
     fn internal_server_error_uri(problem_type: ProblemType, expected_uri: &str) {
         let uri = format!("https://api.zekurix.com/problems/{expected_uri}");
         assert_eq!(problem_type.as_uri(), uri.parse::<Uri>().unwrap());
