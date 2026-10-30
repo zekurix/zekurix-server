@@ -430,7 +430,7 @@
             "minLength": 1,
             "maxLength": 1024,
             "pattern": "^[^\\u0000]*$",
-            "example": "https://auth.example.com"
+            "example": "http://localhost:3001/my-issuer"
           },
           "subject": {
             "description": "Identity provider subject identifier.",
