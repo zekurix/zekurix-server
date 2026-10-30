@@ -8,7 +8,7 @@ Examples are organized by technology. Each example is self-contained and include
 
 | Technology | Description |
 | --- | --- |
-| compose/ | Docker Compose deployment examples |
+| `compose/` | Docker Compose deployment examples |
 
 > [!NOTE]
 > These examples are intended as starting points. Review and adapt their

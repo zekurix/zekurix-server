@@ -23,7 +23,7 @@ migrate = true
 
 [authentication]
 # JWT issuer used for token validation.
-issuer = "https://auth.example.com"
+issuer = "https://auth.example.com/my-issuer"
 
 # JWT audience used for token validation.
 audience = "zekurix"

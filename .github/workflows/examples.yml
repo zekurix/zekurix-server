@@ -21,7 +21,7 @@ jobs:
       contents: read
     env:
       ZEKURIX_DATABASE__PASSWORD: change-me
-      ZEKURIX_AUTHENTICATION__ISSUER: https://auth.example.com
+      ZEKURIX_AUTHENTICATION__ISSUER: https://auth.example.com/my-issuer
       ZEKURIX_AUTHENTICATION__AUDIENCE: zekurix
       ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE: tests/keys/authentication/jwks.json
 
@@ -121,4 +121,75 @@ jobs:
       - name: Stop example
         if: always()
         working-directory: examples/compose/with-env-and-config
+        run: docker compose down -v
+
+  compose-with-remote-jwks:
+    name: Compose / With remote JWKS
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The example relies on an external JWKS endpoint that is not available in CI.
+      - name: Validate example
+        working-directory: examples/compose/with-remote-jwks
+        run: docker compose config --quiet
+
+  compose-with-mock-oauth2:
+    name: Compose / With mock OAuth2
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Start example
+        working-directory: examples/compose/with-mock-oauth2
+        run: docker compose up -d --wait
+
+      - name: Verify health endpoint
+        run: curl --fail http://127.0.0.1:3000/health
+
+      - name: Verify authenticated endpoint
+        run: |
+          TOKEN=$(curl --fail --silent \
+            http://localhost:3001/my-issuer/token \
+            --data 'grant_type=client_credentials' \
+            --data 'client_id=test-client' \
+            --data 'client_secret=test-secret' \
+            --data 'username=Alice' \
+            | jq --raw-output '.access_token')
+          curl --fail \
+            --header "Authorization: Bearer ${TOKEN}" \
+            http://127.0.0.1:3000/api/v1/users/me
+
+      - name: Dump logs
+        if: always()
+        working-directory: examples/compose/with-mock-oauth2
+        run: docker compose logs --no-color
+
+      - name: Stop example
+        if: always()
+        working-directory: examples/compose/with-mock-oauth2
         run: docker compose down -v
