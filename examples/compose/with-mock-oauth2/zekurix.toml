@@ -1,0 +1,23 @@
+# ------------------------------------------------------------------------------
+# Example configuration file for Zekurix Server.
+#
+# This file is loaded by Zekurix Server at startup.
+#
+# Only a subset of the available settings is shown here. Refer to the project
+# documentation for the complete configuration reference.
+#
+# Review and adjust the values to match your environment before deploying
+# to production.
+# ------------------------------------------------------------------------------
+
+[database]
+# Enables automatic database migrations at startup.
+migrate = true
+
+[authentication]
+# JWT issuer exposed by the mock OAuth2 server.
+issuer = "http://localhost:3001/my-issuer"
+
+[authentication.provider]
+# Retrieve JWKS from the mock OAuth2 server running in the Docker Compose network.
+discovery_url = "http://mock-oauth2-server:8080/my-issuer/jwks"
