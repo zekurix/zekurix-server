@@ -8,12 +8,12 @@ use axum::{
 };
 
 use crate::Application;
-use crate::error::{Error, Result};
-use crate::identity::{CurrentUserId, Identity};
+use crate::error::Result;
+use crate::identity::CurrentUserId;
 use crate::router::{ApiJson, ApiPath};
 
 use super::{
-    User, UserId,
+    UserId,
     dto::{CreateUserRequest, UserResponse},
 };
 
@@ -21,7 +21,7 @@ pub async fn get_current_user(
     State(application): State<Arc<Application>>,
     CurrentUserId(id): CurrentUserId,
 ) -> Result<Json<UserResponse>> {
-    let user = application.repositories.user.find(id).await?;
+    let user = application.services.user.find(id).await?;
 
     Ok(Json(user.into()))
 }
@@ -30,7 +30,7 @@ pub async fn get_user(
     State(application): State<Arc<Application>>,
     ApiPath(id): ApiPath<UserId>,
 ) -> Result<Json<UserResponse>> {
-    let user = application.repositories.user.find(id).await?;
+    let user = application.services.user.find(id).await?;
 
     Ok(Json(user.into()))
 }
@@ -43,13 +43,11 @@ pub async fn create_user(
     AppendHeaders<[(HeaderName, String); 1]>,
     Json<UserResponse>,
 )> {
-    if params.identity.issuer.as_str() != application.settings.authentication.issuer {
-        return Err(Error::InvalidIssuer(params.identity.issuer.to_string()));
-    }
-
-    let user = User::new();
-    let identity = Identity::new(params.identity.issuer, params.identity.subject, user.id);
-    let user = application.repositories.user.create(user, identity).await?;
+    let user = application
+        .services
+        .user
+        .create(params.identity.issuer, params.identity.subject)
+        .await?;
 
     Ok((
         StatusCode::CREATED,
