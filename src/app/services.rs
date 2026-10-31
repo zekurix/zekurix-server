@@ -4,10 +4,10 @@ use async_trait::async_trait;
 
 use crate::error::Result;
 use crate::health::{HealthCheck, HealthStatus};
-use crate::identity::AuthenticationService;
-use crate::identity::JwksService;
+use crate::identity::{AuthenticationService, Issuer, JwksService};
 use crate::openapi::OpenApiService;
 use crate::settings::Settings;
+use crate::user::UserService;
 
 use super::repositories::Repositories;
 use super::stores::Stores;
@@ -16,6 +16,7 @@ pub struct Services {
     pub openapi: OpenApiService,
     pub jwks: Arc<JwksService>,
     pub authentication: AuthenticationService,
+    pub user: UserService,
 }
 
 impl Services {
@@ -39,10 +40,16 @@ impl Services {
             repositories.user.clone(),
         );
 
+        let user = UserService::new(
+            Issuer::new(&settings.authentication.issuer)?,
+            repositories.user.clone(),
+        );
+
         Ok(Self {
             openapi,
             jwks,
             authentication,
+            user,
         })
     }
 }
