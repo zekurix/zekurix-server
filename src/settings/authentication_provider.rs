@@ -9,7 +9,7 @@ use crate::error::{Error, Result};
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Settings {
-    pub discovery_url: Option<Url>,
+    pub jwks_url: Option<Url>,
     pub jwks_file: Option<PathBuf>,
     #[serde(with = "humantime_serde")]
     pub startup_retry_timeout: Duration,
@@ -28,7 +28,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            discovery_url: None,
+            jwks_url: None,
             jwks_file: None,
             startup_retry_timeout: Duration::from_secs(30),
             startup_retry_interval: Duration::from_secs(1),
@@ -42,20 +42,20 @@ impl Default for Settings {
 
 impl Settings {
     pub fn validate(&self) -> Result<()> {
-        match (self.discovery_url.is_some(), self.jwks_file.is_some()) {
+        match (self.jwks_url.is_some(), self.jwks_file.is_some()) {
             (true, false) | (false, true) => {}
 
             (false, false) => {
                 return Err(Error::InvalidSettings {
                     setting: "authentication.provider".into(),
-                    reason: "either discovery_url or jwks_file must be configured".into(),
+                    reason: "either jwks_url or jwks_file must be configured".into(),
                 });
             }
 
             (true, true) => {
                 return Err(Error::InvalidSettings {
                     setting: "authentication.provider".into(),
-                    reason: "discovery_url and jwks_file cannot be configured at the same time"
+                    reason: "jwks_url and jwks_file cannot be configured at the same time"
                         .into(),
                 });
             }
@@ -113,8 +113,8 @@ mod tests {
 
     fn valid_settings() -> Settings {
         Settings {
-            discovery_url: Some(
-                "https://auth.example.com/.well-known/openid-configuration"
+            jwks_url: Some(
+                "https://auth.example.com/my-issuer/jwks"
                     .parse()
                     .unwrap(),
             ),
@@ -123,10 +123,10 @@ mod tests {
     }
 
     #[test]
-    fn validate_should_succeed_when_only_discovery_url_is_configured() {
+    fn validate_should_succeed_when_only_jwks_url_is_configured() {
         let settings = Settings {
-            discovery_url: Some(
-                "https://auth.example.com/.well-known/openid-configuration"
+            jwks_url: Some(
+                "https://auth.example.com/my-issuer/jwks"
                     .parse()
                     .unwrap(),
             ),
@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn validate_should_succeed_when_only_jwks_file_is_configured() {
         let settings = Settings {
-            discovery_url: None,
+            jwks_url: None,
             jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()
         };
@@ -149,9 +149,9 @@ mod tests {
     }
 
     #[test]
-    fn validate_should_fail_when_neither_discovery_url_nor_jwks_file_is_configured() {
+    fn validate_should_fail_when_neither_jwks_url_nor_jwks_file_is_configured() {
         let settings = Settings {
-            discovery_url: None,
+            jwks_url: None,
             jwks_file: None,
             ..Default::default()
         };
@@ -161,10 +161,10 @@ mod tests {
     }
 
     #[test]
-    fn validate_should_fail_when_both_discovery_url_and_jwks_file_are_configured() {
+    fn validate_should_fail_when_both_jwks_url_and_jwks_file_are_configured() {
         let settings = Settings {
-            discovery_url: Some(
-                "https://auth.example.com/.well-known/openid-configuration"
+            jwks_url: Some(
+                "https://auth.example.com/my-issuer/jwks"
                     .parse()
                     .unwrap(),
             ),

@@ -23,4 +23,4 @@ audience = "zekurix"
 
 [authentication.provider]
 # Retrieve JWKS from the external identity provider.
-discovery_url = "https://auth.example.com/my-issuer/jwks"
+jwks_url = "https://auth.example.com/my-issuer/jwks"
