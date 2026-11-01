@@ -41,7 +41,7 @@ impl Services {
         );
 
         let user = UserService::new(
-            Issuer::new(&settings.authentication.issuer)?,
+            Issuer::new(&settings.authentication.issuers[0])?,
             repositories.user.clone(),
         );
 

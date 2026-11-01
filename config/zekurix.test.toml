@@ -19,8 +19,10 @@ database = "zekurix_test"
 migrate = true
 
 [authentication]
-# JWT issuer expected by automated tests.
-issuer = "https://auth.example.com/my-issuer"
+# Trusted JWT issuers expected by automated tests.
+issuers = [
+    "https://auth.example.com/my-issuer"
+]
 # JWT audience expected by automated tests.
 audience = "zekurix"
 

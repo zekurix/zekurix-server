@@ -69,7 +69,7 @@ mod tests {
 
     use super::*;
 
-    const ISSUER: &str = "https://auth.example.com";
+    const ISSUER: &str = "https://auth.example.com/my-issuer";
     const AUDIENCE: &str = "zekurix";
     const SUBJECT: &str = "Alice";
     const JWKS: &str = include_str!("../../tests/keys/authentication/jwks.json");
@@ -84,7 +84,7 @@ mod tests {
 
     fn settings() -> Settings {
         Settings {
-            issuer: ISSUER.to_owned(),
+            issuers: vec![ISSUER.to_owned()],
             audience: AUDIENCE.to_owned(),
             ..Default::default()
         }
@@ -279,13 +279,7 @@ mod tests {
         claims["iss"] = json!("");
 
         let token = encode_claims(&claims);
-        let mut settings = settings();
-        settings.issuer.clear();
-        let service = service_with_settings(
-            &settings,
-            MockIdentityRepository::new(),
-            MockUserRepository::new(),
-        );
+        let service = service_without_repository_expectations();
 
         let result = service.authenticate(&token).await;
 
@@ -300,7 +294,7 @@ mod tests {
 
         let token = encode_claims(&claims);
         let mut settings = settings();
-        settings.issuer = issuer;
+        settings.issuers = vec![issuer];
         let service = service_with_settings(
             &settings,
             MockIdentityRepository::new(),
@@ -320,7 +314,7 @@ mod tests {
 
         let token = encode_claims(&claims);
         let mut settings = settings();
-        settings.issuer = issuer.to_owned();
+        settings.issuers = vec![issuer.to_owned()];
         let service = service_with_settings(
             &settings,
             MockIdentityRepository::new(),
