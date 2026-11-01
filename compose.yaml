@@ -80,7 +80,7 @@ services:
       ZEKURIX_DATABASE__USERNAME: ${ZEKURIX_DATABASE__USERNAME:-postgres}
       ZEKURIX_DATABASE__MIGRATE: ${ZEKURIX_DATABASE__MIGRATE:-true}
       ZEKURIX_AUTHENTICATION__ISSUER: http://localhost:3001/my-issuer
-      ZEKURIX_AUTHENTICATION__PROVIDER__DISCOVERY_URL: http://mock-oauth2-server:8080/my-issuer/jwks
+      ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_URL: http://mock-oauth2-server:8080/my-issuer/jwks
     volumes:
       - ./zekurix.toml:/zekurix.toml:ro
       - ./${ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE:-tests/keys/authentication/jwks.json}:/${ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE:-tests/keys/authentication/jwks.json}:ro

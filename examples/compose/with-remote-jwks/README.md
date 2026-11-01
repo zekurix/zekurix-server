@@ -25,7 +25,7 @@ issuer = "https://auth.example.com/my-issuer"
 audience = "zekurix"
 
 [authentication.provider]
-discovery_url = "https://auth.example.com/my-issuer/jwks"
+jwks_url = "https://auth.example.com/my-issuer/jwks"
 ```
 
 The configured issuer must match the iss claim of accepted JWTs, and the audience must match the audience used by your identity provider for Zekurix.

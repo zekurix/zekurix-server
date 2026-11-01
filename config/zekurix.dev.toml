@@ -25,4 +25,4 @@ issuer = "http://localhost:3001/my-issuer"
 
 [authentication.provider]
 # Retrieve JWKS from the local mock OAuth2 server used during development.
-discovery_url = "http://localhost:3001/my-issuer/jwks"
+jwks_url = "http://localhost:3001/my-issuer/jwks"

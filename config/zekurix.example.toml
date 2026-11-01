@@ -100,16 +100,16 @@ allowed_algorithms = [
 
 # Identity provider configuration.
 [authentication.provider]
-# OpenID Connect discovery endpoint.
+# JSON Web Key Set (JWKS) endpoint URL.
 # Format: URL.
 # No default value.
-# Either discovery_url or jwks_file must be configured.
-discovery_url = "https://auth.example.com/my-issuer/jwks"
+# Either jwks_url or jwks_file must be configured.
+jwks_url = "https://auth.example.com/my-issuer/jwks"
 # Local JSON Web Key Set (JWKS) file.
-# This setting is intended for local development, tests and CI environments. For production, prefer discovery_url.
+# This setting is intended for local development, tests and CI environments. For production, prefer jwks_url.
 # Format: file path.
 # No default value.
-# Either discovery_url or jwks_file must be configured.
+# Either jwks_url or jwks_file must be configured.
 # jwks_file = "tests/keys/authentication/jwks.json"
 
 # Maximum duration during startup spent retrying JWKS loading.
