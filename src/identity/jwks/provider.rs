@@ -32,11 +32,7 @@ mod tests {
     #[test]
     fn should_create_remote_jwks_provider_when_jwks_url_is_configured() {
         let settings = Settings {
-            jwks_url: Some(
-                "https://auth.example.com/my-issuer/jwks"
-                    .parse()
-                    .unwrap(),
-            ),
+            jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             jwks_file: None,
             ..Default::default()
         };
@@ -71,11 +67,7 @@ mod tests {
     #[should_panic]
     fn should_panic_when_both_providers_are_configured() {
         let settings = Settings {
-            jwks_url: Some(
-                "https://auth.example.com/my-issuer/jwks"
-                    .parse()
-                    .unwrap(),
-            ),
+            jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()
         };

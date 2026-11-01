@@ -55,8 +55,7 @@ impl Settings {
             (true, true) => {
                 return Err(Error::InvalidSettings {
                     setting: "authentication.provider".into(),
-                    reason: "jwks_url and jwks_file cannot be configured at the same time"
-                        .into(),
+                    reason: "jwks_url and jwks_file cannot be configured at the same time".into(),
                 });
             }
         }
@@ -113,11 +112,7 @@ mod tests {
 
     fn valid_settings() -> Settings {
         Settings {
-            jwks_url: Some(
-                "https://auth.example.com/my-issuer/jwks"
-                    .parse()
-                    .unwrap(),
-            ),
+            jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             ..Default::default()
         }
     }
@@ -125,11 +120,7 @@ mod tests {
     #[test]
     fn validate_should_succeed_when_only_jwks_url_is_configured() {
         let settings = Settings {
-            jwks_url: Some(
-                "https://auth.example.com/my-issuer/jwks"
-                    .parse()
-                    .unwrap(),
-            ),
+            jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             jwks_file: None,
             ..Default::default()
         };
@@ -163,11 +154,7 @@ mod tests {
     #[test]
     fn validate_should_fail_when_both_jwks_url_and_jwks_file_are_configured() {
         let settings = Settings {
-            jwks_url: Some(
-                "https://auth.example.com/my-issuer/jwks"
-                    .parse()
-                    .unwrap(),
-            ),
+            jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()
         };
