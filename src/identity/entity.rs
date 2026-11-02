@@ -48,11 +48,14 @@ mod tests {
     #[test]
     fn should_display_identity() {
         let identity = Identity::new(
-            Issuer::new("https://auth.example.com").unwrap(),
+            Issuer::new("https://auth.example.com/my-issuer").unwrap(),
             Subject::new("Alice").unwrap(),
             UserId::new(),
         );
 
-        assert_eq!(identity.to_string(), "Alice@https://auth.example.com");
+        assert_eq!(
+            identity.to_string(),
+            "Alice@https://auth.example.com/my-issuer"
+        );
     }
 }

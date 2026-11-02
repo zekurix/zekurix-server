@@ -72,11 +72,13 @@ migrate = false
 
 # Authentication configuration: controls JWT validation.
 [authentication]
-# JWT issuer expected by Zekurix.
-# Format: string matching the JWT "iss" claim. Typically an HTTPS URL.
+# Trusted JWT issuers.
+# Format: list of non-empty strings matching the JWT "iss" claim, typically HTTPS URLs.
 # Default value: none.
-# This setting is required.
-issuer = "https://auth.example.com/my-issuer"
+# At least one issuer is required.
+issuers = [
+    "https://auth.example.com/my-issuer"
+]
 # JWT audience expected by Zekurix.
 # Format: string.
 # Default value: none.

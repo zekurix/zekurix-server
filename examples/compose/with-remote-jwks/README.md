@@ -21,7 +21,9 @@ Authentication is configured in `zekurix.toml`:
 
 ```toml
 [authentication]
-issuer = "https://auth.example.com/my-issuer"
+issuer = [
+    "https://auth.example.com/my-issuer"
+]
 audience = "zekurix"
 
 [authentication.provider]

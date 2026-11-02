@@ -35,7 +35,7 @@ impl JwtVerifier {
                 validation.validate_nbf = true;
                 validation.validate_aud = true;
                 validation.set_audience(std::slice::from_ref(&settings.audience));
-                validation.set_issuer(std::slice::from_ref(&settings.issuer));
+                validation.set_issuer(std::slice::from_ref(&settings.issuers[0]));
 
                 (algorithm, validation)
             })
@@ -95,7 +95,7 @@ mod tests {
 
     fn settings_with_clock_skew(clock_skew: Duration) -> Settings {
         Settings {
-            issuer: "https://auth.example.com".into(),
+            issuers: vec!["https://auth.example.com/my-issuer".into()],
             audience: "zekurix".into(),
             clock_skew,
             allowed_algorithms: vec![SettingsAlgorithm::Es256],
@@ -113,7 +113,7 @@ mod tests {
 
     fn claims() -> serde_json::Value {
         json!({
-            "iss": "https://auth.example.com",
+            "iss": "https://auth.example.com/my-issuer",
             "sub": "Alice",
             "aud": "zekurix",
             "exp": timestamp(60)
@@ -242,7 +242,7 @@ mod tests {
 
         let claims = verifier.verify(&token(Some("test"))).await.unwrap();
 
-        assert_eq!(claims.iss, "https://auth.example.com");
+        assert_eq!(claims.iss, "https://auth.example.com/my-issuer");
         assert_eq!(claims.sub, "Alice");
     }
 
@@ -276,7 +276,7 @@ mod tests {
 
         let claims = verifier.verify(&token(None)).await.unwrap();
 
-        assert_eq!(claims.iss, "https://auth.example.com");
+        assert_eq!(claims.iss, "https://auth.example.com/my-issuer");
         assert_eq!(claims.sub, "Alice");
     }
 
@@ -286,7 +286,7 @@ mod tests {
 
         let claims = verifier.verify(&token(None)).await.unwrap();
 
-        assert_eq!(claims.iss, "https://auth.example.com");
+        assert_eq!(claims.iss, "https://auth.example.com/my-issuer");
         assert_eq!(claims.sub, "Alice");
     }
 
@@ -524,7 +524,7 @@ mod tests {
     async fn should_reject_token_with_wrong_issuer() {
         let verifier = verifier(jwks());
         let mut claims = claims();
-        claims["iss"] = json!("https://another-issuer.example.com");
+        claims["iss"] = json!("https://auth.example.com/invalid-issuer");
 
         let result = verifier
             .verify(&token_with_claims(Some("test"), Algorithm::ES256, claims))

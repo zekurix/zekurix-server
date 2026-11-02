@@ -20,8 +20,10 @@ format = "pretty"
 migrate = true
 
 [authentication]
-# JWT issuer exposed by the local mock OAuth2 server.
-issuer = "http://localhost:3001/my-issuer"
+# Trusted JWT issuers for development.
+issuers = [
+    "http://localhost:3001/my-issuer"
+]
 
 [authentication.provider]
 # Retrieve JWKS from the local mock OAuth2 server used during development.

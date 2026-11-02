@@ -404,7 +404,7 @@ mod tests {
     #[test]
     fn identity_already_exists_maps_to_conflict() {
         let identity = Identity::new(
-            Issuer::new("https://auth.example.com").unwrap(),
+            Issuer::new("https://auth.example.com/my-issuer").unwrap(),
             Subject::new("Alice").unwrap(),
             UserId::new(),
         );
@@ -421,7 +421,7 @@ mod tests {
         assert_eq!(problem.status, Some(StatusCode::CONFLICT));
         assert_eq!(
             problem.detail,
-            Some("An account associated with identity 'Alice@https://auth.example.com' already exists.".to_string())
+            Some("An account associated with identity 'Alice@https://auth.example.com/my-issuer' already exists.".to_string())
         );
     }
 

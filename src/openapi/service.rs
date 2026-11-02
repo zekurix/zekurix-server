@@ -23,7 +23,7 @@ impl OpenApiService {
                 Error::InternalError(anyhow::anyhow!("OpenAPI identity issuer const is missing"))
             })?;
 
-        *issuer = serde_json::json!(authentication_settings.issuer);
+        *issuer = serde_json::json!(&authentication_settings.issuers[0]);
 
         let document =
             serde_json::to_vec(&document).map_err(|err| Error::InternalError(err.into()))?;
@@ -46,7 +46,7 @@ mod tests {
 
     fn settings() -> AuthenticationSettings {
         AuthenticationSettings {
-            issuer: ISSUER.to_owned(),
+            issuers: vec![ISSUER.to_owned()],
             ..Default::default()
         }
     }

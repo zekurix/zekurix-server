@@ -24,7 +24,7 @@ fn should_load_settings_from_toml() {
         username = "postgres"
 
         [authentication]
-        issuer = "https://auth.example.com"
+        issuers = ["https://auth.example.com/my-issuer"]
         audience = "zekurix"
 
         [authentication.provider]
@@ -57,7 +57,7 @@ fn should_load_humantime_settings_from_toml() {
         idle_timeout = "15m"
 
         [authentication]
-        issuer = "https://auth.example.com"
+        issuers = ["https://auth.example.com/my-issuer"]
         audience = "zekurix"
 
         [authentication.provider]
@@ -93,7 +93,7 @@ fn should_override_toml_with_cli_bind() {
         username = "postgres"
 
         [authentication]
-        issuer = "https://auth.example.com"
+        issuers = ["https://auth.example.com/my-issuer"]
         audience = "zekurix"
 
         [authentication.provider]
@@ -128,7 +128,7 @@ fn should_return_error_for_invalid_toml() {
         username = "postgres"
 
         [authentication]
-        issuer = "https://auth.example.com"
+        issuers = ["https://auth.example.com/my-issuer"]
         audience = "zekurix"
 
         [authentication.provider]
@@ -158,7 +158,7 @@ fn should_return_error_for_unknown_fields_settings() {
         username = "postgres"
 
         [authentication]
-        issuer = "https://auth.example.com"
+        issuers = ["https://auth.example.com/my-issuer"]
         audience = "zekurix"
 
         [authentication.provider]
@@ -189,7 +189,7 @@ fn should_return_error_for_unknown_fields_settings_logging() {
         username = "postgres"
 
         [authentication]
-        issuer = "https://auth.example.com"
+        issuers = ["https://auth.example.com/my-issuer"]
         audience = "zekurix"
 
         [authentication.provider]
@@ -220,7 +220,7 @@ fn should_return_error_for_unknown_fields_settings_server() {
         username = "postgres"
 
         [authentication]
-        issuer = "https://auth.example.com"
+        issuers = ["https://auth.example.com/my-issuer"]
         audience = "zekurix"
 
         [authentication.provider]
@@ -249,7 +249,7 @@ fn should_return_error_for_unknown_fields_settings_database() {
         username = "postgres"
 
         [authentication]
-        issuer = "https://auth.example.com"
+        issuers = ["https://auth.example.com/my-issuer"]
         audience = "zekurix"
 
         [authentication.provider]

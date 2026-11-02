@@ -64,7 +64,7 @@ impl From<Algorithm> for jsonwebtoken::Algorithm {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Settings {
-    pub issuer: String,
+    pub issuers: Vec<String>,
     pub audience: String,
     #[serde(with = "humantime_serde")]
     pub clock_skew: Duration,
@@ -75,7 +75,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            issuer: "".to_string(),
+            issuers: Vec::new(),
             audience: "".to_string(),
             clock_skew: Duration::from_secs(30),
             allowed_algorithms: vec![
@@ -91,11 +91,20 @@ impl Default for Settings {
 
 impl Settings {
     pub fn validate(&self) -> Result<()> {
-        if self.issuer.trim().is_empty() {
+        if self.issuers.is_empty() {
             return Err(Error::InvalidSettings {
-                setting: "authentication.issuer".into(),
+                setting: "authentication.issuers".into(),
                 reason: "cannot be empty".into(),
             });
+        }
+
+        for (index, issuer) in self.issuers.iter().enumerate() {
+            if issuer.trim().is_empty() {
+                return Err(Error::InvalidSettings {
+                    setting: "authentication.issuers".into(),
+                    reason: format!("value at index {index} cannot be empty"),
+                });
+            }
         }
 
         if self.audience.trim().is_empty() {
@@ -136,7 +145,7 @@ mod tests {
     #[test]
     fn should_accept_static_issuer_audience() {
         let settings = Settings {
-            issuer: "https://auth.example.com".to_string(),
+            issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -150,9 +159,29 @@ mod tests {
     }
 
     #[test]
+    fn should_accept_multiple_issuers() {
+        let settings = Settings {
+            issuers: vec![
+                "https://auth.example.com/my-issuer1".to_string(),
+                "https://auth.example.com/my-issuer2".to_string(),
+            ],
+            audience: "zekurix".to_string(),
+            provider: authentication_provider::Settings {
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        assert!(settings.validate().is_ok());
+        assert_eq!(settings.issuers[0], "https://auth.example.com/my-issuer1");
+        assert_eq!(settings.issuers[1], "https://auth.example.com/my-issuer2");
+    }
+
+    #[test]
     fn should_reject_empty_issuer() {
         let settings = Settings {
-            issuer: "".to_string(),
+            issuers: vec![],
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -168,7 +197,7 @@ mod tests {
     #[test]
     fn should_reject_only_spaces_issuer() {
         let settings = Settings {
-            issuer: "   ".to_string(),
+            issuers: vec!["   ".to_string()],
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -181,11 +210,32 @@ mod tests {
         assert!(matches!(result, Err(Error::InvalidSettings { .. })));
     }
 
+    #[test]
+    fn should_reject_invalid_issuer_in_list() {
+        let settings = Settings {
+            issuers: vec![
+                "https://auth.example.com/my-issuer".to_string(),
+                "   ".to_string(),
+            ],
+            audience: "zekurix".to_string(),
+            provider: authentication_provider::Settings {
+                jwks_file: Some("tests/keys/authentication/jwks.json".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        assert!(matches!(
+            settings.validate(),
+            Err(Error::InvalidSettings { .. })
+        ));
+    }
+
     proptest! {
         #[test]
-        fn should_accept_valid_issuer(issuer in r".*\S.*") {
+        fn should_accept_valid_issuer(issuer in r"[a-zA-Z0-9._:/@#$%&()\\-]{1,1024}") {
             let settings = Settings {
-                issuer: issuer.to_string(),
+                issuers: vec![issuer.to_string()],
                 audience: "zekurix".to_string(),
                 provider: authentication_provider::Settings {
                     jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -203,7 +253,7 @@ mod tests {
         #[test]
         fn should_reject_blank_issuer(issuer in r"\s*") {
             let settings = Settings {
-                issuer: issuer.to_string(),
+                issuers: vec![issuer.to_string()],
                 audience: "zekurix".to_string(),
                 provider: authentication_provider::Settings {
                     jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -221,7 +271,7 @@ mod tests {
     #[test]
     fn should_reject_empty_audience() {
         let settings = Settings {
-            issuer: "https://auth.example.com".to_string(),
+            issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "".to_string(),
             provider: authentication_provider::Settings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -237,7 +287,7 @@ mod tests {
     #[test]
     fn should_reject_only_spaces_audience() {
         let settings = Settings {
-            issuer: "https://auth.example.com".to_string(),
+            issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "   ".to_string(),
             provider: authentication_provider::Settings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -254,7 +304,7 @@ mod tests {
         #[test]
         fn should_accept_valid_audience(audience in r".*\S.*") {
             let settings = Settings {
-                issuer: "https://auth.example.com".to_string(),
+                issuers: vec!["https://auth.example.com/my-issuer".to_string()],
                 audience: audience.to_string(),
                 provider: authentication_provider::Settings {
                     jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -272,7 +322,7 @@ mod tests {
         #[test]
         fn should_reject_blank_audience(audience in r"\s*") {
             let settings = Settings {
-                issuer: "https://auth.example.com".to_string(),
+                issuers: vec!["https://auth.example.com/my-issuer".to_string()],
                 audience: audience.to_string(),
                 provider: authentication_provider::Settings {
                     jwks_file: Some("tests/keys/authentication/jwks.json".into()),
@@ -305,7 +355,7 @@ mod tests {
     #[test]
     fn should_reject_empty_allowed_algorithms() {
         let settings = Settings {
-            issuer: "https://auth.example.com".to_string(),
+            issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
             allowed_algorithms: vec![],
             provider: authentication_provider::Settings {
@@ -322,7 +372,7 @@ mod tests {
     #[test]
     fn should_reject_duplicate_allowed_algorithms() {
         let settings = Settings {
-            issuer: "https://auth.example.com".to_string(),
+            issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
             allowed_algorithms: vec![Algorithm::Rs256, Algorithm::Rs256],
             provider: authentication_provider::Settings {

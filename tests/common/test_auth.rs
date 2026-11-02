@@ -100,7 +100,7 @@ impl TestAuth {
         let algorithm = Self::algorithm(&jwks);
 
         TestAuth {
-            issuer: settings.issuer.clone(),
+            issuer: settings.issuers[0].clone(),
             audience: settings.audience.clone(),
             algorithm,
             kid: Self::kid(&jwks),
