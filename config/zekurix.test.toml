@@ -21,7 +21,7 @@ migrate = true
 [authentication]
 # Trusted JWT issuers expected by automated tests.
 issuers = [
-    "https://auth.example.com/my-issuer"
+    "https://auth.example.com/my-issuer",
 ]
 # JWT audience expected by automated tests.
 audience = "zekurix"

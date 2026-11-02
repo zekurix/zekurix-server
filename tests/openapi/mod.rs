@@ -13,7 +13,7 @@ async fn should_return_openapi_spec() {
     assert!(body["paths"].is_object());
 
     assert_eq!(
-        body["components"]["schemas"]["Identity"]["properties"]["issuer"]["const"],
-        app.auth.issuer
+        body["components"]["schemas"]["Identity"]["properties"]["issuer"]["enum"],
+        serde_json::json!(&app.auth.issuers)
     );
 }

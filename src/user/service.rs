@@ -2,20 +2,27 @@ use std::sync::Arc;
 
 use crate::error::{Error, Result};
 use crate::identity::{Identity, Issuer, Subject};
+use crate::settings::authentication::Settings;
 
 use super::{User, UserId, UserRepository};
 
 pub struct UserService {
-    allowed_issuer: Issuer,
+    allowed_issuers: Vec<Issuer>,
     repository: Arc<dyn UserRepository>,
 }
 
 impl UserService {
-    pub fn new(allowed_issuer: Issuer, repository: Arc<dyn UserRepository>) -> Self {
-        Self {
-            allowed_issuer,
+    pub fn new(settings: &Settings, repository: Arc<dyn UserRepository>) -> Result<Self> {
+        let allowed_issuers = settings
+            .issuers
+            .iter()
+            .map(|issuer| Issuer::new(issuer))
+            .collect::<Result<Vec<_>>>()?;
+
+        Ok(Self {
+            allowed_issuers,
             repository,
-        }
+        })
     }
 
     pub async fn find(&self, id: UserId) -> Result<User> {
@@ -23,7 +30,7 @@ impl UserService {
     }
 
     pub async fn create(&self, issuer: Issuer, subject: Subject) -> Result<User> {
-        if issuer != self.allowed_issuer {
+        if !self.allowed_issuers.contains(&issuer) {
             return Err(Error::InvalidIssuer(issuer.to_string()));
         }
 
@@ -41,11 +48,21 @@ mod tests {
 
     use super::*;
 
-    const ISSUER: &str = "https://auth.example.com/my-issuer";
+    const ISSUER1: &str = "https://auth.example.com/my-issuer1";
+    const ISSUER2: &str = "https://auth.example.com/my-issuer2";
     const SUBJECT: &str = "Alice";
 
+    fn service_with_issuers(repository: MockUserRepository, issuers: &[&str]) -> UserService {
+        let settings = Settings {
+            issuers: issuers.iter().map(|issuer| issuer.to_string()).collect(),
+            ..Default::default()
+        };
+
+        UserService::new(&settings, Arc::new(repository)).unwrap()
+    }
+
     fn service(repository: MockUserRepository) -> UserService {
-        UserService::new(Issuer::new(ISSUER).unwrap(), Arc::new(repository))
+        service_with_issuers(repository, &[ISSUER1])
     }
 
     #[tokio::test]
@@ -81,7 +98,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_create_user_for_allowed_issuer() {
-        let issuer = Issuer::new(ISSUER).unwrap();
+        let issuer = Issuer::new(ISSUER1).unwrap();
         let subject = Subject::new(SUBJECT).unwrap();
         let expected_issuer = issuer.clone();
         let expected_subject = subject.clone();
@@ -97,6 +114,32 @@ mod tests {
             .return_once(|user, _| Ok(user));
 
         let user = service(repository).create(issuer, subject).await.unwrap();
+
+        assert_ne!(user.id, UserId::nil());
+    }
+
+    #[tokio::test]
+    async fn should_create_user_for_second_allowed_issuer() {
+        let issuer = Issuer::new(ISSUER2).unwrap();
+        let subject = Subject::new(SUBJECT).unwrap();
+        let expected_issuer = issuer.clone();
+        let expected_subject = subject.clone();
+
+        let mut repository = MockUserRepository::new();
+        repository
+            .expect_create()
+            .withf(move |user, identity| {
+                identity.issuer == expected_issuer
+                    && identity.subject == expected_subject
+                    && identity.user_id == user.id
+            })
+            .times(1)
+            .return_once(|user, _| Ok(user));
+
+        let user = service_with_issuers(repository, &[ISSUER1, ISSUER2])
+            .create(issuer, subject)
+            .await
+            .unwrap();
 
         assert_ne!(user.id, UserId::nil());
     }
@@ -118,7 +161,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_propagate_create_error() {
-        let issuer = Issuer::new(ISSUER).unwrap();
+        let issuer = Issuer::new(ISSUER1).unwrap();
         let subject = Subject::new(SUBJECT).unwrap();
         let mut repository = MockUserRepository::new();
         repository

@@ -7,6 +7,7 @@ use zekurix_server::settings::authentication::Settings;
 
 #[derive(Clone)]
 pub struct TestAuth {
+    pub issuers: Vec<String>,
     pub issuer: String,
     pub audience: String,
     pub algorithm: Algorithm,
@@ -100,7 +101,12 @@ impl TestAuth {
         let algorithm = Self::algorithm(&jwks);
 
         TestAuth {
-            issuer: settings.issuers[0].clone(),
+            issuers: settings.issuers.clone(),
+            issuer: settings
+                .issuers
+                .first()
+                .expect("at least one issuer must be configured")
+                .clone(),
             audience: settings.audience.clone(),
             algorithm,
             kid: Self::kid(&jwks),

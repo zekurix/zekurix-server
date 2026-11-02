@@ -15,8 +15,10 @@
 migrate = true
 
 [authentication]
-# JWT issuer exposed by the mock OAuth2 server.
-issuer = "http://localhost:3001/my-issuer"
+# Trusted JWT issuers used for token validation.
+issuers = [
+    "http://localhost:3001/my-issuer",
+]
 
 [authentication.provider]
 # Retrieve JWKS from the mock OAuth2 server running in the Docker Compose network.

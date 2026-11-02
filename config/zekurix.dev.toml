@@ -22,7 +22,7 @@ migrate = true
 [authentication]
 # Trusted JWT issuers for development.
 issuers = [
-    "http://localhost:3001/my-issuer"
+    "http://localhost:3001/my-issuer",
 ]
 
 [authentication.provider]
