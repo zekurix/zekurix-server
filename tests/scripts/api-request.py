@@ -36,7 +36,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 CONFIG_PATH_ENV = "ZEKURIX_CONFIG_PATH"
-ISSUER_ENV = "ZEKURIX_AUTHENTICATION__ISSUER"
+ISSUERS_ENV = "ZEKURIX_AUTHENTICATION__ISSUERS"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = PROJECT_ROOT / ".env"
 CLIENT_ID = "zekurix-test-api-request"
@@ -151,17 +151,18 @@ def load_config_issuer() -> str | None:
     with config_file.open("rb") as file:
         config = tomllib.load(file)
 
-    return config.get("authentication", {}).get("issuer")
+    issuers = config.get("authentication", {}).get("issuers", [])
+    return issuers[0] if issuers else None
 
 
 def get_issuer() -> str:
     issuer = (
-        os.getenv(ISSUER_ENV) or load_dotenv_value(ISSUER_ENV) or load_config_issuer()
+        os.getenv(ISSUERS_ENV) or load_dotenv_value(ISSUERS_ENV) or load_config_issuer()
     )
 
     if not issuer:
         raise RuntimeError(
-            f"{ISSUER_ENV} must be defined in the environment, "
+            f"{ISSUERS_ENV} must be defined in the environment, "
             f"{ENV_FILE}, or authentication.issuer in the configured TOML file"
         )
 

@@ -16,7 +16,7 @@ migrate = true
 
 [authentication]
 # Trusted JWT issuers used for token validation.
-issuer = [
+issuers = [
     "https://auth.example.com/my-issuer"
 ]
 

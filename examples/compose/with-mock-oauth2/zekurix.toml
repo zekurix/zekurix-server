@@ -20,4 +20,4 @@ issuer = "http://localhost:3001/my-issuer"
 
 [authentication.provider]
 # Retrieve JWKS from the mock OAuth2 server running in the Docker Compose network.
-discovery_url = "http://mock-oauth2-server:8080/my-issuer/jwks"
+jwks_url = "http://mock-oauth2-server:8080/my-issuer/jwks"
