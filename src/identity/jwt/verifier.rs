@@ -35,7 +35,7 @@ impl JwtVerifier {
                 validation.validate_nbf = true;
                 validation.validate_aud = true;
                 validation.set_audience(std::slice::from_ref(&settings.audience));
-                validation.set_issuer(std::slice::from_ref(&settings.issuers[0]));
+                validation.set_issuer(&settings.issuers);
 
                 (algorithm, validation)
             })
@@ -570,5 +570,25 @@ mod tests {
         let result = verifier.verify(&token).await;
 
         assert!(matches!(result, Err(Error::InvalidToken)));
+    }
+
+    #[tokio::test]
+    async fn should_accept_token_with_second_configured_issuer() {
+        let store = Arc::new(VerificationKeyStore::new(VerificationKeySet::new(jwks())));
+        let mut settings = settings_with_clock_skew(Duration::ZERO);
+        settings.issuers = vec![
+            "https://auth.example.com/my-issuer".into(),
+            "https://auth.example.com/another-issuer".into(),
+        ];
+        let verifier = JwtVerifier::new(&settings, store);
+
+        let mut claims = claims();
+        claims["iss"] = json!("https://auth.example.com/another-issuer");
+
+        let result = verifier
+            .verify(&token_with_claims(Some("test"), Algorithm::ES256, claims))
+            .await;
+
+        assert!(result.is_ok());
     }
 }

@@ -77,7 +77,7 @@ migrate = false
 # Default value: none.
 # At least one issuer is required.
 issuers = [
-    "https://auth.example.com/my-issuer"
+    "https://auth.example.com/my-issuer",
 ]
 # JWT audience expected by Zekurix.
 # Format: string.

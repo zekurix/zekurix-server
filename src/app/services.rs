@@ -4,7 +4,7 @@ use async_trait::async_trait;
 
 use crate::error::Result;
 use crate::health::{HealthCheck, HealthStatus};
-use crate::identity::{AuthenticationService, Issuer, JwksService};
+use crate::identity::{AuthenticationService, JwksService};
 use crate::openapi::OpenApiService;
 use crate::settings::Settings;
 use crate::user::UserService;
@@ -40,10 +40,7 @@ impl Services {
             repositories.user.clone(),
         );
 
-        let user = UserService::new(
-            Issuer::new(&settings.authentication.issuers[0])?,
-            repositories.user.clone(),
-        );
+        let user = UserService::new(&settings.authentication, repositories.user.clone())?;
 
         Ok(Self {
             openapi,

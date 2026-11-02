@@ -17,7 +17,7 @@ migrate = true
 [authentication]
 # Trusted JWT issuers used for token validation.
 issuers = [
-    "https://auth.example.com/my-issuer"
+    "https://auth.example.com/my-issuer",
 ]
 
 # JWT audience used for token validation.

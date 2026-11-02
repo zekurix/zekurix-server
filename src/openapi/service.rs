@@ -1,7 +1,7 @@
 use axum::body::Bytes;
 
 use crate::error::{Error, Result};
-use crate::settings::authentication::Settings as AuthenticationSettings;
+use crate::settings::authentication::Settings;
 
 const OPENAPI_JSON: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -13,17 +13,19 @@ pub struct OpenApiService {
 }
 
 impl OpenApiService {
-    pub fn new(authentication_settings: &AuthenticationSettings) -> Result<Self> {
+    pub fn new(settings: &Settings) -> Result<Self> {
         let mut document: serde_json::Value =
             serde_json::from_str(OPENAPI_JSON).map_err(|err| Error::InternalError(err.into()))?;
 
-        let issuer = document
-            .pointer_mut("/components/schemas/Identity/properties/issuer/const")
+        let issuers = document
+            .pointer_mut("/components/schemas/Identity/properties/issuer/enum")
             .ok_or_else(|| {
-                Error::InternalError(anyhow::anyhow!("OpenAPI identity issuer const is missing"))
+                Error::InternalError(anyhow::anyhow!(
+                    "OpenAPI identity issuer enumeration is missing"
+                ))
             })?;
 
-        *issuer = serde_json::json!(&authentication_settings.issuers[0]);
+        *issuers = serde_json::json!(&settings.issuers);
 
         let document =
             serde_json::to_vec(&document).map_err(|err| Error::InternalError(err.into()))?;
@@ -42,11 +44,12 @@ impl OpenApiService {
 mod tests {
     use super::*;
 
-    const ISSUER: &str = "https://configured.example.com/my-issuer";
+    const ISSUER1: &str = "https://configured.example.com/my-issuer1";
+    const ISSUER2: &str = "https://configured.example.com/my-issuer2";
 
-    fn settings() -> AuthenticationSettings {
-        AuthenticationSettings {
-            issuers: vec![ISSUER.to_owned()],
+    fn settings() -> Settings {
+        Settings {
+            issuers: vec![ISSUER1.to_owned(), ISSUER2.to_owned()],
             ..Default::default()
         }
     }
@@ -68,8 +71,8 @@ mod tests {
         let document: serde_json::Value = serde_json::from_slice(&service.document()).unwrap();
 
         assert_eq!(
-            document.pointer("/components/schemas/Identity/properties/issuer/const"),
-            Some(&serde_json::json!(ISSUER))
+            document.pointer("/components/schemas/Identity/properties/issuer/enum"),
+            Some(&serde_json::json!([ISSUER1, ISSUER2]))
         );
     }
 }
