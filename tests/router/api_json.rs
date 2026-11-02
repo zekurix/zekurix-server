@@ -62,7 +62,7 @@ async fn should_return_problem_details_for_missing_json_content_type() {
         .post("/api/v1/users")
         .add_header(header::AUTHORIZATION, app.auth.header("admin"))
         .bytes(Bytes::from(
-            r#"{"identity": {"issuer": "https://auth.example.com", "subject": "Alice"}}"#,
+            r#"{"identity": {"issuer": "https://auth.example.com/my-issuer", "subject": "Alice"}}"#,
         ))
         .await;
     response.assert_status(StatusCode::UNSUPPORTED_MEDIA_TYPE);

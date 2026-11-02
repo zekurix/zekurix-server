@@ -20,7 +20,7 @@ Set the required environment variables:
  
 ```bash
 export ZEKURIX_DATABASE__PASSWORD=change-me
-export ZEKURIX_AUTHENTICATION__ISSUER=https://auth.example.com
+export ZEKURIX_AUTHENTICATION__ISSUERS=[https://auth.example.com/my-issuer]
 export ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
 export ZEKURIX_AUTHENTICATION__PROVIDER__JWKS_FILE=/etc/zekurix/jwks.json
 ```
