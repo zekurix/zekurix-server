@@ -200,7 +200,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=sha,format=long
+            type=sha,format=long,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push Docker image
@@ -230,6 +230,6 @@ jobs:
         uses: docker/scout-action@a4119c5a8c5076236a54e4ce99531f7e4dd2ef84 # v1.27.0
         with:
           command: cves
-          image: docker.io/${{ github.repository }}:sha-${{ github.sha }}
+          image: docker.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
           only-severities: critical,high
           exit-code: true
