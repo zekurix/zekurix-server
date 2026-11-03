@@ -15,7 +15,7 @@ skip:
 # - Improves CI performance and reduces unnecessary build times.
 - rule: github_action_from_unverified_creator_used
   purl:
-    - pkg:githubactions/Swatinem/rust-cache
+    - pkg:githubactions/swatinem/rust-cache
 
 # Accepted risk:
 # - Official action maintained by the Zizmor project authors.
@@ -24,3 +24,27 @@ skip:
 - rule: github_action_from_unverified_creator_used
   purl:
     - pkg:githubactions/zizmorcore/zizmor-action
+
+# Accepted risk:
+# - Official action maintained by Astral, the Ruff project authors.
+# - Runs Ruff lint and formatting checks for the repository's Python scripts.
+# - Pinned to a full commit SHA in the workflow.
+- rule: github_action_from_unverified_creator_used
+  purl:
+    - pkg:githubactions/astral-sh/ruff-action
+
+# Accepted risk:
+# - Official action maintained by Astral, the uv project authors.
+# - Installs uv to run Schemathesis in the OpenAPI integration tests.
+# - Pinned to a full commit SHA in the workflow.
+- rule: github_action_from_unverified_creator_used
+  purl:
+    - pkg:githubactions/astral-sh/setup-uv
+
+# Accepted risk:
+# - Official Rust project action for obtaining short-lived crates.io publish tokens.
+# - Uses GitHub OIDC in the release environment instead of a stored long-lived token.
+# - The workflow limits its permissions and pins the action to a full commit SHA.
+- rule: github_action_from_unverified_creator_used
+  purl:
+    - pkg:githubactions/rust-lang/crates-io-auth-action
