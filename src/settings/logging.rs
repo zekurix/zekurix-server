@@ -41,12 +41,12 @@ pub enum Format {
 
 #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Settings {
+pub struct LoggingSettings {
     pub level: Level,
     pub format: Format,
 }
 
-impl Settings {
+impl LoggingSettings {
     pub fn merge(&mut self, cli: &Cli) {
         if cli.verbose {
             self.level = Level::Debug;
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn test_default_settings() {
-        let settings = Settings::default();
+        let settings = LoggingSettings::default();
 
         assert_eq!(settings.level, Level::Info);
         assert_eq!(settings.format, Format::Full);
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn test_merge_with_verbose() {
-        let mut settings = Settings::default();
+        let mut settings = LoggingSettings::default();
         let cli = Cli {
             verbose: true,
             quiet: false,
@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_merge_with_quiet() {
-        let mut settings = Settings::default();
+        let mut settings = LoggingSettings::default();
         let cli = Cli {
             verbose: false,
             quiet: true,
@@ -119,7 +119,7 @@ mod tests {
 
     #[test]
     fn test_merge_with_no_flags() {
-        let mut settings = Settings::default();
+        let mut settings = LoggingSettings::default();
         let cli = Cli {
             verbose: false,
             quiet: false,
@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn test_merge_preserves_format() {
-        let mut settings = Settings {
+        let mut settings = LoggingSettings {
             level: Level::Info,
             format: Format::Pretty,
         };
