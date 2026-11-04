@@ -6,7 +6,7 @@ use crate::error::{Error, Result};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Settings {
+pub struct DatabaseSettings {
     pub username: String,
     pub port: u16,
     pub host: String,
@@ -22,7 +22,7 @@ pub struct Settings {
     pub migrate: bool,
 }
 
-impl Default for Settings {
+impl Default for DatabaseSettings {
     fn default() -> Self {
         Self {
             username: "".to_string(),
@@ -39,7 +39,7 @@ impl Default for Settings {
     }
 }
 
-impl Settings {
+impl DatabaseSettings {
     pub fn validate(&self) -> Result<()> {
         if self.username.trim().is_empty() {
             return Err(Error::InvalidSettings {
@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn should_accept_static_username() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "postgres".to_string(),
             ..Default::default()
         };
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn should_reject_empty_username() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "".to_string(),
             ..Default::default()
         };
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn should_reject_only_spaces_username() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "   ".to_string(),
             ..Default::default()
         };
@@ -107,7 +107,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_accept_valid_username(username in r".*\S.*") {
-            let settings = Settings {
+            let settings = DatabaseSettings {
                 username: username.to_string(),
                 ..Default::default()
             };
@@ -120,7 +120,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_reject_blank_username(username in r"\s*") {
-            let settings = Settings {
+            let settings = DatabaseSettings {
                 username: username.to_string(),
                 ..Default::default()
             };
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn should_accept_connection_max_greater_than_min() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "postgres".to_string(),
             max_connections: 5,
             min_connections: 4,
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn should_accept_connection_max_equal_min() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "postgres".to_string(),
             max_connections: 5,
             min_connections: 5,
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn should_reject_connection_max_lesser_than_min() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "postgres".to_string(),
             max_connections: 5,
             min_connections: 6,
@@ -173,7 +173,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_verify_connection_max_greater_or_equal_than_min(max in 0..1000u32, min in 0..1000u32) {
-            let settings = Settings {
+            let settings = DatabaseSettings {
                 username: "postgres".to_string(),
                 max_connections: max,
                 min_connections: min,
@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn should_accept_max_lifetime_greater_than_idle_timeout() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "postgres".to_string(),
             max_lifetime: Duration::from_mins(15),
             idle_timeout: Duration::from_mins(14),
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn should_accept_max_lifetime_equal_idle_timeout() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "postgres".to_string(),
             max_lifetime: Duration::from_mins(15),
             idle_timeout: Duration::from_mins(15),
@@ -213,7 +213,7 @@ mod tests {
 
     #[test]
     fn should_accept_max_lifetime_lesser_than_idle_timeout() {
-        let settings = Settings {
+        let settings = DatabaseSettings {
             username: "postgres".to_string(),
             max_lifetime: Duration::from_mins(15),
             idle_timeout: Duration::from_mins(16),
@@ -227,7 +227,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_verify_max_lifetime_greater_or_equal_than_idle_timeout(max_lifetime in 0..1000u64, idle_timeout in 0..1000u64) {
-            let settings = Settings {
+            let settings = DatabaseSettings {
                 username: "postgres".to_string(),
                 max_lifetime: Duration::from_mins(max_lifetime),
                 idle_timeout: Duration::from_mins(idle_timeout),

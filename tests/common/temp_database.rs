@@ -5,15 +5,15 @@ use tracing::info;
 use uuid::Uuid;
 
 use zekurix_server::secrets::DatabaseSecrets;
-use zekurix_server::settings::database::Settings;
+use zekurix_server::settings::DatabaseSettings;
 
 pub struct TempDatabase {
-    settings: Settings,
+    settings: DatabaseSettings,
     secrets: DatabaseSecrets,
 }
 
 impl TempDatabase {
-    pub fn new(settings: &Settings, secrets: &DatabaseSecrets) -> Self {
+    pub fn new(settings: &DatabaseSettings, secrets: &DatabaseSecrets) -> Self {
         let mut temp_database = Self {
             settings: settings.clone(),
             secrets: secrets.clone(),
@@ -54,7 +54,7 @@ impl TempDatabase {
     // Assumes the `postgres` database exists.
     // PostgreSQL does not allow dropping the currently connected database.
     // Connect to the administrative `postgres` database and drop the test database from there.
-    fn drop_database(settings: &Settings, secrets: &DatabaseSecrets) -> Result<()> {
+    fn drop_database(settings: &DatabaseSettings, secrets: &DatabaseSecrets) -> Result<()> {
         let config = format!(
             "host={} port={} user={} password={} dbname=postgres",
             settings.host,
