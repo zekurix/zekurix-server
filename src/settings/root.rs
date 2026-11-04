@@ -9,9 +9,9 @@ use crate::cli::Cli;
 use crate::secrets::Secrets;
 
 use super::LoggingSettings;
+use super::ServerSettings;
 use super::authentication;
 use super::database;
-use super::server;
 
 const ENV_PREFIX: &str = "ZEKURIX_";
 
@@ -19,7 +19,7 @@ const ENV_PREFIX: &str = "ZEKURIX_";
 #[serde(deny_unknown_fields)]
 pub struct Settings {
     pub logging: LoggingSettings,
-    pub server: server::Settings,
+    pub server: ServerSettings,
     pub database: database::Settings,
     pub authentication: authentication::Settings,
 }
