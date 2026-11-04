@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, Result};
 
-use super::authentication_provider;
+use super::ProviderSettings;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum Algorithm {
@@ -69,7 +69,7 @@ pub struct AuthenticationSettings {
     #[serde(with = "humantime_serde")]
     pub clock_skew: Duration,
     pub allowed_algorithms: Vec<Algorithm>,
-    pub provider: authentication_provider::Settings,
+    pub provider: ProviderSettings,
 }
 
 impl Default for AuthenticationSettings {
@@ -147,7 +147,7 @@ mod tests {
         let settings = AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
@@ -166,7 +166,7 @@ mod tests {
                 "https://auth.example.com/my-issuer2".to_string(),
             ],
             audience: "zekurix".to_string(),
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
@@ -183,7 +183,7 @@ mod tests {
         let settings = AuthenticationSettings {
             issuers: vec![],
             audience: "zekurix".to_string(),
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
@@ -199,7 +199,7 @@ mod tests {
         let settings = AuthenticationSettings {
             issuers: vec!["   ".to_string()],
             audience: "zekurix".to_string(),
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
@@ -218,7 +218,7 @@ mod tests {
                 "   ".to_string(),
             ],
             audience: "zekurix".to_string(),
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
@@ -237,7 +237,7 @@ mod tests {
             let settings = AuthenticationSettings {
                 issuers: vec![issuer.to_string()],
                 audience: "zekurix".to_string(),
-                provider: authentication_provider::Settings {
+                provider: ProviderSettings {
                     jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                     ..Default::default()
                 },
@@ -255,7 +255,7 @@ mod tests {
             let settings = AuthenticationSettings {
                 issuers: vec![issuer.to_string()],
                 audience: "zekurix".to_string(),
-                provider: authentication_provider::Settings {
+                provider: ProviderSettings {
                     jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                     ..Default::default()
                 },
@@ -273,7 +273,7 @@ mod tests {
         let settings = AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "".to_string(),
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
@@ -289,7 +289,7 @@ mod tests {
         let settings = AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "   ".to_string(),
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
@@ -306,7 +306,7 @@ mod tests {
             let settings = AuthenticationSettings {
                 issuers: vec!["https://auth.example.com/my-issuer".to_string()],
                 audience: audience.to_string(),
-                provider: authentication_provider::Settings {
+                provider: ProviderSettings {
                     jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                     ..Default::default()
                 },
@@ -324,7 +324,7 @@ mod tests {
             let settings = AuthenticationSettings {
                 issuers: vec!["https://auth.example.com/my-issuer".to_string()],
                 audience: audience.to_string(),
-                provider: authentication_provider::Settings {
+                provider: ProviderSettings {
                     jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                     ..Default::default()
                 },
@@ -358,7 +358,7 @@ mod tests {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
             allowed_algorithms: vec![],
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },
@@ -375,7 +375,7 @@ mod tests {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
             allowed_algorithms: vec![Algorithm::Rs256, Algorithm::Rs256],
-            provider: authentication_provider::Settings {
+            provider: ProviderSettings {
                 jwks_file: Some("tests/keys/authentication/jwks.json".into()),
                 ..Default::default()
             },

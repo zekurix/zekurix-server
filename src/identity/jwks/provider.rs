@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use jsonwebtoken::jwk::JwkSet;
 
 use crate::error::Result;
-use crate::settings::authentication_provider::Settings;
+use crate::settings::ProviderSettings;
 
 use super::{FileJwksProvider, RemoteJwksProvider};
 
@@ -14,7 +14,7 @@ pub trait JwksProvider: Send + Sync {
     async fn load(&self) -> Result<JwkSet>;
 }
 
-pub fn create_jwks_provider(settings: &Settings) -> Arc<dyn JwksProvider> {
+pub fn create_jwks_provider(settings: &ProviderSettings) -> Arc<dyn JwksProvider> {
     match (settings.jwks_url.as_ref(), settings.jwks_file.as_ref()) {
         (Some(url), None) => Arc::new(RemoteJwksProvider::new(
             url.clone(),
@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn should_create_remote_jwks_provider_when_jwks_url_is_configured() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             jwks_file: None,
             ..Default::default()
@@ -42,7 +42,7 @@ mod tests {
 
     #[test]
     fn should_create_file_jwks_provider_when_jwks_file_is_configured() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             jwks_url: None,
             jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()
@@ -54,7 +54,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn should_panic_when_no_provider_is_configured() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             jwks_url: None,
             jwks_file: None,
             ..Default::default()
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn should_panic_when_both_providers_are_configured() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()

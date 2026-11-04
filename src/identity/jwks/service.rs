@@ -8,7 +8,7 @@ use tracing::{debug, error, warn};
 
 use crate::error::{Error, Result};
 use crate::health::{HealthCheck, HealthStatus};
-use crate::settings::authentication_provider::Settings;
+use crate::settings::ProviderSettings;
 
 use super::{JwksProvider, VerificationKeySet, VerificationKeyStore, create_jwks_provider};
 
@@ -25,12 +25,12 @@ pub struct JwksService {
 }
 
 impl JwksService {
-    fn new(settings: &Settings, key_store: Arc<VerificationKeyStore>) -> Self {
+    fn new(settings: &ProviderSettings, key_store: Arc<VerificationKeyStore>) -> Self {
         Self::with_provider(settings, key_store, create_jwks_provider(settings))
     }
 
     fn with_provider(
-        settings: &Settings,
+        settings: &ProviderSettings,
         key_store: Arc<VerificationKeyStore>,
         provider: Arc<dyn JwksProvider>,
     ) -> Self {
@@ -155,7 +155,7 @@ impl JwksService {
     }
 
     pub async fn start(
-        settings: &Settings,
+        settings: &ProviderSettings,
         key_store: Arc<VerificationKeyStore>,
     ) -> Result<Arc<Self>> {
         let service = Arc::new(Self::new(settings, key_store));
@@ -203,8 +203,8 @@ mod tests {
         }))
     }
 
-    fn settings() -> Settings {
-        Settings {
+    fn settings() -> ProviderSettings {
+        ProviderSettings {
             startup_retry_timeout: Duration::from_millis(50),
             startup_retry_interval: Duration::from_millis(10),
             refresh_interval: Duration::from_millis(50),
