@@ -7,11 +7,11 @@ use crate::error::{Error, Result};
 const ENV_PASSWORD: &str = "ZEKURIX_DATABASE__PASSWORD";
 
 #[derive(Clone, Debug, Default)]
-pub struct Secrets {
+pub struct DatabaseSecrets {
     password: SecretString,
 }
 
-impl Secrets {
+impl DatabaseSecrets {
     fn new(password: &str) -> Result<Self> {
         if password.trim().is_empty() {
             return Err(Error::InvalidEnvironmentVariable(ENV_PASSWORD.to_string()));
@@ -45,21 +45,21 @@ mod tests {
 
     #[test]
     fn should_create_secrets_from_static_password() {
-        let secrets = Secrets::new("password").unwrap();
+        let secrets = DatabaseSecrets::new("password").unwrap();
 
         assert_eq!(secrets.password(), "password");
     }
 
     #[test]
     fn should_return_error_when_password_is_empty() {
-        let result = Secrets::new("");
+        let result = DatabaseSecrets::new("");
 
         assert!(matches!(result, Err(Error::InvalidEnvironmentVariable(_))));
     }
 
     #[test]
     fn should_return_error_when_password_is_only_spaces() {
-        let result = Secrets::new("   ");
+        let result = DatabaseSecrets::new("   ");
 
         assert!(matches!(result, Err(Error::InvalidEnvironmentVariable(_))));
     }
@@ -67,7 +67,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_create_secrets_from_valid_password(password in r".*\S.*") {
-            let secrets = Secrets::new(&password).unwrap();
+            let secrets = DatabaseSecrets::new(&password).unwrap();
 
             prop_assert_eq!(secrets.password(), password);
         }
@@ -76,7 +76,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_reject_blank_password(password in r"\s*") {
-            let result = Secrets::new(&password);
+            let result = DatabaseSecrets::new(&password);
 
             prop_assert!(matches!(result, Err(Error::InvalidEnvironmentVariable(_))));
         }

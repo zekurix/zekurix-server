@@ -2,7 +2,7 @@ use anyhow::Result;
 use sqlx::{PgPool, postgres::PgConnectOptions, postgres::PgPoolOptions};
 use tracing::info;
 
-use crate::secrets::database::Secrets;
+use crate::secrets::DatabaseSecrets;
 use crate::settings::database::Settings;
 
 pub struct PostgresDatabase {
@@ -10,7 +10,7 @@ pub struct PostgresDatabase {
 }
 
 impl PostgresDatabase {
-    async fn connect(settings: &Settings, secrets: &Secrets) -> Result<PgPool> {
+    async fn connect(settings: &Settings, secrets: &DatabaseSecrets) -> Result<PgPool> {
         info!("connecting to PostgreSQL database");
         let options = PgConnectOptions::new()
             .host(&settings.host)
@@ -40,7 +40,7 @@ impl PostgresDatabase {
         Ok(())
     }
 
-    pub async fn init(settings: &Settings, secrets: &Secrets) -> Result<Self> {
+    pub async fn init(settings: &Settings, secrets: &DatabaseSecrets) -> Result<Self> {
         let postgres_database = Self {
             pool: Self::connect(settings, secrets).await?,
         };
