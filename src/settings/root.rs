@@ -8,10 +8,10 @@ use serde::{Deserialize, Serialize};
 use crate::cli::Cli;
 use crate::secrets::Secrets;
 
+use super::AuthenticationSettings;
 use super::DatabaseSettings;
 use super::LoggingSettings;
 use super::ServerSettings;
-use super::authentication;
 
 const ENV_PREFIX: &str = "ZEKURIX_";
 
@@ -21,7 +21,7 @@ pub struct Settings {
     pub logging: LoggingSettings,
     pub server: ServerSettings,
     pub database: DatabaseSettings,
-    pub authentication: authentication::Settings,
+    pub authentication: AuthenticationSettings,
 }
 
 impl Settings {

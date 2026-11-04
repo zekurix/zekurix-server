@@ -63,7 +63,7 @@ impl From<Algorithm> for jsonwebtoken::Algorithm {
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Settings {
+pub struct AuthenticationSettings {
     pub issuers: Vec<String>,
     pub audience: String,
     #[serde(with = "humantime_serde")]
@@ -72,7 +72,7 @@ pub struct Settings {
     pub provider: authentication_provider::Settings,
 }
 
-impl Default for Settings {
+impl Default for AuthenticationSettings {
     fn default() -> Self {
         Self {
             issuers: Vec::new(),
@@ -89,7 +89,7 @@ impl Default for Settings {
     }
 }
 
-impl Settings {
+impl AuthenticationSettings {
     pub fn validate(&self) -> Result<()> {
         if self.issuers.is_empty() {
             return Err(Error::InvalidSettings {
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn should_accept_static_issuer_audience() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn should_accept_multiple_issuers() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec![
                 "https://auth.example.com/my-issuer1".to_string(),
                 "https://auth.example.com/my-issuer2".to_string(),
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn should_reject_empty_issuer() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec![],
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
@@ -196,7 +196,7 @@ mod tests {
 
     #[test]
     fn should_reject_only_spaces_issuer() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec!["   ".to_string()],
             audience: "zekurix".to_string(),
             provider: authentication_provider::Settings {
@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn should_reject_invalid_issuer_in_list() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec![
                 "https://auth.example.com/my-issuer".to_string(),
                 "   ".to_string(),
@@ -234,7 +234,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_accept_valid_issuer(issuer in r"[a-zA-Z0-9._:/@#$%&()\\-]{1,1024}") {
-            let settings = Settings {
+            let settings = AuthenticationSettings {
                 issuers: vec![issuer.to_string()],
                 audience: "zekurix".to_string(),
                 provider: authentication_provider::Settings {
@@ -252,7 +252,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_reject_blank_issuer(issuer in r"\s*") {
-            let settings = Settings {
+            let settings = AuthenticationSettings {
                 issuers: vec![issuer.to_string()],
                 audience: "zekurix".to_string(),
                 provider: authentication_provider::Settings {
@@ -270,7 +270,7 @@ mod tests {
 
     #[test]
     fn should_reject_empty_audience() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "".to_string(),
             provider: authentication_provider::Settings {
@@ -286,7 +286,7 @@ mod tests {
 
     #[test]
     fn should_reject_only_spaces_audience() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "   ".to_string(),
             provider: authentication_provider::Settings {
@@ -303,7 +303,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_accept_valid_audience(audience in r".*\S.*") {
-            let settings = Settings {
+            let settings = AuthenticationSettings {
                 issuers: vec!["https://auth.example.com/my-issuer".to_string()],
                 audience: audience.to_string(),
                 provider: authentication_provider::Settings {
@@ -321,7 +321,7 @@ mod tests {
     proptest! {
         #[test]
         fn should_reject_blank_audience(audience in r"\s*") {
-            let settings = Settings {
+            let settings = AuthenticationSettings {
                 issuers: vec!["https://auth.example.com/my-issuer".to_string()],
                 audience: audience.to_string(),
                 provider: authentication_provider::Settings {
@@ -339,7 +339,7 @@ mod tests {
 
     #[test]
     fn should_use_default_allowed_algorithms() {
-        let settings = Settings::default();
+        let settings = AuthenticationSettings::default();
 
         assert_eq!(
             settings.allowed_algorithms,
@@ -354,7 +354,7 @@ mod tests {
 
     #[test]
     fn should_reject_empty_allowed_algorithms() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
             allowed_algorithms: vec![],
@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn should_reject_duplicate_allowed_algorithms() {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".to_string()],
             audience: "zekurix".to_string(),
             allowed_algorithms: vec![Algorithm::Rs256, Algorithm::Rs256],

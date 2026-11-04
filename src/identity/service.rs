@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::error::{Error, Result};
-use crate::settings::authentication::Settings;
+use crate::settings::AuthenticationSettings;
 use crate::user::{User, UserId, UserRepository};
 
 use super::jwt::JwtVerifier;
@@ -15,7 +15,7 @@ pub struct AuthenticationService {
 
 impl AuthenticationService {
     pub fn new(
-        settings: &Settings,
+        settings: &AuthenticationSettings,
         key_store: Arc<VerificationKeyStore>,
         identity_repository: Arc<dyn IdentityRepository>,
         user_repository: Arc<dyn UserRepository>,
@@ -82,8 +82,8 @@ mod tests {
             .as_secs()
     }
 
-    fn settings() -> Settings {
-        Settings {
+    fn settings() -> AuthenticationSettings {
+        AuthenticationSettings {
             issuers: vec![ISSUER.to_owned()],
             audience: AUDIENCE.to_owned(),
             ..Default::default()
@@ -118,7 +118,7 @@ mod tests {
     }
 
     fn service_with_settings(
-        settings: &Settings,
+        settings: &AuthenticationSettings,
         identity_repository: MockIdentityRepository,
         user_repository: MockUserRepository,
     ) -> AuthenticationService {

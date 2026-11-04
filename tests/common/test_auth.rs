@@ -3,7 +3,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use jsonwebtoken::{Algorithm, EncodingKey, Header, encode, jwk::JwkSet};
 use serde::Serialize;
 
-use zekurix_server::settings::authentication::Settings;
+use zekurix_server::settings::AuthenticationSettings;
 
 #[derive(Clone)]
 pub struct TestAuth {
@@ -25,7 +25,7 @@ struct Claims {
 }
 
 impl TestAuth {
-    fn read_jwks(settings: &Settings) -> JwkSet {
+    fn read_jwks(settings: &AuthenticationSettings) -> JwkSet {
         let jwks_file = settings
             .provider
             .jwks_file
@@ -37,7 +37,7 @@ impl TestAuth {
         serde_json::from_str(&jwks).expect("failed to parse JWKS file")
     }
 
-    fn read_private_key(settings: &Settings) -> Vec<u8> {
+    fn read_private_key(settings: &AuthenticationSettings) -> Vec<u8> {
         let jwks_file = settings
             .provider
             .jwks_file
@@ -95,7 +95,7 @@ impl TestAuth {
         }
     }
 
-    pub fn new(settings: &Settings) -> Self {
+    pub fn new(settings: &AuthenticationSettings) -> Self {
         let jwks = Self::read_jwks(settings);
         let private_key = Self::read_private_key(settings);
         let algorithm = Self::algorithm(&jwks);
