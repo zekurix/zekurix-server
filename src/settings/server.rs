@@ -8,14 +8,14 @@ use crate::cli::Cli;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Settings {
+pub struct ServerSettings {
     pub host: String,
     pub port: u16,
     #[serde(with = "humantime_serde")]
     pub timeout: Duration,
 }
 
-impl Default for Settings {
+impl Default for ServerSettings {
     fn default() -> Self {
         Self {
             host: "0.0.0.0".to_string(),
@@ -25,7 +25,7 @@ impl Default for Settings {
     }
 }
 
-impl Settings {
+impl ServerSettings {
     pub fn merge(&mut self, cli: &Cli) {
         if let Some(bind) = cli.bind {
             self.host = bind.ip().to_string();
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn should_use_default_settings() {
-        let settings = Settings::default();
+        let settings = ServerSettings::default();
 
         assert_eq!(settings.host, "0.0.0.0");
         assert_eq!(settings.port, 3000);
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn should_build_socket_addr_ipv4() {
-        let settings = Settings {
+        let settings = ServerSettings {
             host: "127.0.0.1".into(),
             port: 3000,
             ..Default::default()
@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn should_build_socket_addr_ipv6() {
-        let settings = Settings {
+        let settings = ServerSettings {
             host: "::1".into(),
             port: 3000,
             ..Default::default()
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn should_reject_empty_host() {
-        let settings = Settings {
+        let settings = ServerSettings {
             host: "".into(),
             port: 3000,
             ..Default::default()
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn should_reject_invalid_host_with_space() {
-        let settings = Settings {
+        let settings = ServerSettings {
             host: "invalid host".into(),
             port: 3000,
             ..Default::default()
@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn should_reject_host_with_port() {
-        let settings = Settings {
+        let settings = ServerSettings {
             host: "0.0.0.0:3000".into(),
             port: 3000,
             ..Default::default()
@@ -128,12 +128,12 @@ mod tests {
 
     #[test]
     fn supports_port_boundaries() {
-        let s0 = Settings {
+        let s0 = ServerSettings {
             host: "0.0.0.0".into(),
             port: 0,
             ..Default::default()
         };
-        let smax = Settings {
+        let smax = ServerSettings {
             host: "0.0.0.0".into(),
             port: 65535,
             ..Default::default()
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn merge_with_bind_overrides_settings() {
-        let mut settings = Settings::default();
+        let mut settings = ServerSettings::default();
         let cli = Cli {
             bind: Some("10.0.0.5:4242".parse::<SocketAddr>().unwrap()),
             ..Default::default()
@@ -159,8 +159,8 @@ mod tests {
 
     #[test]
     fn merge_with_none_leaves_settings_unchanged() {
-        let mut settings = Settings::default();
-        let original = Settings::default();
+        let mut settings = ServerSettings::default();
+        let original = ServerSettings::default();
         let cli = Cli {
             bind: None,
             ..Default::default()
