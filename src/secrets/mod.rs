@@ -1,5 +1,5 @@
+mod database;
 mod root;
 
-pub mod database;
-
+pub use database::DatabaseSecrets;
 pub use root::Secrets;
