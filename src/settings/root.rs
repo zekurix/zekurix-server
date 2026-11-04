@@ -8,10 +8,10 @@ use serde::{Deserialize, Serialize};
 use crate::cli::Cli;
 use crate::secrets::Secrets;
 
+use super::DatabaseSettings;
 use super::LoggingSettings;
 use super::ServerSettings;
 use super::authentication;
-use super::database;
 
 const ENV_PREFIX: &str = "ZEKURIX_";
 
@@ -20,7 +20,7 @@ const ENV_PREFIX: &str = "ZEKURIX_";
 pub struct Settings {
     pub logging: LoggingSettings,
     pub server: ServerSettings,
-    pub database: database::Settings,
+    pub database: DatabaseSettings,
     pub authentication: authentication::Settings,
 }
 
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn should_reject_invalid_settings() {
         let settings = Settings {
-            database: database::Settings {
+            database: DatabaseSettings {
                 username: "postgres".to_string(),
                 max_connections: 5,
                 min_connections: 6,
