@@ -6,7 +6,7 @@ use tracing::trace;
 
 use crate::error::{Error, Result};
 use crate::identity::VerificationKeyStore;
-use crate::settings::authentication::Settings;
+use crate::settings::AuthenticationSettings;
 
 use super::Claims;
 
@@ -16,7 +16,7 @@ pub struct JwtVerifier {
 }
 
 impl JwtVerifier {
-    pub fn new(settings: &Settings, store: Arc<VerificationKeyStore>) -> Self {
+    pub fn new(settings: &AuthenticationSettings, store: Arc<VerificationKeyStore>) -> Self {
         let algorithms = settings
             .allowed_algorithms
             .iter()
@@ -93,13 +93,13 @@ mod tests {
     const PRIVATE_KEY: &[u8] = include_bytes!("../../../tests/keys/authentication/private.pem");
     const JWKS: &str = include_str!("../../../tests/keys/authentication/jwks.json");
 
-    fn settings_with_clock_skew(clock_skew: Duration) -> Settings {
-        Settings {
+    fn settings_with_clock_skew(clock_skew: Duration) -> AuthenticationSettings {
+        AuthenticationSettings {
             issuers: vec!["https://auth.example.com/my-issuer".into()],
             audience: "zekurix".into(),
             clock_skew,
             allowed_algorithms: vec![SettingsAlgorithm::Es256],
-            ..Settings::default()
+            ..Default::default()
         }
     }
 

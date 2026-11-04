@@ -1,7 +1,7 @@
 use axum::body::Bytes;
 
 use crate::error::{Error, Result};
-use crate::settings::authentication::Settings;
+use crate::settings::AuthenticationSettings;
 
 const OPENAPI_JSON: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -13,7 +13,7 @@ pub struct OpenApiService {
 }
 
 impl OpenApiService {
-    pub fn new(settings: &Settings) -> Result<Self> {
+    pub fn new(settings: &AuthenticationSettings) -> Result<Self> {
         let mut document: serde_json::Value =
             serde_json::from_str(OPENAPI_JSON).map_err(|err| Error::InternalError(err.into()))?;
 
@@ -47,8 +47,8 @@ mod tests {
     const ISSUER1: &str = "https://configured.example.com/my-issuer1";
     const ISSUER2: &str = "https://configured.example.com/my-issuer2";
 
-    fn settings() -> Settings {
-        Settings {
+    fn settings() -> AuthenticationSettings {
+        AuthenticationSettings {
             issuers: vec![ISSUER1.to_owned(), ISSUER2.to_owned()],
             ..Default::default()
         }

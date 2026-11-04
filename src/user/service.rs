@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::error::{Error, Result};
 use crate::identity::{Identity, Issuer, Subject};
-use crate::settings::authentication::Settings;
+use crate::settings::AuthenticationSettings;
 
 use super::{User, UserId, UserRepository};
 
@@ -12,7 +12,10 @@ pub struct UserService {
 }
 
 impl UserService {
-    pub fn new(settings: &Settings, repository: Arc<dyn UserRepository>) -> Result<Self> {
+    pub fn new(
+        settings: &AuthenticationSettings,
+        repository: Arc<dyn UserRepository>,
+    ) -> Result<Self> {
         let allowed_issuers = settings
             .issuers
             .iter()
@@ -53,7 +56,7 @@ mod tests {
     const SUBJECT: &str = "Alice";
 
     fn service_with_issuers(repository: MockUserRepository, issuers: &[&str]) -> UserService {
-        let settings = Settings {
+        let settings = AuthenticationSettings {
             issuers: issuers.iter().map(|issuer| issuer.to_string()).collect(),
             ..Default::default()
         };
