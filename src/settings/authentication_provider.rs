@@ -8,7 +8,7 @@ use crate::error::{Error, Result};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Settings {
+pub struct ProviderSettings {
     pub jwks_url: Option<Url>,
     pub jwks_file: Option<PathBuf>,
     #[serde(with = "humantime_serde")]
@@ -25,7 +25,7 @@ pub struct Settings {
     pub request_timeout: Duration,
 }
 
-impl Default for Settings {
+impl Default for ProviderSettings {
     fn default() -> Self {
         Self {
             jwks_url: None,
@@ -40,7 +40,7 @@ impl Default for Settings {
     }
 }
 
-impl Settings {
+impl ProviderSettings {
     pub fn validate(&self) -> Result<()> {
         match (self.jwks_url.is_some(), self.jwks_file.is_some()) {
             (true, false) | (false, true) => {}
@@ -110,8 +110,8 @@ impl Settings {
 mod tests {
     use super::*;
 
-    fn valid_settings() -> Settings {
-        Settings {
+    fn valid_settings() -> ProviderSettings {
+        ProviderSettings {
             jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             ..Default::default()
         }
@@ -119,7 +119,7 @@ mod tests {
 
     #[test]
     fn validate_should_succeed_when_only_jwks_url_is_configured() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             jwks_file: None,
             ..Default::default()
@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn validate_should_succeed_when_only_jwks_file_is_configured() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             jwks_url: None,
             jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn validate_should_fail_when_neither_jwks_url_nor_jwks_file_is_configured() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             jwks_url: None,
             jwks_file: None,
             ..Default::default()
@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn validate_should_fail_when_both_jwks_url_and_jwks_file_are_configured() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             jwks_url: Some("https://auth.example.com/my-issuer/jwks".parse().unwrap()),
             jwks_file: Some("tests/keys/authentication/jwks.json".into()),
             ..Default::default()
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn validate_should_fail_when_startup_retry_timeout_is_zero() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             startup_retry_timeout: Duration::ZERO,
             ..valid_settings()
         };
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn validate_should_fail_when_startup_retry_interval_is_zero() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             startup_retry_interval: Duration::ZERO,
             ..valid_settings()
         };
@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn validate_should_fail_when_startup_retry_interval_exceeds_startup_retry_timeout() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             startup_retry_timeout: Duration::from_secs(10),
             startup_retry_interval: Duration::from_secs(11),
             ..valid_settings()
@@ -199,7 +199,7 @@ mod tests {
 
     #[test]
     fn validate_should_succeed_when_startup_retry_interval_equals_startup_retry_timeout() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             startup_retry_timeout: Duration::from_secs(10),
             startup_retry_interval: Duration::from_secs(10),
             ..valid_settings()
@@ -211,7 +211,7 @@ mod tests {
 
     #[test]
     fn validate_should_fail_when_refresh_interval_is_zero() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             refresh_interval: Duration::ZERO,
             ..valid_settings()
         };
@@ -222,7 +222,7 @@ mod tests {
 
     #[test]
     fn validate_should_fail_when_refresh_retry_interval_is_zero() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             refresh_retry_interval: Duration::ZERO,
             ..valid_settings()
         };
@@ -233,7 +233,7 @@ mod tests {
 
     #[test]
     fn validate_should_succeed_when_stale_keys_ttl_is_zero() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             stale_keys_ttl: Duration::ZERO,
             ..valid_settings()
         };
@@ -244,7 +244,7 @@ mod tests {
 
     #[test]
     fn validate_should_fail_when_request_timeout_is_zero() {
-        let settings = Settings {
+        let settings = ProviderSettings {
             request_timeout: Duration::ZERO,
             ..valid_settings()
         };
