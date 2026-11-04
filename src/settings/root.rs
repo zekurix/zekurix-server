@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 use crate::cli::Cli;
 use crate::secrets::Secrets;
 
+use super::LoggingSettings;
 use super::authentication;
 use super::database;
-use super::logging;
 use super::server;
 
 const ENV_PREFIX: &str = "ZEKURIX_";
@@ -18,7 +18,7 @@ const ENV_PREFIX: &str = "ZEKURIX_";
 #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Settings {
-    pub logging: logging::Settings,
+    pub logging: LoggingSettings,
     pub server: server::Settings,
     pub database: database::Settings,
     pub authentication: authentication::Settings,

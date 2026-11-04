@@ -1,8 +1,9 @@
 use tracing_subscriber::prelude::*;
 
-use crate::settings::logging::*;
+use crate::settings::LoggingSettings;
+use crate::settings::logging::Format;
 
-pub fn init(settings: &Settings) {
+pub fn init(settings: &LoggingSettings) {
     let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| format!("{}", settings.level).into());
 
