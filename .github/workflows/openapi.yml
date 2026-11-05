@@ -84,6 +84,8 @@ jobs:
           cat > .env <<EOF
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
           ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
+          ZEKURIX_AUTHORIZATION__BOOTSTRAP__SUPER_ADMIN__ISSUER: http://localhost:3001/my-issuer
+          ZEKURIX_AUTHORIZATION__BOOTSTRAP__SUPER_ADMIN__SUBJECT: admin
           EOF
 
       - name: Start services
@@ -165,6 +167,8 @@ jobs:
           cat > .env <<EOF
           ZEKURIX_DATABASE__PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
           ZEKURIX_AUTHENTICATION__AUDIENCE=zekurix
+          ZEKURIX_AUTHORIZATION__BOOTSTRAP__SUPER_ADMIN__ISSUER: http://localhost:3001/my-issuer
+          ZEKURIX_AUTHORIZATION__BOOTSTRAP__SUPER_ADMIN__SUBJECT: admin
           EOF
 
       - name: Start services
