@@ -9,6 +9,7 @@ use crate::cli::Cli;
 use crate::secrets::Secrets;
 
 use super::AuthenticationSettings;
+use super::AuthorizationSettings;
 use super::DatabaseSettings;
 use super::LoggingSettings;
 use super::ServerSettings;
@@ -22,6 +23,7 @@ pub struct Settings {
     pub server: ServerSettings,
     pub database: DatabaseSettings,
     pub authentication: AuthenticationSettings,
+    pub authorization: AuthorizationSettings,
 }
 
 impl Settings {
@@ -59,6 +61,7 @@ impl Settings {
     fn validate(&self) -> Result<()> {
         self.database.validate()?;
         self.authentication.validate()?;
+        self.authorization.validate(&self.authentication.issuers)?;
         Ok(())
     }
 }
@@ -66,6 +69,16 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const VALID_SETTINGS_TOML: &str = include_str!("../../config/zekurix.example.toml");
+
+    fn valid_settings() -> Settings {
+        Figment::new()
+            .merge(Serialized::defaults(Settings::default()))
+            .merge(Toml::string(VALID_SETTINGS_TOML))
+            .extract()
+            .expect("example settings should deserialize")
+    }
 
     #[test]
     fn should_strip_env_prefix() {
@@ -86,16 +99,44 @@ mod tests {
     }
 
     #[test]
-    fn should_reject_invalid_settings() {
-        let settings = Settings {
-            database: DatabaseSettings {
-                username: "postgres".to_string(),
-                max_connections: 5,
-                min_connections: 6,
-                ..Default::default()
-            },
-            ..Default::default()
-        };
+    fn example_settings_should_be_valid() {
+        let settings = valid_settings();
+
+        assert!(settings.validate().is_ok());
+    }
+
+    #[test]
+    fn should_reject_invalid_database_settings() {
+        let mut settings = valid_settings();
+        settings.database.min_connections = 6;
+        settings.database.max_connections = 5;
+
+        let result = settings.validate();
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn should_reject_invalid_authentication_settings() {
+        let mut settings = valid_settings();
+        settings.authentication.issuers.clear();
+
+        let result = settings.validate();
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn should_reject_invalid_authorization_settings() {
+        let mut settings = valid_settings();
+        settings
+            .authorization
+            .bootstrap
+            .super_admin
+            .as_mut()
+            .expect("example settings should contain a super administrator")
+            .issuer = "https://auth.example.com/invalid-issuer".into();
+
         let result = settings.validate();
 
         assert!(result.is_err());

@@ -150,3 +150,20 @@ stale_keys_ttl = "6h"
 # Format: human-readable duration, for example "5s", "10s" or "1m"; must be greater than zero.
 # Default value: "10s".
 request_timeout = "10s"
+
+# Authorization configuration: controls access rights and initial administrator bootstrap.
+[authorization]
+# Initial super administrator used to bootstrap authorization.
+# This setting is only used once, when authorization has not been bootstrapped yet.
+# After bootstrap, roles stored in the database are the source of truth.
+[authorization.bootstrap.super_admin]
+# Trusted JWT issuer identifying the initial super administrator.
+# Format: non-empty string matching one of the configured authentication issuers.
+# Default value: none.
+# This setting is required until authorization has been bootstrapped.
+issuer = "https://auth.example.com/my-issuer"
+# JWT subject identifying the initial super administrator.
+# Format: non-empty string matching the JWT "sub" claim.
+# Default value: none.
+# This setting is required until authorization has been bootstrapped.
+subject = "initial-admin-subject"
