@@ -55,3 +55,12 @@ pub async fn create_user(
         Json(user.into()),
     ))
 }
+
+pub async fn delete_user(
+    State(application): State<Arc<Application>>,
+    ApiPath(id): ApiPath<UserId>,
+) -> Result<StatusCode> {
+    application.services.user.delete(id).await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}

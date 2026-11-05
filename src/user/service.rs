@@ -41,6 +41,10 @@ impl UserService {
         let identity = Identity::new(issuer, subject, user.id);
         self.repository.create(user, identity).await
     }
+
+    pub async fn delete(&self, id: UserId) -> Result<()> {
+        self.repository.delete(id).await
+    }
 }
 
 #[cfg(test)]
@@ -175,5 +179,35 @@ mod tests {
         let result = service(repository).create(issuer, subject).await;
 
         assert!(matches!(result, Err(Error::InvalidToken)));
+    }
+
+    #[tokio::test]
+    async fn should_delete_user() {
+        let id = UserId::new();
+        let mut repository = MockUserRepository::new();
+        repository
+            .expect_delete()
+            .with(eq(id))
+            .times(1)
+            .return_once(move |_| Ok(()));
+
+        let result = service(repository).delete(id).await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn should_propagate_delete_error() {
+        let id = UserId::new();
+        let mut repository = MockUserRepository::new();
+        repository
+            .expect_delete()
+            .with(eq(id))
+            .times(1)
+            .return_once(move |_| Err(Error::UserNotFound(id)));
+
+        let result = service(repository).delete(id).await;
+
+        assert!(matches!(result, Err(Error::UserNotFound(user_id)) if user_id == id));
     }
 }

@@ -1,10 +1,18 @@
 use axum::http::{StatusCode, header};
+use axum_test::TestResponse;
 
 use zekurix_server::user::UserId;
 
 use super::common::UserResponse;
 use crate::common::ErrorResponse;
 use crate::common::TestApplication;
+
+pub async fn get_user(app: &TestApplication, user_id: UserId, subject: &str) -> TestResponse {
+    app.server
+        .get(&format!("/api/v1/users/{user_id}"))
+        .add_header(header::AUTHORIZATION, app.auth.header(subject))
+        .await
+}
 
 #[tokio::test]
 async fn should_get_user() {
