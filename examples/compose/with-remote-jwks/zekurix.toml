@@ -26,3 +26,8 @@ audience = "zekurix"
 [authentication.provider]
 # Retrieve JWKS from the external identity provider.
 jwks_url = "https://auth.example.com/my-issuer/jwks"
+
+# Initial super administrator used to bootstrap authorization.
+[authorization.bootstrap.super_admin]
+issuer = "https://auth.example.com/my-issuer"
+subject = "admin"
