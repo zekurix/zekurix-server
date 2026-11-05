@@ -29,3 +29,8 @@ issuers = [
 
 # JWT audience used for token validation.
 audience = "zekurix"
+
+# Initial super administrator used to bootstrap authorization.
+[authorization.bootstrap.super_admin]
+issuer = "https://auth.example.com/my-issuer"
+subject = "admin"
