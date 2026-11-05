@@ -5,6 +5,23 @@ use super::common::UserResponse;
 use crate::common::ErrorResponse;
 use crate::common::TestApplication;
 
+pub async fn create_user(app: &TestApplication, subject: &str) -> UserResponse {
+    let response = app
+        .server
+        .post("/api/v1/users")
+        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
+        .json(&serde_json::json!({
+            "identity": {
+                "issuer": app.auth.issuer.clone(),
+                "subject": subject
+            }
+        }))
+        .await;
+    response.assert_status(StatusCode::CREATED);
+
+    response.json()
+}
+
 #[tokio::test]
 async fn should_create_user() {
     let app = TestApplication::new().await;

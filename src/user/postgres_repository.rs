@@ -72,4 +72,22 @@ impl UserRepository for PostgresUserRepository {
 
         Ok(user)
     }
+
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn delete(&self, id: UserId) -> Result<()> {
+        let result = sqlx::query("DELETE FROM users WHERE id = $1")
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|err| {
+                error!(error = ?err, "failed to delete user");
+                Error::InternalError(err.into())
+            })?;
+
+        if result.rows_affected() == 0 {
+            return Err(Error::UserNotFound(id));
+        }
+
+        Ok(())
+    }
 }

@@ -10,4 +10,5 @@ use super::{User, UserId};
 pub trait UserRepository: Send + Sync {
     async fn find(&self, id: UserId) -> Result<User>;
     async fn create(&self, user: User, identity: Identity) -> Result<User>;
+    async fn delete(&self, id: UserId) -> Result<()>;
 }

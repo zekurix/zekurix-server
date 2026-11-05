@@ -138,14 +138,40 @@ paths:
           $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
 
         "404":
-          description: User not found.
+          $ref: "./responses.yaml#/components/responses/UserNotFound"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
+    delete:
+      tags:
+        - users
+      summary: Delete a user by ID.
+      description: Removes the specified user from the system.
+      operationId: deleteUser
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./parameters.yaml#/components/parameters/UserId"
+
+      responses:
+        "204":
+          description: User deleted successfully.
           headers:
             X-Request-Id:
               $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
-          content:
-            application/problem+json:
-              schema:
-                $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "404":
+          $ref: "./responses.yaml#/components/responses/UserNotFound"
 
         "500":
           $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
