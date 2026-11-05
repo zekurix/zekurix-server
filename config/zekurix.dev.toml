@@ -28,3 +28,8 @@ issuers = [
 [authentication.provider]
 # Retrieve JWKS from the local mock OAuth2 server used during development.
 jwks_url = "http://localhost:3001/my-issuer/jwks"
+
+# Initial super administrator used to bootstrap authorization.
+[authorization.bootstrap.super_admin]
+issuer = "http://localhost:3001/my-issuer"
+subject = "admin"

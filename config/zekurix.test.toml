@@ -29,3 +29,8 @@ audience = "zekurix"
 [authentication.provider]
 # Path to the JWKS file used by automated tests.
 jwks_file = "tests/keys/authentication/jwks.json"
+
+# Initial super administrator used to bootstrap authorization.
+[authorization.bootstrap.super_admin]
+issuer = "https://auth.example.com/my-issuer"
+subject = "admin"
