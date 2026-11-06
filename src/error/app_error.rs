@@ -30,7 +30,7 @@ pub enum Error {
     #[error("HTTP method '{method}' not allowed for URI '{uri}'")]
     HttpMethodNotAllowed { uri: Uri, method: Method },
 
-    #[error("Gateway timeout")]
+    #[error("gateway timeout")]
     HttpGatewayTimeout,
 
     #[error("setting '{setting}' invalid: {reason}")]
@@ -54,22 +54,25 @@ pub enum Error {
     #[error("JSON error")]
     Json(#[from] JsonRejection),
 
-    #[error("Path error")]
+    #[error("path error")]
     Path(#[from] PathRejection),
 
-    #[error("Authentication required")]
+    #[error("invalid query: {0}")]
+    InvalidQuery(String),
+
+    #[error("authentication required")]
     AuthenticationRequired,
 
-    #[error("Invalid authorization header")]
+    #[error("invalid authorization header")]
     InvalidAuthorizationHeader,
 
-    #[error("Invalid token")]
+    #[error("invalid token")]
     InvalidToken,
 
-    #[error("Failed to load JWKS")]
+    #[error("failed to load JWKS")]
     JwksLoadFailed(#[source] anyhow::Error),
 
-    #[error("Invalid JWK")]
+    #[error("invalid JWK")]
     InvalidJwk(#[source] anyhow::Error),
 }
 
@@ -165,6 +168,12 @@ impl From<Error> for ProblemDetails {
                 .with_title("Path rejection")
                 .with_status(rejection.status())
                 .with_detail(rejection.body_text()),
+
+            Error::InvalidQuery(reason) => ProblemDetails::new()
+                .with_type(problem_type::query::INVALID.as_uri())
+                .with_title("Invalid query")
+                .with_status(StatusCode::BAD_REQUEST)
+                .with_detail(reason),
 
             Error::AuthenticationRequired => ProblemDetails::new()
                 .with_type(problem_type::http::UNAUTHORIZED.as_uri())
@@ -399,6 +408,25 @@ mod tests {
         assert_eq!(problem.title, Some("Path rejection".to_string()));
         assert_eq!(problem.status, Some(StatusCode::INTERNAL_SERVER_ERROR));
         assert!(problem.detail.is_some_and(|s| !s.is_empty()));
+    }
+
+    #[test]
+    fn invalid_query_maps_to_bad_request() {
+        let error = Error::InvalidQuery("pagination limit must be greater than zero".to_owned());
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::query::INVALID.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Invalid query".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::BAD_REQUEST));
+        assert_eq!(
+            problem.detail,
+            Some("pagination limit must be greater than zero".to_owned())
+        );
     }
 
     #[test]
