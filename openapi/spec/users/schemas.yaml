@@ -49,3 +49,15 @@ components:
       properties:
         id:
           $ref: "#/components/schemas/UserId"
+
+    UsersResponse:
+      description: Response containing a list of users.
+      type: object
+      additionalProperties: false
+      required:
+        - users
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponse"

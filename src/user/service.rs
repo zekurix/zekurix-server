@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::error::{Error, Result};
 use crate::identity::{Identity, Issuer, Subject};
+use crate::router::Pagination;
 use crate::settings::AuthenticationSettings;
 
 use super::{User, UserId, UserRepository};
@@ -28,10 +29,6 @@ impl UserService {
         })
     }
 
-    pub async fn find(&self, id: UserId) -> Result<User> {
-        self.repository.find(id).await
-    }
-
     pub async fn create(&self, issuer: Issuer, subject: Subject) -> Result<User> {
         if !self.allowed_issuers.contains(&issuer) {
             return Err(Error::InvalidIssuer(issuer.to_string()));
@@ -40,6 +37,14 @@ impl UserService {
         let user = User::new();
         let identity = Identity::new(issuer, subject, user.id);
         self.repository.create(user, identity).await
+    }
+
+    pub async fn find(&self, id: UserId) -> Result<User> {
+        self.repository.find(id).await
+    }
+
+    pub async fn list(&self, pagination: Pagination) -> Result<Vec<User>> {
+        self.repository.list(pagination).await
     }
 
     pub async fn delete(&self, id: UserId) -> Result<()> {
@@ -70,37 +75,6 @@ mod tests {
 
     fn service(repository: MockUserRepository) -> UserService {
         service_with_issuers(repository, &[ISSUER1])
-    }
-
-    #[tokio::test]
-    async fn should_return_user_found_by_repository() {
-        let expected_user = User::new();
-        let expected_id = expected_user.id;
-        let mut repository = MockUserRepository::new();
-        repository
-            .expect_find()
-            .with(eq(expected_id))
-            .times(1)
-            .return_once(move |_| Ok(expected_user));
-
-        let user = service(repository).find(expected_id).await.unwrap();
-
-        assert_eq!(user.id, expected_id);
-    }
-
-    #[tokio::test]
-    async fn should_propagate_find_error() {
-        let id = UserId::new();
-        let mut repository = MockUserRepository::new();
-        repository
-            .expect_find()
-            .with(eq(id))
-            .times(1)
-            .return_once(move |_| Err(Error::UserNotFound(id)));
-
-        let result = service(repository).find(id).await;
-
-        assert!(matches!(result, Err(Error::UserNotFound(user_id)) if user_id == id));
     }
 
     #[tokio::test]
@@ -179,6 +153,77 @@ mod tests {
         let result = service(repository).create(issuer, subject).await;
 
         assert!(matches!(result, Err(Error::InvalidToken)));
+    }
+
+    #[tokio::test]
+    async fn should_return_user_found_by_repository() {
+        let expected_user = User::new();
+        let expected_id = expected_user.id;
+        let mut repository = MockUserRepository::new();
+        repository
+            .expect_find()
+            .with(eq(expected_id))
+            .times(1)
+            .return_once(move |_| Ok(expected_user));
+
+        let user = service(repository).find(expected_id).await.unwrap();
+
+        assert_eq!(user.id, expected_id);
+    }
+
+    #[tokio::test]
+    async fn should_propagate_find_error() {
+        let id = UserId::new();
+        let mut repository = MockUserRepository::new();
+        repository
+            .expect_find()
+            .with(eq(id))
+            .times(1)
+            .return_once(move |_| Err(Error::UserNotFound(id)));
+
+        let result = service(repository).find(id).await;
+
+        assert!(matches!(result, Err(Error::UserNotFound(user_id)) if user_id == id));
+    }
+
+    #[tokio::test]
+    async fn should_list_users() {
+        let pagination = Pagination::default();
+        let expected_users = vec![User::new(), User::new()];
+        let expected_ids = expected_users
+            .iter()
+            .map(|user| user.id)
+            .collect::<Vec<_>>();
+
+        let mut repository = MockUserRepository::new();
+        repository
+            .expect_list()
+            .with(eq(pagination))
+            .times(1)
+            .return_once(move |_| Ok(expected_users));
+
+        let users = service(repository).list(pagination).await.unwrap();
+
+        assert_eq!(
+            users.iter().map(|user| user.id).collect::<Vec<_>>(),
+            expected_ids
+        );
+    }
+
+    #[tokio::test]
+    async fn should_propagate_list_error() {
+        let pagination = Pagination::default();
+
+        let mut repository = MockUserRepository::new();
+        repository
+            .expect_list()
+            .with(eq(pagination))
+            .times(1)
+            .return_once(|_| Err(Error::InternalError(anyhow::anyhow!("error"))));
+
+        let result = service(repository).list(pagination).await;
+
+        assert!(matches!(result, Err(Error::InternalError(_))));
     }
 
     #[tokio::test]

@@ -1,5 +1,7 @@
 use axum::http::{StatusCode, header};
 
+use zekurix_server::user::UserId;
+
 use super::common::UserResponse;
 
 use crate::common::ErrorResponse;
@@ -20,6 +22,37 @@ pub async fn create_user(app: &TestApplication, subject: &str) -> UserResponse {
     response.assert_status(StatusCode::CREATED);
 
     response.json()
+}
+
+pub async fn create_users(app: &TestApplication, subjects: &[&str]) -> Vec<UserId> {
+    assert_eq!(
+        subjects.first(),
+        Some(&"admin"),
+        "admin must be the first fixture user"
+    );
+
+    let mut users = Vec::with_capacity(subjects.len());
+
+    for subject in subjects {
+        let user = if *subject == "admin" {
+            let response = app
+                .server
+                .get("/api/v1/users/me")
+                .add_header(header::AUTHORIZATION, app.auth.header("admin"))
+                .await;
+
+            response.assert_status_ok();
+            response.json::<UserResponse>()
+        } else {
+            create_user(app, subject).await
+        };
+
+        users.push(user.id);
+    }
+
+    // Match the repository's ORDER BY id.
+    users.sort();
+    users
 }
 
 #[tokio::test]

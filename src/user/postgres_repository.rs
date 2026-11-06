@@ -4,6 +4,7 @@ use tracing::{error, instrument};
 
 use crate::error::{Error, Result};
 use crate::identity::Identity;
+use crate::router::Pagination;
 
 use super::{User, UserId, repository::UserRepository};
 
@@ -19,19 +20,6 @@ impl PostgresUserRepository {
 
 #[async_trait]
 impl UserRepository for PostgresUserRepository {
-    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn find(&self, id: UserId) -> Result<User> {
-        sqlx::query_as::<_, User>("SELECT id FROM users WHERE id = $1")
-            .bind(id)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(|err| {
-                error!(error = ?err, "failed to select user");
-                Error::InternalError(err.into())
-            })?
-            .ok_or(Error::UserNotFound(id))
-    }
-
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
     async fn create(&self, user: User, identity: Identity) -> Result<User> {
         let mut tx = self.pool.begin().await.map_err(|err| {
@@ -71,6 +59,32 @@ impl UserRepository for PostgresUserRepository {
         })?;
 
         Ok(user)
+    }
+
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn find(&self, id: UserId) -> Result<User> {
+        sqlx::query_as::<_, User>("SELECT id FROM users WHERE id = $1")
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|err| {
+                error!(error = ?err, "failed to select user");
+                Error::InternalError(err.into())
+            })?
+            .ok_or(Error::UserNotFound(id))
+    }
+
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn list(&self, pagination: Pagination) -> Result<Vec<User>> {
+        sqlx::query_as::<_, User>("SELECT id FROM users ORDER BY id LIMIT $1 OFFSET $2")
+            .bind(i64::from(pagination.limit))
+            .bind(i64::from(pagination.offset))
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|err| {
+                error!(error = ?err, "failed to list users");
+                Error::InternalError(err.into())
+            })
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
