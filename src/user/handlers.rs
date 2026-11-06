@@ -10,30 +10,12 @@ use axum::{
 use crate::Application;
 use crate::error::Result;
 use crate::identity::CurrentUserId;
-use crate::router::{ApiJson, ApiPath};
+use crate::router::{ApiJson, ApiPath, Pagination};
 
 use super::{
     UserId,
-    dto::{CreateUserRequest, UserResponse},
+    dto::{CreateUserRequest, UserResponse, UsersResponse},
 };
-
-pub async fn get_current_user(
-    State(application): State<Arc<Application>>,
-    CurrentUserId(id): CurrentUserId,
-) -> Result<Json<UserResponse>> {
-    let user = application.services.user.find(id).await?;
-
-    Ok(Json(user.into()))
-}
-
-pub async fn get_user(
-    State(application): State<Arc<Application>>,
-    ApiPath(id): ApiPath<UserId>,
-) -> Result<Json<UserResponse>> {
-    let user = application.services.user.find(id).await?;
-
-    Ok(Json(user.into()))
-}
 
 pub async fn create_user(
     State(application): State<Arc<Application>>,
@@ -54,6 +36,33 @@ pub async fn create_user(
         AppendHeaders([(header::LOCATION, format!("/api/v1/users/{}", user.id))]),
         Json(user.into()),
     ))
+}
+
+pub async fn get_current_user(
+    State(application): State<Arc<Application>>,
+    CurrentUserId(id): CurrentUserId,
+) -> Result<Json<UserResponse>> {
+    let user = application.services.user.find(id).await?;
+
+    Ok(Json(user.into()))
+}
+
+pub async fn get_user(
+    State(application): State<Arc<Application>>,
+    ApiPath(id): ApiPath<UserId>,
+) -> Result<Json<UserResponse>> {
+    let user = application.services.user.find(id).await?;
+
+    Ok(Json(user.into()))
+}
+
+pub async fn list_users(
+    State(application): State<Arc<Application>>,
+    pagination: Pagination,
+) -> Result<Json<UsersResponse>> {
+    let users = application.services.user.list(pagination).await?;
+
+    Ok(Json(users.into()))
 }
 
 pub async fn delete_user(

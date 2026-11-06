@@ -13,13 +13,22 @@ const fn default_page_limit() -> u32 {
     DEFAULT_PAGE_LIMIT
 }
 
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
 pub struct Pagination {
     #[serde(default = "default_page_limit")]
     pub limit: u32,
 
     #[serde(default)]
-    pub offset: u64,
+    pub offset: u32,
+}
+
+impl Default for Pagination {
+    fn default() -> Self {
+        Self {
+            limit: DEFAULT_PAGE_LIMIT,
+            offset: 0,
+        }
+    }
 }
 
 impl<S> FromRequestParts<S> for Pagination
@@ -61,6 +70,14 @@ mod tests {
         let (mut parts, _) = request.into_parts();
 
         Pagination::from_request_parts(&mut parts, &()).await
+    }
+
+    #[test]
+    fn default_has_expected_values() {
+        let pagination = Pagination::default();
+
+        assert_eq!(pagination.limit, DEFAULT_PAGE_LIMIT);
+        assert_eq!(pagination.offset, 0);
     }
 
     #[tokio::test]
