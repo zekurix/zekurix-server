@@ -34,14 +34,12 @@ paths:
             application/json:
               schema:
                 $ref: "./schemas.yaml#/components/schemas/UserResponse"
+
           links:
             GetUserById:
-              operationId: getUser
-              parameters:
-                id: "$response.body#/id"
-              description: >
-                The user identifier returned by this operation can be used as the id parameter of
-                the getUser operation.
+              $ref: "./links.yaml#/components/links/GetUserById"
+            DeleteUserById:
+              $ref: "./links.yaml#/components/links/DeleteUserById"
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
@@ -95,6 +93,12 @@ paths:
             application/json:
               schema:
                 $ref: "./schemas.yaml#/components/schemas/UserResponse"
+
+          links:
+            GetUserById:
+              $ref: "./links.yaml#/components/links/GetUserById"
+            DeleteUserById:
+              $ref: "./links.yaml#/components/links/DeleteUserById"
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
