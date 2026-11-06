@@ -146,11 +146,10 @@
             },
             "links": {
               "GetUserById": {
-                "operationId": "getUser",
-                "parameters": {
-                  "id": "$response.body#/id"
-                },
-                "description": "The user identifier returned by this operation can be used as the id parameter of the getUser operation.\n"
+                "$ref": "#/components/links/GetUserById"
+              },
+              "DeleteUserById": {
+                "$ref": "#/components/links/DeleteUserById"
               }
             }
           },
@@ -219,6 +218,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
+              }
+            },
+            "links": {
+              "GetUserById": {
+                "$ref": "#/components/links/GetUserById"
+              },
+              "DeleteUserById": {
+                "$ref": "#/components/links/DeleteUserById"
               }
             }
           },
@@ -629,6 +636,22 @@
             }
           }
         }
+      }
+    },
+    "links": {
+      "GetUserById": {
+        "operationId": "getUser",
+        "parameters": {
+          "id": "$response.body#/id"
+        },
+        "description": "The user identifier returned by this operation can be used as the id parameter of the getUser operation.\n"
+      },
+      "DeleteUserById": {
+        "operationId": "deleteUser",
+        "parameters": {
+          "id": "$response.body#/id"
+        },
+        "description": "The user identifier returned by this operation can be used as the id parameter of the deleteUser operation.\n"
       }
     }
   }

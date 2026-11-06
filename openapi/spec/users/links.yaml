@@ -1,0 +1,17 @@
+components:
+  links:
+    GetUserById:
+      operationId: getUser
+      parameters:
+        id: "$response.body#/id"
+      description: >
+        The user identifier returned by this operation can be used as the id parameter of
+        the getUser operation.
+
+    DeleteUserById:
+      operationId: deleteUser
+      parameters:
+        id: "$response.body#/id"
+      description: >
+        The user identifier returned by this operation can be used as the id parameter of
+        the deleteUser operation.
