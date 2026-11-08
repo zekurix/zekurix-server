@@ -46,7 +46,15 @@ jobs:
           cache-from: type=gha,scope=${{ github.workflow }}-${{ github.job }}
           cache-to: type=gha,scope=${{ github.workflow }}-${{ github.job }},mode=max
 
-      - name: Run Trivy vulnerability scan
+      - name: Run Trivy vulnerability scan (table format)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ github.repository }}:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: '0'
+
+      - name: Run Trivy vulnerability scan (sarif format)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ github.repository }}:${{ github.sha }}
