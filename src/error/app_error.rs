@@ -74,6 +74,9 @@ pub enum Error {
 
     #[error("invalid JWK")]
     InvalidJwk(#[source] anyhow::Error),
+
+    #[error("invalid permission: {0}")]
+    InvalidPermission(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -581,6 +584,7 @@ mod tests {
         }; "invalid settings")]
     #[test_case(Error::JwksLoadFailed(anyhow::anyhow!("error")); "jwks load failed")]
     #[test_case(Error::InvalidJwk(anyhow::anyhow!("error")); "invalid jwk")]
+    #[test_case(Error::InvalidPermission("permissions:invalid".to_owned()); "invalid permission")]
     fn other_error_maps_to_internal_server_error(error: Error) {
         let problem = ProblemDetails::from(error);
 
