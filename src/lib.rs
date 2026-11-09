@@ -30,6 +30,8 @@
 #[doc(hidden)]
 pub mod app;
 #[doc(hidden)]
+pub mod authorization;
+#[doc(hidden)]
 pub mod cli;
 #[doc(hidden)]
 pub mod database;
