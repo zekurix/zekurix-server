@@ -1,3 +1,4 @@
+mod authorization;
 mod cli;
 mod common;
 mod health;

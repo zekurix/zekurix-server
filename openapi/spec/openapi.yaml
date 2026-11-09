@@ -26,6 +26,8 @@ servers:
 tags:
   - name: health
     description: Health check endpoints.
+  - name: permissions
+    description: Authorization permission endpoints.
   - name: users
     description: User management endpoints.
 
@@ -35,6 +37,9 @@ security:
 paths:
   /health:
     $ref: "./health/paths.yaml#/paths/~1health"
+
+  /api/v1/permissions:
+    $ref: "./permissions/paths.yaml#/paths/~1permissions"
 
   /api/v1/users:
     $ref: "./users/paths.yaml#/paths/~1users"
