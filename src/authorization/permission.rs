@@ -7,8 +7,6 @@ use crate::error::Error;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Permission {
-    #[serde(rename = "permissions:read")]
-    PermissionsRead,
     #[serde(rename = "roles:create")]
     RolesCreate,
     #[serde(rename = "roles:read")]
@@ -23,19 +21,22 @@ pub enum Permission {
     RolesUnassign,
 }
 
-impl fmt::Display for Permission {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let value = match self {
-            Self::PermissionsRead => "permissions:read",
+impl Permission {
+    pub const fn as_str(&self) -> &'static str {
+        match self {
             Self::RolesCreate => "roles:create",
             Self::RolesRead => "roles:read",
             Self::RolesUpdate => "roles:update",
             Self::RolesDelete => "roles:delete",
             Self::RolesAssign => "roles:assign",
             Self::RolesUnassign => "roles:unassign",
-        };
+        }
+    }
+}
 
-        write!(f, "{value}")
+impl fmt::Display for Permission {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 
@@ -44,7 +45,6 @@ impl FromStr for Permission {
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
-            "permissions:read" => Ok(Self::PermissionsRead),
             "roles:create" => Ok(Self::RolesCreate),
             "roles:read" => Ok(Self::RolesRead),
             "roles:update" => Ok(Self::RolesUpdate),
@@ -58,11 +58,10 @@ impl FromStr for Permission {
 
 #[cfg(test)]
 mod tests {
-    use super::Permission;
+    use super::*;
     use std::str::FromStr;
 
-    const PERMISSIONS: [(Permission, &str); 7] = [
-        (Permission::PermissionsRead, "permissions:read"),
+    const PERMISSIONS: [(Permission, &str); 6] = [
         (Permission::RolesCreate, "roles:create"),
         (Permission::RolesRead, "roles:read"),
         (Permission::RolesUpdate, "roles:update"),
@@ -70,6 +69,13 @@ mod tests {
         (Permission::RolesAssign, "roles:assign"),
         (Permission::RolesUnassign, "roles:unassign"),
     ];
+
+    #[test]
+    fn converts_each_permission_to_str() {
+        for (permission, expected) in PERMISSIONS {
+            assert_eq!(permission.as_str(), expected);
+        }
+    }
 
     #[test]
     fn displays_each_permission() {
@@ -91,7 +97,7 @@ mod tests {
 
         assert!(matches!(
             Permission::from_str(value),
-            Err(crate::error::Error::InvalidPermission(invalid)) if invalid == value
+            Err(Error::InvalidPermission(invalid)) if invalid == value
         ));
     }
 
