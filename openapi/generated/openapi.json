@@ -41,6 +41,10 @@
       "description": "Health check endpoints."
     },
     {
+      "name": "permissions",
+      "description": "Authorization permission endpoints."
+    },
+    {
       "name": "users",
       "description": "User management endpoints."
     }
@@ -90,6 +94,50 @@
                 }
               }
             }
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
+    },
+    "/api/v1/permissions": {
+      "get": {
+        "tags": [
+          "permissions"
+        ],
+        "summary": "List permissions.",
+        "description": "Returns all permissions supported by the server.",
+        "operationId": "getPermissions",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permissions retrieved successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           },
           "504": {
             "$ref": "#/components/responses/GatewayTimeout"
@@ -521,6 +569,46 @@
           "title": "Internal Server Error",
           "status": 500,
           "detail": "An unexpected internal server error occurred."
+        }
+      },
+      "Permission": {
+        "description": "Permission supported by the server.",
+        "type": "string",
+        "enum": [
+          "roles:create",
+          "roles:read",
+          "roles:update",
+          "roles:delete",
+          "roles:assign",
+          "roles:unassign"
+        ]
+      },
+      "PermissionsResponse": {
+        "description": "Response containing all permissions supported by the server.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "permissions"
+        ],
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          }
+        },
+        "example": {
+          "permissions": [
+            "roles:create",
+            "roles:read",
+            "roles:update",
+            "roles:delete",
+            "roles:assign",
+            "roles:unassign"
+          ]
         }
       },
       "UserId": {

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
+use crate::authorization::AuthorizationService;
 use crate::error::Result;
 use crate::health::{HealthCheck, HealthStatus};
 use crate::identity::{AuthenticationService, JwksService};
@@ -17,6 +18,7 @@ pub struct Services {
     pub jwks: Arc<JwksService>,
     pub authentication: AuthenticationService,
     pub user: UserService,
+    pub authorization: AuthorizationService,
 }
 
 impl Services {
@@ -42,11 +44,14 @@ impl Services {
 
         let user = UserService::new(&settings.authentication, repositories.user.clone())?;
 
+        let authorization = AuthorizationService::new(repositories.authorization.clone())?;
+
         Ok(Self {
             openapi,
             jwks,
             authentication,
             user,
+            authorization,
         })
     }
 }

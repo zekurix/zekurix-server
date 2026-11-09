@@ -14,6 +14,7 @@ use tower_http::{
 };
 use tracing::{info_span, warn};
 
+use crate::authorization;
 use crate::error::Error;
 use crate::health;
 use crate::identity::authenticate;
@@ -41,6 +42,7 @@ async fn http_method_not_allowed(uri: Uri, method: Method) -> Error {
 
 fn api_v1_router(application: Arc<Application>) -> Router<Arc<Application>> {
     Router::new()
+        .nest("/permissions", authorization::permissions_router())
         .nest("/users", user::router())
         .route_layer(middleware::from_fn_with_state(application, authenticate))
 }
