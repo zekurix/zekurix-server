@@ -10,6 +10,7 @@ use problem_details::ProblemDetails;
 use thiserror::Error;
 
 use super::problem_type;
+use crate::authorization::RoleName;
 use crate::identity::{Identity, Issuer, Subject};
 use crate::user::UserId;
 
@@ -80,6 +81,9 @@ pub enum Error {
 
     #[error("invalid role name: '{0}'")]
     InvalidRoleName(String),
+
+    #[error("role '{0}' already exists")]
+    RoleAlreadyExists(RoleName),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -204,6 +208,18 @@ impl From<Error> for ProblemDetails {
                 .with_title("Invalid Role Name")
                 .with_status(StatusCode::UNPROCESSABLE_ENTITY)
                 .with_detail("The role name is invalid."),
+
+            Error::RoleAlreadyExists(role_name) => ProblemDetails::new()
+                .with_type(problem_type::role::ALREADY_EXISTS.as_uri())
+                .with_title("Role Already Exists")
+                .with_status(StatusCode::CONFLICT)
+                .with_detail(format!("A role named '{role_name}' already exists.")),
+
+            Error::InvalidPermission(permission) => ProblemDetails::new()
+                .with_type(problem_type::json::DATA_ERROR.as_uri())
+                .with_title("Invalid Permission")
+                .with_status(StatusCode::UNPROCESSABLE_ENTITY)
+                .with_detail(format!("The permission '{permission}' is invalid.")),
 
             _ => internal_server_error(),
         }

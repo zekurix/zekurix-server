@@ -45,6 +45,10 @@
       "description": "Authorization permission endpoints."
     },
     {
+      "name": "roles",
+      "description": "Role management endpoints."
+    },
+    {
       "name": "users",
       "description": "User management endpoints."
     }
@@ -135,6 +139,96 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
+    },
+    "/api/v1/roles": {
+      "post": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Create a role.",
+        "description": "Creates a role with the given name and permission set. Requires the `roles:create` permission. Additionally, the caller may only grant permissions they possess themselves: any requested permission missing from the caller's own permission set causes the request to fail with 403 Forbidden, preventing privilege escalation.",
+        "operationId": "createRole",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          }
+        ],
+        "requestBody": {
+          "description": "Role creation request payload.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Role created successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              },
+              "Location": {
+                "description": "URI of the created role resource.",
+                "schema": {
+                  "type": "string",
+                  "format": "uri-reference",
+                  "example": "/api/v1/roles/01a1c232-15fa-7748-9e58-26bcfe04c941"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "A role with this name already exists.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
@@ -572,7 +666,7 @@
         }
       },
       "Permission": {
-        "description": "Permission supported by the server.",
+        "description": "A named capability that determines whether an operation is authorized.",
         "type": "string",
         "enum": [
           "roles:create",
@@ -583,8 +677,21 @@
           "roles:unassign"
         ]
       },
+      "Permissions": {
+        "description": "A collection of permissions.",
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "$ref": "#/components/schemas/Permission"
+        },
+        "example": [
+          "roles:create",
+          "roles:read",
+          "roles:delete"
+        ]
+      },
       "PermissionsResponse": {
-        "description": "Response containing all permissions supported by the server.",
+        "description": "Response containing all permissions available in the API.",
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -592,12 +699,15 @@
         ],
         "properties": {
           "permissions": {
-            "type": "array",
-            "minItems": 1,
-            "uniqueItems": true,
-            "items": {
-              "$ref": "#/components/schemas/Permission"
-            }
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Permissions"
+              },
+              {
+                "type": "array",
+                "minItems": 1
+              }
+            ]
           }
         },
         "example": {
@@ -609,6 +719,58 @@
             "roles:assign",
             "roles:unassign"
           ]
+        }
+      },
+      "RoleName": {
+        "description": "Unique name of a role.",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255,
+        "pattern": "^[^\\u0000]*$",
+        "example": "admin"
+      },
+      "CreateRoleRequest": {
+        "description": "Request payload for creating a role.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "permissions"
+        ],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/RoleName"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions"
+          }
+        }
+      },
+      "RoleId": {
+        "description": "Unique identifier of a role.",
+        "type": "string",
+        "format": "uuid",
+        "example": "01a1c232-15fa-7748-9e58-26bcfe04c941"
+      },
+      "RoleResponse": {
+        "description": "Response containing role details.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "permissions"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/RoleId"
+          },
+          "name": {
+            "$ref": "#/components/schemas/RoleName"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions"
+          }
         }
       },
       "UserId": {
@@ -740,6 +902,21 @@
       },
       "InternalServerError": {
         "description": "An unexpected internal server error occurred.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The client is not allowed to perform the requested action.",
         "headers": {
           "X-Request-Id": {
             "$ref": "#/components/headers/X-Request-Id"

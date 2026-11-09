@@ -1,0 +1,44 @@
+components:
+  schemas:
+    RoleId:
+      description: Unique identifier of a role.
+      type: string
+      format: uuid
+      example: 01a1c232-15fa-7748-9e58-26bcfe04c941
+
+    RoleName:
+      description: Unique name of a role.
+      type: string
+      minLength: 1
+      maxLength: 255
+      pattern: ^[^\u0000]*$
+      example: admin
+
+    CreateRoleRequest:
+      description: Request payload for creating a role.
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - permissions
+      properties:
+        name:
+          $ref: "#/components/schemas/RoleName"
+        permissions:
+          $ref: "./../permissions/schemas.yaml#/components/schemas/Permissions"
+
+    RoleResponse:
+      description: Response containing role details.
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - permissions
+      properties:
+        id:
+          $ref: "#/components/schemas/RoleId"
+        name:
+          $ref: "#/components/schemas/RoleName"
+        permissions:
+          $ref: "./../permissions/schemas.yaml#/components/schemas/Permissions"

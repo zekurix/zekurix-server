@@ -1,7 +1,7 @@
 components:
   schemas:
     Permission:
-      description: Permission supported by the server.
+      description: A named capability that determines whether an operation is authorized.
       type: string
       enum:
         - roles:create
@@ -11,19 +11,29 @@ components:
         - roles:assign
         - roles:unassign
 
+    Permissions:
+      description: A collection of permissions.
+      type: array
+      uniqueItems: true
+      items:
+        $ref: "#/components/schemas/Permission"
+      example:
+        - roles:create
+        - roles:read
+        - roles:delete
+
     PermissionsResponse:
-      description: Response containing all permissions supported by the server.
+      description: Response containing all permissions available in the API.
       type: object
       additionalProperties: false
       required:
         - permissions
       properties:
         permissions:
-          type: array
-          minItems: 1
-          uniqueItems: true
-          items:
-            $ref: "#/components/schemas/Permission"
+          allOf:
+            - $ref: "#/components/schemas/Permissions"
+            - type: array
+              minItems: 1
       example:
         permissions:
           - roles:create

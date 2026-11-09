@@ -2,6 +2,7 @@ use crate::authorization::Permission;
 
 use super::{RoleId, RoleName};
 
+#[derive(Debug)]
 pub struct Role {
     id: RoleId,
     name: RoleName,
@@ -35,6 +36,10 @@ impl Role {
 
     pub fn permissions(&self) -> &[Permission] {
         &self.permissions
+    }
+
+    pub fn into_parts(self) -> (RoleId, RoleName, Vec<Permission>) {
+        (self.id, self.name, self.permissions)
     }
 
     pub fn has_permission(&self, permission: Permission) -> bool {
@@ -81,5 +86,19 @@ mod tests {
 
         assert!(role.has_permission(Permission::RolesRead));
         assert!(!role.has_permission(Permission::RolesCreate));
+    }
+
+    #[test]
+    fn into_parts_moves_the_role_data_out() {
+        let id = RoleId::nil();
+        let name = role_name();
+        let permissions = vec![Permission::RolesRead, Permission::RolesDelete];
+
+        let role = Role::from_persisted(id, name.clone(), permissions.clone());
+        let (actual_id, actual_name, actual_permissions) = role.into_parts();
+
+        assert_eq!(actual_id, id);
+        assert_eq!(actual_name, name);
+        assert_eq!(actual_permissions, permissions);
     }
 }

@@ -86,6 +86,9 @@ pub mod role {
 
     pub const INVALID_NAME: ProblemType =
         ProblemType::new("https://api.zekurix.com/problems/role/invalid-name");
+
+    pub const ALREADY_EXISTS: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/role/already-exists");
 }
 
 #[cfg(test)]
@@ -109,6 +112,7 @@ mod tests {
     #[test_case(identity::INVALID_ISSUER, "identity/invalid-issuer" ; "identity invalid issuer")]
     #[test_case(identity::INVALID_SUBJECT, "identity/invalid-subject" ; "identity invalid subject")]
     #[test_case(role::INVALID_NAME, "role/invalid-name" ; "role invalid name")]
+    #[test_case(role::ALREADY_EXISTS, "role/already-exists" ; "role already exists")]
     fn internal_server_error_uri(problem_type: ProblemType, expected_uri: &str) {
         let uri = format!("https://api.zekurix.com/problems/{expected_uri}");
         assert_eq!(problem_type.as_uri(), uri.parse::<Uri>().unwrap());
