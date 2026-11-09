@@ -77,6 +77,9 @@ pub enum Error {
 
     #[error("invalid permission: {0}")]
     InvalidPermission(String),
+
+    #[error("invalid role name: '{0}'")]
+    InvalidRoleName(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -195,6 +198,12 @@ impl From<Error> for ProblemDetails {
                 .with_title("Invalid Token")
                 .with_status(StatusCode::UNAUTHORIZED)
                 .with_detail("The access token is invalid."),
+
+            Error::InvalidRoleName(_) => ProblemDetails::new()
+                .with_type(problem_type::role::INVALID_NAME.as_uri())
+                .with_title("Invalid Role Name")
+                .with_status(StatusCode::UNPROCESSABLE_ENTITY)
+                .with_detail("The role name is invalid."),
 
             _ => internal_server_error(),
         }
@@ -551,6 +560,25 @@ mod tests {
         assert_eq!(
             problem.detail,
             Some("The identity subject is invalid.".to_string())
+        );
+    }
+
+    #[test]
+    fn invalid_role_name_maps_to_unprocessable_entity() {
+        let error = Error::InvalidRoleName("Invalid Role Name".to_string());
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::role::INVALID_NAME.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Invalid Role Name".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::UNPROCESSABLE_ENTITY));
+        assert_eq!(
+            problem.detail,
+            Some("The role name is invalid.".to_string())
         );
     }
 
