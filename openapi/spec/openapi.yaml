@@ -28,6 +28,8 @@ tags:
     description: Health check endpoints.
   - name: permissions
     description: Authorization permission endpoints.
+  - name: roles
+    description: Role management endpoints.
   - name: users
     description: User management endpoints.
 
@@ -40,6 +42,9 @@ paths:
 
   /api/v1/permissions:
     $ref: "./permissions/paths.yaml#/paths/~1permissions"
+
+  /api/v1/roles:
+    $ref: "./roles/paths.yaml#/paths/~1roles"
 
   /api/v1/users:
     $ref: "./users/paths.yaml#/paths/~1users"

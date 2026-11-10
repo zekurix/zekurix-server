@@ -1,0 +1,74 @@
+paths:
+  /roles:
+    post:
+      tags:
+        - roles
+      summary: Create a role.
+      description: >-
+        Creates a role with the given name and permission set.
+        Requires the `roles:create` permission. Additionally, the caller may only grant permissions
+        they possess themselves: any requested permission missing from the caller's own permission
+        set causes the request to fail with 403 Forbidden, preventing privilege escalation.
+      operationId: createRole
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+
+      requestBody:
+        description: Role creation request payload.
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas.yaml#/components/schemas/CreateRoleRequest"
+        required: true
+
+      responses:
+        "201":
+          description: Role created successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+            Location:
+              description: URI of the created role resource.
+              schema:
+                type: string
+                format: uri-reference
+                example: /api/v1/roles/01a1c232-15fa-7748-9e58-26bcfe04c941
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.yaml#/components/schemas/RoleResponse"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
+        "409":
+          description: A role with this name already exists.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"
+
+        "413":
+          $ref: "./../common/responses.yaml#/components/responses/PayloadTooLarge"
+
+        "415":
+          $ref: "./../common/responses.yaml#/components/responses/UnsupportedMediaType"
+
+        "422":
+          $ref: "./../common/responses.yaml#/components/responses/UnprocessableEntity"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
