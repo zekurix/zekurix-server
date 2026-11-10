@@ -10,7 +10,7 @@ use problem_details::ProblemDetails;
 use thiserror::Error;
 
 use super::problem_type;
-use crate::authorization::{Permission, RoleName};
+use crate::authorization::{Permission, RoleId, RoleName};
 use crate::identity::{Identity, Issuer, Subject};
 use crate::user::UserId;
 
@@ -87,6 +87,9 @@ pub enum Error {
 
     #[error("role '{0}' already exists")]
     RoleAlreadyExists(RoleName),
+
+    #[error("role '{0}' not found")]
+    RoleNotFound(RoleId),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -217,6 +220,12 @@ impl From<Error> for ProblemDetails {
                 .with_title("Role Already Exists")
                 .with_status(StatusCode::CONFLICT)
                 .with_detail(format!("A role named '{role_name}' already exists.")),
+
+            Error::RoleNotFound(id) => ProblemDetails::new()
+                .with_type(problem_type::role::NOT_FOUND.as_uri())
+                .with_title("Role Not Found")
+                .with_status(StatusCode::NOT_FOUND)
+                .with_detail(format!("Role '{id}' was not found.")),
 
             Error::InvalidPermission(permission) => ProblemDetails::new()
                 .with_type(problem_type::permission::INVALID.as_uri())
@@ -643,6 +652,43 @@ mod tests {
             problem.detail,
             Some("The permission 'roles:read' is duplicated.".to_string())
         );
+    }
+
+    #[test]
+    fn role_already_exists_maps_to_conflict() {
+        let name = RoleName::new("admin").unwrap();
+        let error = Error::RoleAlreadyExists(name.clone());
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::role::ALREADY_EXISTS.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Role Already Exists".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::CONFLICT));
+        assert_eq!(
+            problem.detail,
+            Some(format!("A role named '{name}' already exists."))
+        );
+    }
+
+    #[test]
+    fn role_not_found_maps_to_not_found() {
+        let id = RoleId::new();
+        let error = Error::RoleNotFound(id);
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::role::NOT_FOUND.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Role Not Found".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::NOT_FOUND));
+        assert_eq!(problem.detail, Some(format!("Role '{id}' was not found.")));
     }
 
     #[test]

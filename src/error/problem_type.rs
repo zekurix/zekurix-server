@@ -99,6 +99,9 @@ pub mod role {
 
     pub const ALREADY_EXISTS: ProblemType =
         ProblemType::new("https://api.zekurix.com/problems/role/already-exists");
+
+    pub const NOT_FOUND: ProblemType =
+        ProblemType::new("https://api.zekurix.com/problems/role/not-found");
 }
 
 #[cfg(test)]
@@ -125,6 +128,7 @@ mod tests {
     #[test_case(permission::DUPLICATE, "permission/duplicate" ; "permission duplicate")]
     #[test_case(role::INVALID_NAME, "role/invalid-name" ; "role invalid name")]
     #[test_case(role::ALREADY_EXISTS, "role/already-exists" ; "role already exists")]
+    #[test_case(role::NOT_FOUND, "role/not-found" ; "role not found")]
     fn internal_server_error_uri(problem_type: ProblemType, expected_uri: &str) {
         let uri = format!("https://api.zekurix.com/problems/{expected_uri}");
         assert_eq!(problem_type.as_uri(), uri.parse::<Uri>().unwrap());

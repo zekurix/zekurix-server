@@ -26,7 +26,9 @@ impl AuthorizationService {
             }
         }
 
-        self.repository.create_role(name, permissions).await
+        let role = Role::new(name, permissions);
+
+        self.repository.create_role(role).await
     }
 }
 
@@ -79,21 +81,20 @@ mod tests {
     async fn should_create_role() {
         let name = RoleName::new("admin").unwrap();
         let permissions = vec![Permission::RolesRead, Permission::RolesUpdate];
-        let expected = Role::new(name.clone(), permissions.clone());
-        let expected_name = expected.name().clone();
-        let expected_permissions = expected.permissions().to_vec();
+        let expected_name = name.clone();
+        let expected_permissions = permissions.clone();
+        let expected_name_for_match = expected_name.clone();
+        let expected_permissions_for_match = expected_permissions.clone();
 
         let mut repository = MockAuthorizationRepository::new();
-        let expected_name_for_match = name.clone();
-        let expected_permissions_for_match = permissions.clone();
         repository
             .expect_create_role()
-            .withf(move |actual_name, actual_permissions| {
-                actual_name == &expected_name_for_match
-                    && actual_permissions == &expected_permissions_for_match
+            .withf(move |role| {
+                role.name() == &expected_name_for_match
+                    && role.permissions() == expected_permissions_for_match.as_slice()
             })
             .times(1)
-            .return_once(move |_, _| Ok(expected));
+            .return_once(Ok);
 
         let role = service(repository)
             .create_role(name, permissions)
@@ -129,7 +130,7 @@ mod tests {
         repository
             .expect_create_role()
             .times(1)
-            .return_once(|_, _| Err(Error::InternalError(anyhow::anyhow!("error"))));
+            .return_once(|_| Err(Error::InternalError(anyhow::anyhow!("error"))));
 
         let result = service(repository).create_role(name, permissions).await;
 
