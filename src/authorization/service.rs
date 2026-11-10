@@ -22,9 +22,7 @@ impl AuthorizationService {
         let mut seen = HashSet::new();
         for permission in &permissions {
             if !seen.insert(permission) {
-                return Err(Error::InvalidPermission(format!(
-                    "duplicate permission: {permission}"
-                )));
+                return Err(Error::DuplicatePermission(*permission));
             }
         }
 
@@ -116,7 +114,10 @@ mod tests {
 
         let result = service(repository).create_role(name, permissions).await;
 
-        assert!(matches!(result, Err(Error::InvalidPermission(_))));
+        assert!(matches!(
+            result,
+            Err(Error::DuplicatePermission(Permission::RolesRead))
+        ));
     }
 
     #[tokio::test]

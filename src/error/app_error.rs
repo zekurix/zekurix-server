@@ -10,7 +10,7 @@ use problem_details::ProblemDetails;
 use thiserror::Error;
 
 use super::problem_type;
-use crate::authorization::RoleName;
+use crate::authorization::{Permission, RoleName};
 use crate::identity::{Identity, Issuer, Subject};
 use crate::user::UserId;
 
@@ -78,6 +78,9 @@ pub enum Error {
 
     #[error("invalid permission: {0}")]
     InvalidPermission(String),
+
+    #[error("duplicate permission: {0}")]
+    DuplicatePermission(Permission),
 
     #[error("invalid role name: '{0}'")]
     InvalidRoleName(String),
@@ -216,10 +219,16 @@ impl From<Error> for ProblemDetails {
                 .with_detail(format!("A role named '{role_name}' already exists.")),
 
             Error::InvalidPermission(permission) => ProblemDetails::new()
-                .with_type(problem_type::json::DATA_ERROR.as_uri())
+                .with_type(problem_type::permission::INVALID.as_uri())
                 .with_title("Invalid Permission")
                 .with_status(StatusCode::UNPROCESSABLE_ENTITY)
                 .with_detail(format!("The permission '{permission}' is invalid.")),
+
+            Error::DuplicatePermission(permission) => ProblemDetails::new()
+                .with_type(problem_type::permission::DUPLICATE.as_uri())
+                .with_title("Duplicate Permission")
+                .with_status(StatusCode::UNPROCESSABLE_ENTITY)
+                .with_detail(format!("The permission '{permission}' is duplicated.")),
 
             _ => internal_server_error(),
         }
@@ -599,6 +608,44 @@ mod tests {
     }
 
     #[test]
+    fn invalid_permission_maps_to_unprocessable_entity() {
+        let error = Error::InvalidPermission("permission:invalid".to_string());
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::permission::INVALID.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Invalid Permission".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::UNPROCESSABLE_ENTITY));
+        assert_eq!(
+            problem.detail,
+            Some("The permission 'permission:invalid' is invalid.".to_string())
+        );
+    }
+
+    #[test]
+    fn duplicate_permission_maps_to_unprocessable_entity() {
+        let error = Error::DuplicatePermission(Permission::RolesRead);
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::permission::DUPLICATE.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Duplicate Permission".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::UNPROCESSABLE_ENTITY));
+        assert_eq!(
+            problem.detail,
+            Some("The permission 'roles:read' is duplicated.".to_string())
+        );
+    }
+
+    #[test]
     fn user_not_found_maps_to_not_found() {
         let id = UserId::new();
         let error = Error::UserNotFound(id);
@@ -628,7 +675,6 @@ mod tests {
         }; "invalid settings")]
     #[test_case(Error::JwksLoadFailed(anyhow::anyhow!("error")); "jwks load failed")]
     #[test_case(Error::InvalidJwk(anyhow::anyhow!("error")); "invalid jwk")]
-    #[test_case(Error::InvalidPermission("permissions:invalid".to_owned()); "invalid permission")]
     fn other_error_maps_to_internal_server_error(error: Error) {
         let problem = ProblemDetails::from(error);
 

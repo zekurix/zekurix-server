@@ -213,7 +213,7 @@ async fn should_reject_duplicate_permissions() {
     let body: ErrorResponse = response.json();
     assert_eq!(
         body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
+        "https://api.zekurix.com/problems/permission/duplicate"
     );
     assert!(!body.title.is_empty());
     assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());

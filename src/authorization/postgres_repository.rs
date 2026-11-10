@@ -30,7 +30,16 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
 
         permissions
             .into_iter()
-            .map(|permission| permission.parse())
+            .map(|permission| {
+                permission.parse::<Permission>().map_err(|err| {
+                    error!(
+                        permission = %permission,
+                        error = ?err,
+                        "invalid permission stored in database"
+                    );
+                    Error::InternalError(err.into())
+                })
+            })
             .collect()
     }
 
@@ -61,7 +70,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         for permission in &permissions {
             sqlx::query("INSERT INTO role_permissions (role_id, permission) VALUES ($1, $2)")
                 .bind(id)
-                .bind(permission.to_string())
+                .bind(permission.as_str())
                 .execute(&mut *tx)
                 .await
                 .map_err(|err| {
