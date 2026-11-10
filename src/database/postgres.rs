@@ -5,6 +5,8 @@ use tracing::info;
 use crate::secrets::DatabaseSecrets;
 use crate::settings::DatabaseSettings;
 
+pub const UNIQUE_VIOLATION: &str = "23505";
+
 pub struct PostgresDatabase {
     pub pool: PgPool,
 }

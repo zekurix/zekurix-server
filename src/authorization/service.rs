@@ -94,7 +94,7 @@ mod tests {
                     && role.permissions() == expected_permissions_for_match.as_slice()
             })
             .times(1)
-            .return_once(|role| Ok(role));
+            .return_once(Ok);
 
         let role = service(repository)
             .create_role(name, permissions)

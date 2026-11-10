@@ -2,10 +2,11 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 use tracing::{error, instrument};
 
+use crate::database::postgres::UNIQUE_VIOLATION;
 use crate::error::{Error, Result};
 use crate::router::Pagination;
 
-use super::{Permission, Role, RoleId, repository::AuthorizationRepository};
+use super::{Permission, Role, RoleId, RoleName, repository::AuthorizationRepository};
 
 pub struct PostgresAuthorizationRepository {
     pool: PgPool,
@@ -15,19 +16,48 @@ impl PostgresAuthorizationRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
+
+    fn role_from_persisted(id: RoleId, name: String, permissions: Vec<String>) -> Result<Role> {
+        let name = RoleName::new(&name).map_err(|err| {
+            error!(
+                role_id = %id,
+                error = ?err,
+                "invalid role name stored in database"
+            );
+            Error::InternalError(err.into())
+        })?;
+
+        let permissions = permissions
+            .into_iter()
+            .map(|permission| {
+                permission.parse::<Permission>().map_err(|err| {
+                    error!(
+                        role_id = %id,
+                        permission = %permission,
+                        error = ?err,
+                        "invalid permission value stored in database"
+                    );
+                    Error::InternalError(err.into())
+                })
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        Ok(Role::from_persisted(id, name, permissions))
+    }
 }
 
 #[async_trait]
 impl AuthorizationRepository for PostgresAuthorizationRepository {
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
     async fn list_permissions(&self) -> Result<Vec<Permission>> {
-        let permissions = sqlx::query_scalar::<_, String>("SELECT name FROM permissions")
-            .fetch_all(&self.pool)
-            .await
-            .map_err(|err| {
-                error!(error = ?err, "failed to list permissions");
-                Error::InternalError(err.into())
-            })?;
+        let permissions =
+            sqlx::query_scalar::<_, String>("SELECT name FROM permissions ORDER BY name")
+                .fetch_all(&self.pool)
+                .await
+                .map_err(|err| {
+                    error!(error = ?err, "failed to list permissions");
+                    Error::InternalError(err.into())
+                })?;
 
         permissions
             .into_iter()
@@ -64,7 +94,8 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         })?;
 
         if result.rows_affected() == 0 {
-            return Err(Error::RoleAlreadyExists(role.name()));
+            let (_, name, _) = role.into_parts();
+            return Err(Error::RoleAlreadyExists(name));
         }
 
         for permission in role.permissions() {
@@ -89,19 +120,19 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
     async fn get_role(&self, id: RoleId) -> Result<Role> {
-        let row = sqlx::query_as::<_, (String, Vec<String>)>(
+        let (name, permissions) = sqlx::query_as::<_, (String, Vec<String>)>(
             r#"
             SELECT
-                r.name,
+                role.name,
                 COALESCE(
-                    ARRAY_AGG(rp.permission ORDER BY rp.permission)
-                        FILTER (WHERE rp.permission IS NOT NULL),
+                    ARRAY_AGG(role_permission.permission ORDER BY role_permission.permission)
+                        FILTER (WHERE role_permission.permission IS NOT NULL),
                     ARRAY[]::TEXT[]
                 )
-            FROM roles r
-            LEFT JOIN role_permissions rp ON rp.role_id = r.id
-            WHERE r.id = $1
-            GROUP BY r.id, r.name
+            FROM roles AS role
+            LEFT JOIN role_permissions AS role_permission ON role_permission.role_id = role.id
+            WHERE role.id = $1
+            GROUP BY role.id
             "#,
         )
         .bind(id)
@@ -113,28 +144,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         })?
         .ok_or(Error::RoleNotFound(id))?;
 
-        let name = RoleName::new(row.0).map_err(|err| {
-            error!(role_id = %id, error = ?err, "invalid role name stored in database");
-            Error::InternalError(err.into())
-        })?;
-
-        let permissions = row
-            .1
-            .into_iter()
-            .map(|permission| {
-                permission.parse::<Permission>().map_err(|err| {
-                    error!(
-                        role_id = %id,
-                        permission = %permission,
-                        error = ?err,
-                        "invalid permission stored in database"
-                    );
-                    Error::InternalError(err.into())
-                })
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-        Ok(Role::from_persisted(id, name, permissions))
+        Self::role_from_persisted(id, name, permissions)
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
@@ -142,17 +152,17 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         let rows = sqlx::query_as::<_, (RoleId, String, Vec<String>)>(
             r#"
             SELECT
-                r.id,
-                r.name,
+                role.id,
+                role.name,
                 COALESCE(
-                    ARRAY_AGG(rp.permission ORDER BY rp.permission)
-                        FILTER (WHERE rp.permission IS NOT NULL),
+                    ARRAY_AGG(role_permission.permission ORDER BY role_permission.permission)
+                        FILTER (WHERE role_permission.permission IS NOT NULL),
                     ARRAY[]::TEXT[]
                 )
-            FROM roles r
-            LEFT JOIN role_permissions rp ON rp.role_id = r.id
-            GROUP BY r.id, r.name
-            ORDER BY r.id
+            FROM roles AS role
+            LEFT JOIN role_permissions AS role_permission ON role_permission.role_id = role.id
+            GROUP BY role.id
+            ORDER BY role.id
             LIMIT $1
             OFFSET $2
             "#,
@@ -167,34 +177,8 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         })?;
 
         rows.into_iter()
-            .map(|(id, name, permissions)| {
-                let name = RoleName::new(name).map_err(|err| {
-                    error!(
-                        role_id = %id,
-                        error = ?err,
-                        "invalid role name stored in database"
-                    );
-                    Error::InternalError(err.into())
-                })?;
-
-                let permissions = permissions
-                .into_iter()
-                .map(|permission| {
-                     permission.parse::<Permission>().map_err(|err| {
-                        error!(
-                            role_id = %id,
-                            permission = %permission,
-                            error = ?err,
-                            "invalid permission stored in database"
-                        );
-                        Error::InternalError(err.into())
-                    })
-                })
-                .collect::<Result<Vec<_>>>()?;
-
-            Ok(Role::from_persisted(id, name, permissions))
-        })
-        .collect()
+            .map(|(id, name, permissions)| Self::role_from_persisted(id, name, permissions))
+            .collect()
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
@@ -213,7 +197,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
                 if err
                     .as_database_error()
                     .and_then(|err| err.code())
-                    .is_some_and(|code| code == "23505")
+                    .is_some_and(|code| code == UNIQUE_VIOLATION)
                 {
                     Error::RoleAlreadyExists(role.name().clone())
                 } else {
@@ -244,22 +228,20 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
             })?;
 
         for permission in role.permissions() {
-            sqlx::query(
-                "INSERT INTO role_permissions (role_id, permission) VALUES ($1, $2)",
-            )
-            .bind(role.id())
-            .bind(permission.as_str())
-            .execute(&mut *tx)
-            .await
-            .map_err(|err| {
-                error!(
-                    role_id = %role.id(),
-                    permission = %permission,
-                    error = ?err,
-                    "failed to insert role permission"
-                );
-                Error::InternalError(err.into())
-            })?;
+            sqlx::query("INSERT INTO role_permissions (role_id, permission) VALUES ($1, $2)")
+                .bind(role.id())
+                .bind(permission.as_str())
+                .execute(&mut *tx)
+                .await
+                .map_err(|err| {
+                    error!(
+                        role_id = %role.id(),
+                        permission = %permission,
+                        error = ?err,
+                        "failed to insert role permission"
+                    );
+                    Error::InternalError(err.into())
+                })?;
         }
 
         tx.commit().await.map_err(|err| {
