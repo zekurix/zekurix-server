@@ -14,5 +14,12 @@ pub fn permissions_router() -> Router<Arc<Application>> {
 }
 
 pub fn roles_router() -> Router<Arc<Application>> {
-    Router::new().route("/", post(handlers::create_role))
+    Router::new()
+        .route("/", post(handlers::create_role).get(handlers::list_roles))
+        .route(
+            "/{id}",
+            get(handlers::get_role)
+                .put(handlers::update_role)
+                .delete(handlers::delete_role),
+        )
 }
