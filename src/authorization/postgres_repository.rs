@@ -42,7 +42,7 @@ impl PostgresAuthorizationRepository {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        Ok(Role::from_persisted(id, name, permissions))
+        Ok(Role::from_parts(id, name, permissions))
     }
 }
 
