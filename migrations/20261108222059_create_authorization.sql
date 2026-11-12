@@ -24,3 +24,9 @@ CREATE TABLE role_permissions (
     permission TEXT NOT NULL REFERENCES permissions(name) ON DELETE RESTRICT,
     PRIMARY KEY (role_id, permission)
 );
+
+-- Create users - roles association table
+CREATE TABLE user_roles (
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, role_id));
