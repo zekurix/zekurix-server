@@ -26,30 +26,30 @@ async fn should_auth_with_helper() {
 async fn should_auth_with_valid_header() {
     let app = TestApplication::new().await;
 
-    let claims = build_valid_claims(app.auth.clone(), "Alice");
-    let token = build_valid_token(app.auth.clone(), claims);
+    let claims = build_valid_claims(&app.auth, "Alice");
+    let token = build_valid_token(&app.auth, &claims);
     let header = build_valid_header(&token);
 
-    assert_valid_auth_header(app, &header).await;
+    assert_valid_auth_header(&app, &header).await;
 }
 
 #[tokio::test]
 async fn should_ignore_unknown_claims() {
     let app = TestApplication::new().await;
 
-    let mut claims = build_valid_claims(app.auth.clone(), "Alice");
+    let mut claims = build_valid_claims(&app.auth, "Alice");
     claims.other = Some("Other".to_string());
-    let token = build_valid_token(app.auth.clone(), claims);
+    let token = build_valid_token(&app.auth, &claims);
     let header = build_valid_header(&token);
 
-    assert_valid_auth_header(app, &header).await;
+    assert_valid_auth_header(&app, &header).await;
 }
 
 #[tokio::test]
 async fn should_accept_recently_expired_token_within_leeway() {
     let app = TestApplication::new().await;
 
-    let mut claims = build_valid_claims(app.auth.clone(), "Alice");
+    let mut claims = build_valid_claims(&app.auth, "Alice");
     claims.exp = Some(
         SystemTime::now()
             .checked_sub(app.auth.clock_skew - Duration::from_secs(1))
@@ -58,34 +58,34 @@ async fn should_accept_recently_expired_token_within_leeway() {
             .unwrap()
             .as_secs() as usize,
     );
-    let token = build_valid_token(app.auth.clone(), claims);
+    let token = build_valid_token(&app.auth, &claims);
     let header = build_valid_header(&token);
 
-    assert_valid_auth_header(app, &header).await;
+    assert_valid_auth_header(&app, &header).await;
 }
 
 #[tokio::test]
 async fn should_accept_token_with_valid_nbf() {
     let app = TestApplication::new().await;
 
-    let mut claims = build_valid_claims(app.auth.clone(), "Alice");
+    let mut claims = build_valid_claims(&app.auth, "Alice");
     claims.nbf = Some(
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs() as usize,
     );
-    let token = build_valid_token(app.auth.clone(), claims);
+    let token = build_valid_token(&app.auth, &claims);
     let header = build_valid_header(&token);
 
-    assert_valid_auth_header(app, &header).await;
+    assert_valid_auth_header(&app, &header).await;
 }
 
 #[tokio::test]
 async fn should_accept_token_with_valid_nbf_within_leeway() {
     let app = TestApplication::new().await;
 
-    let mut claims = build_valid_claims(app.auth.clone(), "Alice");
+    let mut claims = build_valid_claims(&app.auth, "Alice");
     claims.nbf = Some(
         SystemTime::now()
             .checked_add(app.auth.clock_skew - Duration::from_secs(1))
@@ -94,17 +94,17 @@ async fn should_accept_token_with_valid_nbf_within_leeway() {
             .unwrap()
             .as_secs() as usize,
     );
-    let token = build_valid_token(app.auth.clone(), claims);
+    let token = build_valid_token(&app.auth, &claims);
     let header = build_valid_header(&token);
 
-    assert_valid_auth_header(app, &header).await;
+    assert_valid_auth_header(&app, &header).await;
 }
 
 #[tokio::test]
 async fn should_accept_token_without_kid() {
     let app = TestApplication::new().await;
 
-    let claims = build_valid_claims(app.auth.clone(), "Alice");
+    let claims = build_valid_claims(&app.auth, "Alice");
 
     let token = encode(
         &Header::new(app.auth.algorithm),
@@ -115,5 +115,5 @@ async fn should_accept_token_without_kid() {
 
     let header = build_valid_header(&token);
 
-    assert_valid_auth_header(app, &header).await;
+    assert_valid_auth_header(&app, &header).await;
 }

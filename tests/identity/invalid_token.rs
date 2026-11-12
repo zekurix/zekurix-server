@@ -21,30 +21,30 @@ async fn should_reject_invalid_token(token: &str) {
 
     let header = build_valid_header(token);
 
-    assert_invalid_auth_header(app, &header).await;
+    assert_invalid_auth_header(&app, &header).await;
 }
 
 #[tokio::test]
 async fn should_reject_token_with_invalid_signature() {
     let app = TestApplication::new().await;
 
-    let claims = build_valid_claims(app.auth.clone(), "Alice");
+    let claims = build_valid_claims(&app.auth, "Alice");
 
-    let token = build_valid_token(app.auth.clone(), claims);
+    let token = build_valid_token(&app.auth, &claims);
     let mut parts: Vec<String> = token.split('.').map(str::to_owned).collect();
     parts[2].push('A'); // Corrupt the signature
     let token = parts.join(".");
 
     let header = build_valid_header(&token);
 
-    assert_invalid_auth_header(app, &header).await;
+    assert_invalid_auth_header(&app, &header).await;
 }
 
 #[tokio::test]
 async fn should_reject_token_with_unexpected_algorithm() {
     let app = TestApplication::new().await;
 
-    let claims = build_valid_claims(app.auth.clone(), "Alice");
+    let claims = build_valid_claims(&app.auth, "Alice");
 
     let mut header = Header::new(Algorithm::HS256);
     header.kid = Some(app.auth.kid.clone());
@@ -56,14 +56,14 @@ async fn should_reject_token_with_unexpected_algorithm() {
     .expect("failed to generate test JWT");
     let header = build_valid_header(&token);
 
-    assert_invalid_auth_header(app, &header).await;
+    assert_invalid_auth_header(&app, &header).await;
 }
 
 #[tokio::test]
 async fn should_reject_token_with_unknown_kid() {
     let app = TestApplication::new().await;
 
-    let claims = build_valid_claims(app.auth.clone(), "Alice");
+    let claims = build_valid_claims(&app.auth, "Alice");
 
     let mut header = Header::new(app.auth.algorithm);
     header.kid = Some("unknown".to_string());
@@ -72,5 +72,5 @@ async fn should_reject_token_with_unknown_kid() {
 
     let header = build_valid_header(&token);
 
-    assert_invalid_auth_header(app, &header).await;
+    assert_invalid_auth_header(&app, &header).await;
 }

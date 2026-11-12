@@ -1,11 +1,12 @@
-use axum::http::{StatusCode, header};
+use axum::http::header;
 use axum_test::TestResponse;
 
 use zekurix_server::user::UserId;
 
-use super::common::UserResponse;
-use crate::common::ErrorResponse;
-use crate::common::TestApplication;
+use crate::common::{TestApplication, assert_unauthorized};
+
+use super::common::{UserResponse, assert_user_not_found};
+use super::create::create_user;
 
 pub async fn get_user(app: &TestApplication, user_id: UserId, subject: &str) -> TestResponse {
     app.server
@@ -18,28 +19,13 @@ pub async fn get_user(app: &TestApplication, user_id: UserId, subject: &str) -> 
 async fn should_get_user() {
     let app = TestApplication::new().await;
 
-    let response = app
-        .server
-        .post("/api/v1/users")
-        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
-        .json(&serde_json::json!({
-            "identity": {
-                "issuer": app.auth.issuer,
-                "subject": "Alice"
-            }
-        }))
-        .await;
-    response.assert_status(StatusCode::CREATED);
-    let user_post: UserResponse = response.json();
+    let created = create_user(&app, "Alice").await;
 
-    let response = app
-        .server
-        .get(&format!("/api/v1/users/{}", user_post.id))
-        .add_header(header::AUTHORIZATION, app.auth.header("Alice"))
-        .await;
+    let response = get_user(&app, created.id, "Alice").await;
     response.assert_status_ok();
-    let user_get: UserResponse = response.json();
-    assert_eq!(user_get.id, user_post.id);
+
+    let fetched: UserResponse = response.json();
+    assert_eq!(fetched, created);
 }
 
 #[tokio::test]
@@ -48,28 +34,13 @@ async fn should_create_and_get_multiple_users() {
     let subjects = ["Alice", "Bob", "Charlie"];
 
     for subject in subjects {
-        let response = app
-            .server
-            .post("/api/v1/users")
-            .add_header(header::AUTHORIZATION, app.auth.header("admin"))
-            .json(&serde_json::json!({
-                "identity": {
-                    "issuer": app.auth.issuer,
-                    "subject": subject
-                }
-            }))
-            .await;
-        response.assert_status(StatusCode::CREATED);
-        let user_post: UserResponse = response.json();
+        let created = create_user(&app, subject).await;
 
-        let response = app
-            .server
-            .get(&format!("/api/v1/users/{}", user_post.id))
-            .add_header(header::AUTHORIZATION, app.auth.header(subject))
-            .await;
+        let response = get_user(&app, created.id, subject).await;
         response.assert_status_ok();
-        let user_get: UserResponse = response.json();
-        assert_eq!(user_get.id, user_post.id);
+
+        let fetched: UserResponse = response.json();
+        assert_eq!(fetched, created);
     }
 }
 
@@ -83,50 +54,16 @@ async fn should_return_not_found_for_invalid_user_id() {
         .get(&format!("/api/v1/users/{}", user_id))
         .add_header(header::AUTHORIZATION, app.auth.header("Alice"))
         .await;
-    response.assert_status_not_found();
 
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/user/not-found"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::NOT_FOUND.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_user_not_found(&response);
 }
 
 #[tokio::test]
-async fn should_require_authentication_for_get_current_user() {
+async fn should_require_authentication_to_get_user() {
     let app = TestApplication::new().await;
 
-    let response = app
-        .server
-        .post("/api/v1/users")
-        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
-        .json(&serde_json::json!({
-            "identity": {
-                "issuer": app.auth.issuer,
-                "subject": "Alice"
-            }
-        }))
-        .await;
-    response.assert_status(StatusCode::CREATED);
-    let user_post: UserResponse = response.json();
+    let user = create_user(&app, "Alice").await;
 
-    let response = app
-        .server
-        .get(&format!("/api/v1/users/{}", user_post.id))
-        .await;
-    response.assert_status_unauthorized();
-    assert_eq!(response.content_type(), "application/problem+json");
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/http/unauthorized"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
-    assert!(!body.detail.is_empty());
+    let response = app.server.get(&format!("/api/v1/users/{}", user.id)).await;
+    assert_unauthorized(&response);
 }

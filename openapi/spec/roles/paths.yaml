@@ -19,7 +19,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas.yaml#/components/schemas/CreateRoleRequest"
+              $ref: "./schemas.yaml#/components/schemas/RoleRequest"
         required: true
 
       responses:
@@ -39,6 +39,14 @@ paths:
               schema:
                 $ref: "./schemas.yaml#/components/schemas/RoleResponse"
 
+          links:
+            GetRoleById:
+              $ref: "./links.yaml#/components/links/GetRoleById"
+            UpdateRoleById:
+              $ref: "./links.yaml#/components/links/UpdateRoleById"
+            DeleteRoleById:
+              $ref: "./links.yaml#/components/links/DeleteRoleById"
+
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
 
@@ -49,14 +57,7 @@ paths:
           $ref: "./../common/responses.yaml#/components/responses/Forbidden"
 
         "409":
-          description: A role with this name already exists.
-          headers:
-            X-Request-Id:
-              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
-          content:
-            application/problem+json:
-              schema:
-                $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./responses.yaml#/components/responses/RoleConflict"
 
         "413":
           $ref: "./../common/responses.yaml#/components/responses/PayloadTooLarge"
@@ -66,6 +67,202 @@ paths:
 
         "422":
           $ref: "./../common/responses.yaml#/components/responses/UnprocessableEntity"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
+    get:
+      tags:
+        - roles
+      summary: List roles.
+      description: >-
+        Returns a paginated list of roles.
+        Requires the `roles:read` permission.
+      operationId: getRoles
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./../common/parameters.yaml#/components/parameters/Limit"
+        - $ref: "./../common/parameters.yaml#/components/parameters/Offset"
+
+      responses:
+        "200":
+          description: Roles retrieved successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.yaml#/components/schemas/RolesResponse"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
+  /roles/{id}:
+    get:
+      tags:
+        - roles
+      summary: Retrieve a role.
+      description: >-
+        Returns the role identified by the provided ID.
+        Requires the `roles:read` permission.
+      operationId: getRole
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./parameters.yaml#/components/parameters/RoleId"
+
+      responses:
+        "200":
+          description: Role retrieved successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.yaml#/components/schemas/RoleResponse"
+
+          links:
+            UpdateRoleById:
+              $ref: "./links.yaml#/components/links/UpdateRoleById"
+            DeleteRoleById:
+              $ref: "./links.yaml#/components/links/DeleteRoleById"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
+        "404":
+          $ref: "./responses.yaml#/components/responses/RoleNotFound"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
+    put:
+      tags:
+        - roles
+      summary: Update a role.
+      description: >-
+        Replaces the name and permission set of the role identified by the provided ID.
+        Requires the `roles:update` permission. The caller may only grant permissions
+        they possess themselves, preventing privilege escalation.
+      operationId: updateRole
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./parameters.yaml#/components/parameters/RoleId"
+
+      requestBody:
+        description: Role update request payload.
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas.yaml#/components/schemas/RoleRequest"
+        required: true
+
+      responses:
+        "200":
+          description: Role updated successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.yaml#/components/schemas/RoleResponse"
+
+          links:
+            GetRoleById:
+              $ref: "./links.yaml#/components/links/GetRoleById"
+            DeleteRoleById:
+              $ref: "./links.yaml#/components/links/DeleteRoleById"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
+        "404":
+          $ref: "./responses.yaml#/components/responses/RoleNotFound"
+
+        "409":
+          $ref: "./responses.yaml#/components/responses/RoleConflict"
+
+        "413":
+          $ref: "./../common/responses.yaml#/components/responses/PayloadTooLarge"
+
+        "415":
+          $ref: "./../common/responses.yaml#/components/responses/UnsupportedMediaType"
+
+        "422":
+          $ref: "./../common/responses.yaml#/components/responses/UnprocessableEntity"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
+    delete:
+      tags:
+        - roles
+      summary: Delete a role.
+      description: >-
+        Deletes the role identified by the provided ID.
+        Requires the `roles:delete` permission.
+      operationId: deleteRole
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./parameters.yaml#/components/parameters/RoleId"
+
+      responses:
+        "204":
+          description: Role deleted successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
+        "404":
+          $ref: "./responses.yaml#/components/responses/RoleNotFound"
 
         "500":
           $ref: "./../common/responses.yaml#/components/responses/InternalServerError"

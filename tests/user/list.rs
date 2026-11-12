@@ -1,11 +1,12 @@
-use axum::http::{StatusCode, header};
+use axum::http::header;
 use axum_test::TestResponse;
 
 use zekurix_server::user::UserId;
 
+use crate::common::{TestApplication, assert_invalid_query, assert_unauthorized};
+
 use super::common::UsersResponse;
 use super::create::create_users;
-use crate::common::{ErrorResponse, TestApplication};
 
 async fn list_users(app: &TestApplication, subject: &str, query: Option<&str>) -> TestResponse {
     let uri = match query {
@@ -31,16 +32,6 @@ fn assert_user_ids(response: TestResponse, expected: &[UserId]) {
         .collect::<Vec<_>>();
 
     assert_eq!(actual, expected);
-}
-
-fn assert_bad_request(response: TestResponse) {
-    response.assert_status_bad_request();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(body.status, StatusCode::BAD_REQUEST.as_u16());
-    assert!(!body.title.is_empty());
-    assert!(!body.detail.is_empty());
 }
 
 #[tokio::test]
@@ -139,7 +130,7 @@ async fn should_reject_zero_limit() {
 
     let response = list_users(&app, "admin", Some("limit=0")).await;
 
-    assert_bad_request(response);
+    assert_invalid_query(&response);
 }
 
 #[tokio::test]
@@ -148,7 +139,7 @@ async fn should_reject_limit_above_maximum() {
 
     let response = list_users(&app, "admin", Some("limit=101")).await;
 
-    assert_bad_request(response);
+    assert_invalid_query(&response);
 }
 
 #[tokio::test]
@@ -157,7 +148,7 @@ async fn should_reject_negative_limit() {
 
     let response = list_users(&app, "admin", Some("limit=-1")).await;
 
-    assert_bad_request(response);
+    assert_invalid_query(&response);
 }
 
 #[tokio::test]
@@ -166,7 +157,7 @@ async fn should_reject_non_integer_limit() {
 
     let response = list_users(&app, "admin", Some("limit=invalid")).await;
 
-    assert_bad_request(response);
+    assert_invalid_query(&response);
 }
 
 #[tokio::test]
@@ -175,7 +166,7 @@ async fn should_reject_negative_offset() {
 
     let response = list_users(&app, "admin", Some("offset=-1")).await;
 
-    assert_bad_request(response);
+    assert_invalid_query(&response);
 }
 
 #[tokio::test]
@@ -184,7 +175,7 @@ async fn should_reject_non_integer_offset() {
 
     let response = list_users(&app, "admin", Some("offset=invalid")).await;
 
-    assert_bad_request(response);
+    assert_invalid_query(&response);
 }
 
 #[tokio::test]
@@ -203,15 +194,5 @@ async fn should_require_authentication_to_list_users() {
 
     let response = app.server.get("/api/v1/users").await;
 
-    response.assert_status_unauthorized();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/http/unauthorized"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_unauthorized(&response);
 }
