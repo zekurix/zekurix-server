@@ -1,31 +1,12 @@
 use axum::http::{StatusCode, header};
-use serde::Deserialize;
 
-use crate::common::ErrorResponse;
-use crate::common::TestApplication;
+use zekurix_server::authorization::RoleId;
 
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct RoleResponse {
-    id: String,
-    name: String,
-    permissions: Vec<String>,
-}
+use crate::common::{TestApplication, assert_json_data_error, assert_unauthorized};
 
-async fn create_role(app: &TestApplication, name: &str, permissions: &[&str]) -> RoleResponse {
-    let response = app
-        .server
-        .post("/api/v1/roles")
-        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
-        .json(&serde_json::json!({
-            "name": name,
-            "permissions": permissions
-        }))
-        .await;
-
-    response.assert_status(StatusCode::CREATED);
-    response.json()
-}
+use super::common::{
+    RoleResponse, assert_duplicate_permission, assert_role_already_exists, create_role,
+};
 
 #[tokio::test]
 async fn should_create_role() {
@@ -55,7 +36,7 @@ async fn should_create_role() {
 
     assert_eq!(role.name, "user-manager");
     assert_eq!(role.permissions, vec!["roles:read"]);
-    assert!(!role.id.is_empty());
+    assert_ne!(role.id, RoleId::nil());
     assert_eq!(location, format!("/api/v1/roles/{}", role.id));
 }
 
@@ -99,17 +80,7 @@ async fn should_reject_missing_name() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -125,17 +96,7 @@ async fn should_reject_missing_permissions() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -153,17 +114,7 @@ async fn should_reject_unknown_fields() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -180,17 +131,7 @@ async fn should_reject_unknown_permissions() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -207,17 +148,7 @@ async fn should_reject_duplicate_permissions() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/permission/duplicate"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_duplicate_permission(&response);
 }
 
 #[tokio::test]
@@ -236,17 +167,7 @@ async fn should_return_conflict_for_existing_role() {
         }))
         .await;
 
-    response.assert_status_conflict();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/role/already-exists"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::CONFLICT.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_role_already_exists(&response);
 }
 
 #[tokio::test]
@@ -262,15 +183,5 @@ async fn should_require_authentication_for_create_role() {
         }))
         .await;
 
-    response.assert_status_unauthorized();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/http/unauthorized"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_unauthorized(&response);
 }

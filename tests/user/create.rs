@@ -2,10 +2,10 @@ use axum::http::{StatusCode, header};
 
 use zekurix_server::user::UserId;
 
-use super::common::UserResponse;
+use crate::common::{TestApplication, assert_json_data_error, assert_unauthorized};
+use crate::identity::assert_invalid_issuer;
 
-use crate::common::ErrorResponse;
-use crate::common::TestApplication;
+use super::common::{UserResponse, assert_user_already_exists};
 
 pub async fn create_user(app: &TestApplication, subject: &str) -> UserResponse {
     let response = app
@@ -94,18 +94,7 @@ async fn should_reject_missing_identity() {
         .json(&serde_json::json!({}))
         .await;
 
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -123,18 +112,7 @@ async fn should_reject_missing_identity_issuer() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -152,18 +130,7 @@ async fn should_reject_missing_identity_subject() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -182,18 +149,7 @@ async fn should_reject_empty_identity_issuer() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -212,18 +168,7 @@ async fn should_reject_empty_identity_subject() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -243,18 +188,7 @@ async fn should_reject_unknown_fields() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
@@ -274,36 +208,14 @@ async fn should_reject_unknown_identity_fields() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/json/data-error"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_json_data_error(&response);
 }
 
 #[tokio::test]
 async fn should_return_conflict_for_existing_user() {
     let app = TestApplication::new().await;
 
-    let response = app
-        .server
-        .post("/api/v1/users")
-        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
-        .json(&serde_json::json!({
-            "identity": {
-                "issuer": app.auth.issuer,
-                "subject": "Alice"
-            }
-        }))
-        .await;
-    response.assert_status(StatusCode::CREATED);
+    create_user(&app, "Alice").await;
 
     let response = app
         .server
@@ -316,31 +228,8 @@ async fn should_return_conflict_for_existing_user() {
             }
         }))
         .await;
-    response.assert_status_conflict();
 
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/user/already-exists"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::CONFLICT.as_u16());
-    assert!(!body.detail.is_empty());
-}
-
-#[tokio::test]
-async fn should_return_unprocessable_entity_for_invalid_payload() {
-    let app = TestApplication::new().await;
-
-    let response = app
-        .server
-        .post("/api/v1/users")
-        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
-        .json(&serde_json::json!({}))
-        .await;
-    response.assert_status_unprocessable_entity();
+    assert_user_already_exists(&response);
 }
 
 #[tokio::test]
@@ -357,16 +246,7 @@ async fn should_require_authentication_for_create_user() {
             }
         }))
         .await;
-    response.assert_status_unauthorized();
-    assert_eq!(response.content_type(), "application/problem+json");
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/http/unauthorized"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_unauthorized(&response);
 }
 
 #[tokio::test]
@@ -385,16 +265,5 @@ async fn should_reject_identity_with_invalid_issuer() {
         }))
         .await;
 
-    response.assert_status_unprocessable_entity();
-
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/identity/invalid-issuer"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNPROCESSABLE_ENTITY.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_invalid_issuer(&response);
 }

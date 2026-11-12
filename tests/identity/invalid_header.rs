@@ -2,9 +2,9 @@ use axum::http::{HeaderValue, header};
 use test_case::test_case;
 
 use crate::common::TestApplication;
+use crate::common::assert_unauthorized;
 
 use super::common::assert_invalid_auth_header;
-use super::common::assert_unauthorized;
 use super::common::build_valid_claims;
 use super::common::build_valid_token;
 
@@ -13,7 +13,7 @@ async fn should_reject_missing_auth_header() {
     let app = TestApplication::new().await;
 
     let response = app.server.get("/api/v1/users/me").await;
-    assert_unauthorized(response);
+    assert_unauthorized(&response);
 }
 
 #[tokio::test]
@@ -27,14 +27,14 @@ async fn should_reject_auth_header_with_invalid_utf8() {
         .get("/api/v1/users/me")
         .add_header(header::AUTHORIZATION, header)
         .await;
-    assert_unauthorized(response);
+    assert_unauthorized(&response);
 }
 
 #[tokio::test]
 async fn should_reject_empty_auth_header() {
     let app = TestApplication::new().await;
 
-    assert_invalid_auth_header(app, "").await;
+    assert_invalid_auth_header(&app, "").await;
 }
 
 #[test_case(""; "missing bearer prefix")]
@@ -49,9 +49,9 @@ async fn should_reject_empty_auth_header() {
 async fn should_reject_invalid_auth_header(prefix: &str) {
     let app = TestApplication::new().await;
 
-    let claims = build_valid_claims(app.auth.clone(), "Alice");
-    let token = build_valid_token(app.auth.clone(), claims);
+    let claims = build_valid_claims(&app.auth, "Alice");
+    let token = build_valid_token(&app.auth, &claims);
     let header = format!("{prefix}{token}");
 
-    assert_invalid_auth_header(app, &header).await;
+    assert_invalid_auth_header(&app, &header).await;
 }

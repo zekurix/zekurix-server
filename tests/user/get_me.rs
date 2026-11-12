@@ -1,26 +1,14 @@
-use axum::http::{StatusCode, header};
+use axum::http::header;
+
+use crate::common::{TestApplication, assert_unauthorized};
 
 use super::common::UserResponse;
-use crate::common::ErrorResponse;
-use crate::common::TestApplication;
+use super::create::create_user;
 
 #[tokio::test]
 async fn should_get_current_user_after_admin_creation() {
     let app = TestApplication::new().await;
-
-    let response = app
-        .server
-        .post("/api/v1/users")
-        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
-        .json(&serde_json::json!({
-            "identity": {
-                "issuer": app.auth.issuer.clone(),
-                "subject": "Alice"
-            }
-        }))
-        .await;
-    response.assert_status(StatusCode::CREATED);
-    let created_user: UserResponse = response.json();
+    let created = create_user(&app, "Alice").await;
 
     let response = app
         .server
@@ -28,8 +16,8 @@ async fn should_get_current_user_after_admin_creation() {
         .add_header(header::AUTHORIZATION, app.auth.header("Alice"))
         .await;
     response.assert_status_ok();
-    let current_user: UserResponse = response.json();
-    assert_eq!(current_user.id, created_user.id);
+    let current: UserResponse = response.json();
+    assert_eq!(current, created);
 }
 
 #[tokio::test]
@@ -103,14 +91,6 @@ async fn should_require_authentication_for_get_current_user() {
     let app = TestApplication::new().await;
 
     let response = app.server.get("/api/v1/users/me").await;
-    response.assert_status_unauthorized();
-    assert_eq!(response.content_type(), "application/problem+json");
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/http/unauthorized"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
-    assert!(!body.detail.is_empty());
+
+    assert_unauthorized(&response);
 }

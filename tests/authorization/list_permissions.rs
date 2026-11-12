@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
-use axum::http::{StatusCode, header};
+use axum::http::header;
 use serde::Deserialize;
 
-use crate::common::{ErrorResponse, TestApplication};
+use crate::common::{TestApplication, assert_unauthorized};
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -47,15 +47,5 @@ async fn should_require_authentication_to_list_permissions() {
 
     let response = app.server.get("/api/v1/permissions").await;
 
-    response.assert_status_unauthorized();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/http/unauthorized"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_unauthorized(&response);
 }

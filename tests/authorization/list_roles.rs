@@ -1,10 +1,11 @@
-use axum::http::{StatusCode, header};
+use axum::http::header;
 use axum_test::TestResponse;
 
 use zekurix_server::authorization::RoleId;
 
+use crate::common::{TestApplication, assert_invalid_query, assert_unauthorized};
+
 use super::common::{RolesResponse, create_role};
-use crate::common::{ErrorResponse, TestApplication};
 
 async fn list_roles(app: &TestApplication, query: Option<&str>) -> TestResponse {
     let uri = match query {
@@ -30,16 +31,6 @@ fn assert_role_ids(response: TestResponse, expected: &[RoleId]) {
         .collect::<Vec<_>>();
 
     assert_eq!(actual, expected);
-}
-
-fn assert_bad_request(response: TestResponse) {
-    response.assert_status_bad_request();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(body.status, StatusCode::BAD_REQUEST.as_u16());
-    assert!(!body.title.is_empty());
-    assert!(!body.detail.is_empty());
 }
 
 async fn create_roles(app: &TestApplication, names: &[&str]) -> Vec<RoleId> {
@@ -95,7 +86,7 @@ async fn should_reject_invalid_pagination() {
         "offset=-1",
     ] {
         let response = list_roles(&app, Some(query)).await;
-        assert_bad_request(response);
+        assert_invalid_query(&response);
     }
 }
 
@@ -105,15 +96,5 @@ async fn should_require_authentication_to_list_roles() {
 
     let response = app.server.get("/api/v1/roles").await;
 
-    response.assert_status_unauthorized();
-    assert_eq!(response.content_type(), "application/problem+json");
-
-    let body: ErrorResponse = response.json();
-    assert_eq!(
-        body.r#type.as_str(),
-        "https://api.zekurix.com/problems/http/unauthorized"
-    );
-    assert!(!body.title.is_empty());
-    assert_eq!(body.status, StatusCode::UNAUTHORIZED.as_u16());
-    assert!(!body.detail.is_empty());
+    assert_unauthorized(&response);
 }
