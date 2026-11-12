@@ -270,3 +270,63 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_create_role_from_persisted_data() {
+        let id = RoleId::new();
+
+        let role = PostgresAuthorizationRepository::role_from_persisted(
+            id,
+            "reader".to_string(),
+            vec!["roles:read".to_string()],
+        )
+        .unwrap();
+
+        assert_eq!(role.id(), id);
+        assert_eq!(role.name().as_str(), "reader");
+        assert_eq!(role.permissions(), &[Permission::RolesRead]);
+    }
+
+    #[test]
+    fn should_create_role_without_permissions_from_persisted_data() {
+        let id = RoleId::new();
+
+        let role =
+            PostgresAuthorizationRepository::role_from_persisted(id, "reader".to_string(), vec![])
+                .unwrap();
+
+        assert_eq!(role.id(), id);
+        assert_eq!(role.name().as_str(), "reader");
+        assert!(role.permissions().is_empty());
+    }
+
+    #[test]
+    fn should_reject_invalid_role_name_from_persisted_data() {
+        let id = RoleId::new();
+
+        let result = PostgresAuthorizationRepository::role_from_persisted(
+            id,
+            "".to_string(),
+            vec!["roles:read".to_string()],
+        );
+
+        assert!(matches!(result, Err(Error::InternalError(_))));
+    }
+
+    #[test]
+    fn should_reject_invalid_permission_from_persisted_data() {
+        let id = RoleId::new();
+
+        let result = PostgresAuthorizationRepository::role_from_persisted(
+            id,
+            "reader".to_string(),
+            vec!["unknown:permission".to_string()],
+        );
+
+        assert!(matches!(result, Err(Error::InternalError(_))));
+    }
+}
