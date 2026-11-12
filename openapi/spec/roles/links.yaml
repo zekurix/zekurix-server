@@ -1,0 +1,25 @@
+components:
+  links:
+    GetRoleById:
+      operationId: getRole
+      parameters:
+        id: "$response.body#/id"
+      description: >-
+        The role identifier returned by this operation can be used as the id parameter of
+        the getRole operation.
+
+    UpdateRoleById:
+      operationId: updateRole
+      parameters:
+        id: "$response.body#/id"
+      description: >-
+        The role identifier returned by this operation can be used as the id parameter of
+        the updateRole operation.
+
+    DeleteRoleById:
+      operationId: deleteRole
+      parameters:
+        id: "$response.body#/id"
+      description: >-
+        The role identifier returned by this operation can be used as the id parameter of
+        the deleteRole operation.

@@ -14,8 +14,8 @@ components:
       pattern: ^[^\u0000]*$
       example: admin
 
-    CreateRoleRequest:
-      description: Request payload for creating a role.
+    RoleRequest:
+      description: Request payload for creating or updating a role.
       type: object
       additionalProperties: false
       required:
@@ -42,3 +42,15 @@ components:
           $ref: "#/components/schemas/RoleName"
         permissions:
           $ref: "./../permissions/schemas.yaml#/components/schemas/Permissions"
+
+    RolesResponse:
+      description: Response containing a list of roles.
+      type: object
+      additionalProperties: false
+      required:
+        - roles
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleResponse"

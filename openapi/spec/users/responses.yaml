@@ -9,3 +9,13 @@ components:
         application/problem+json:
           schema:
             $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"
+
+    UserConflict:
+      description: Another user with this identity already exists.
+      headers:
+        X-Request-Id:
+          $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "./../common/schemas.yaml#/components/schemas/ErrorResponse"

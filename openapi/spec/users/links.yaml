@@ -4,7 +4,7 @@ components:
       operationId: getUser
       parameters:
         id: "$response.body#/id"
-      description: >
+      description: >-
         The user identifier returned by this operation can be used as the id parameter of
         the getUser operation.
 
@@ -12,6 +12,6 @@ components:
       operationId: deleteUser
       parameters:
         id: "$response.body#/id"
-      description: >
+      description: >-
         The user identifier returned by this operation can be used as the id parameter of
         the deleteUser operation.

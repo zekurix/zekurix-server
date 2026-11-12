@@ -167,7 +167,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateRoleRequest"
+                "$ref": "#/components/schemas/RoleRequest"
               }
             }
           },
@@ -195,6 +195,17 @@
                   "$ref": "#/components/schemas/RoleResponse"
                 }
               }
+            },
+            "links": {
+              "GetRoleById": {
+                "$ref": "#/components/links/GetRoleById"
+              },
+              "UpdateRoleById": {
+                "$ref": "#/components/links/UpdateRoleById"
+              },
+              "DeleteRoleById": {
+                "$ref": "#/components/links/DeleteRoleById"
+              }
             }
           },
           "400": {
@@ -207,19 +218,7 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "409": {
-            "description": "A role with this name already exists.",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/X-Request-Id"
-              }
-            },
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+            "$ref": "#/components/responses/RoleConflict"
           },
           "413": {
             "$ref": "#/components/responses/PayloadTooLarge"
@@ -229,6 +228,244 @@
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "List roles.",
+        "description": "Returns a paginated list of roles. Requires the `roles:read` permission.",
+        "operationId": "getRoles",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Roles retrieved successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
+    },
+    "/api/v1/roles/{id}": {
+      "get": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Retrieve a role.",
+        "description": "Returns the role identified by the provided ID. Requires the `roles:read` permission.",
+        "operationId": "getRole",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
+            "$ref": "#/components/parameters/RoleId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Role retrieved successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponse"
+                }
+              }
+            },
+            "links": {
+              "UpdateRoleById": {
+                "$ref": "#/components/links/UpdateRoleById"
+              },
+              "DeleteRoleById": {
+                "$ref": "#/components/links/DeleteRoleById"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/RoleNotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Update a role.",
+        "description": "Replaces the name and permission set of the role identified by the provided ID. Requires the `roles:update` permission. The caller may only grant permissions they possess themselves, preventing privilege escalation.",
+        "operationId": "updateRole",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
+            "$ref": "#/components/parameters/RoleId"
+          }
+        ],
+        "requestBody": {
+          "description": "Role update request payload.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Role updated successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponse"
+                }
+              }
+            },
+            "links": {
+              "GetRoleById": {
+                "$ref": "#/components/links/GetRoleById"
+              },
+              "DeleteRoleById": {
+                "$ref": "#/components/links/DeleteRoleById"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/RoleNotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/RoleConflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Delete a role.",
+        "description": "Deletes the role identified by the provided ID. Requires the `roles:delete` permission.",
+        "operationId": "deleteRole",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
+            "$ref": "#/components/parameters/RoleId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Role deleted successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/RoleNotFound"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
@@ -302,19 +539,7 @@
             "$ref": "#/components/responses/Unauthorized"
           },
           "409": {
-            "description": "A user with this identity already exists.",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/X-Request-Id"
-              }
-            },
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+            "$ref": "#/components/responses/UserConflict"
           },
           "413": {
             "$ref": "#/components/responses/PayloadTooLarge"
@@ -439,7 +664,7 @@
         "tags": [
           "users"
         ],
-        "summary": "Retrieve a user by ID.",
+        "summary": "Retrieve a user.",
         "description": "Returns the details of the specified user.",
         "operationId": "getUser",
         "parameters": [
@@ -464,6 +689,11 @@
                   "$ref": "#/components/schemas/UserResponse"
                 }
               }
+            },
+            "links": {
+              "DeleteUserById": {
+                "$ref": "#/components/links/DeleteUserById"
+              }
             }
           },
           "400": {
@@ -487,7 +717,7 @@
         "tags": [
           "users"
         ],
-        "summary": "Delete a user by ID.",
+        "summary": "Delete a user.",
         "description": "Removes the specified user from the system.",
         "operationId": "deleteUser",
         "parameters": [
@@ -566,6 +796,15 @@
           "minimum": 0,
           "maximum": 4294967295,
           "default": 0
+        }
+      },
+      "RoleId": {
+        "name": "id",
+        "in": "path",
+        "description": "Unique identifier of the role.",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/RoleId"
         }
       },
       "UserId": {
@@ -721,6 +960,12 @@
           ]
         }
       },
+      "RoleId": {
+        "description": "Unique identifier of a role.",
+        "type": "string",
+        "format": "uuid",
+        "example": "01a1c232-15fa-7748-9e58-26bcfe04c941"
+      },
       "RoleName": {
         "description": "Unique name of a role.",
         "type": "string",
@@ -728,29 +973,6 @@
         "maxLength": 255,
         "pattern": "^[^\\u0000]*$",
         "example": "admin"
-      },
-      "CreateRoleRequest": {
-        "description": "Request payload for creating a role.",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "name",
-          "permissions"
-        ],
-        "properties": {
-          "name": {
-            "$ref": "#/components/schemas/RoleName"
-          },
-          "permissions": {
-            "$ref": "#/components/schemas/Permissions"
-          }
-        }
-      },
-      "RoleId": {
-        "description": "Unique identifier of a role.",
-        "type": "string",
-        "format": "uuid",
-        "example": "01a1c232-15fa-7748-9e58-26bcfe04c941"
       },
       "RoleResponse": {
         "description": "Response containing role details.",
@@ -765,6 +987,39 @@
           "id": {
             "$ref": "#/components/schemas/RoleId"
           },
+          "name": {
+            "$ref": "#/components/schemas/RoleName"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions"
+          }
+        }
+      },
+      "RolesResponse": {
+        "description": "Response containing a list of roles.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "roles"
+        ],
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleResponse"
+            }
+          }
+        }
+      },
+      "RoleRequest": {
+        "description": "Request payload for creating or updating a role.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "permissions"
+        ],
+        "properties": {
           "name": {
             "$ref": "#/components/schemas/RoleName"
           },
@@ -930,6 +1185,21 @@
           }
         }
       },
+      "RoleConflict": {
+        "description": "Another role with this name already exists.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
       "PayloadTooLarge": {
         "description": "The request payload exceeds the maximum accepted size.",
         "headers": {
@@ -975,6 +1245,36 @@
           }
         }
       },
+      "RoleNotFound": {
+        "description": "Role not found.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "UserConflict": {
+        "description": "Another user with this identity already exists.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
       "UserNotFound": {
         "description": "User not found.",
         "headers": {
@@ -992,19 +1292,40 @@
       }
     },
     "links": {
+      "GetRoleById": {
+        "operationId": "getRole",
+        "parameters": {
+          "id": "$response.body#/id"
+        },
+        "description": "The role identifier returned by this operation can be used as the id parameter of the getRole operation."
+      },
+      "UpdateRoleById": {
+        "operationId": "updateRole",
+        "parameters": {
+          "id": "$response.body#/id"
+        },
+        "description": "The role identifier returned by this operation can be used as the id parameter of the updateRole operation."
+      },
+      "DeleteRoleById": {
+        "operationId": "deleteRole",
+        "parameters": {
+          "id": "$response.body#/id"
+        },
+        "description": "The role identifier returned by this operation can be used as the id parameter of the deleteRole operation."
+      },
       "GetUserById": {
         "operationId": "getUser",
         "parameters": {
           "id": "$response.body#/id"
         },
-        "description": "The user identifier returned by this operation can be used as the id parameter of the getUser operation.\n"
+        "description": "The user identifier returned by this operation can be used as the id parameter of the getUser operation."
       },
       "DeleteUserById": {
         "operationId": "deleteUser",
         "parameters": {
           "id": "$response.body#/id"
         },
-        "description": "The user identifier returned by this operation can be used as the id parameter of the deleteUser operation.\n"
+        "description": "The user identifier returned by this operation can be used as the id parameter of the deleteUser operation."
       }
     }
   }
