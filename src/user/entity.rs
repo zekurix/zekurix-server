@@ -1,6 +1,6 @@
 use super::id::UserId;
 
-#[derive(Clone, Debug, sqlx::FromRow)]
+#[derive(Clone, Debug, PartialEq, Eq, sqlx::FromRow)]
 pub struct User {
     pub id: UserId,
 }
