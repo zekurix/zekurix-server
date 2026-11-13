@@ -157,7 +157,7 @@ async fn should_reject_unknown_role() {
 }
 
 #[tokio::test]
-async fn should_preserve_role_consistency_under_concurrent_updates()
+async fn should_preserve_role_consistency_under_concurrent_updates() {
     // Update the same role concurrently with two different names and permission
     // sets, and verify that the final persisted role exactly matches one complete
     // update without mixing data from both transactions.
