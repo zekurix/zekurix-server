@@ -5,6 +5,7 @@ use tracing::{error, instrument};
 use crate::database::postgres::UNIQUE_VIOLATION;
 use crate::error::{Error, Result};
 use crate::router::Pagination;
+use crate::user::UserId;
 
 use super::{Permission, Role, RoleId, RoleName, repository::AuthorizationRepository};
 
@@ -268,6 +269,185 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         }
 
         Ok(())
+    }
+
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn get_user_roles(&self, user_id: UserId) -> Result<Vec<Role>> {
+        let rows = sqlx::query_as::<_, (Option<RoleId>, Option<String>)>(
+            r#"
+            SELECT
+                role.id,
+                role.name
+            FROM users AS u
+            LEFT JOIN user_roles AS user_role ON user_role.user_id = u.id
+            LEFT JOIN roles AS role ON role.id = user_role.role_id
+            WHERE u.id = $1
+            ORDER BY role.name
+        "#,
+        )
+        .bind(user_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|err| {
+            error!(user_id = %user_id, error = ?err, "failed to get user roles");
+            Error::InternalError(err.into())
+        })?;
+
+        if rows.is_empty() {
+            return Err(Error::UserNotFound(user_id));
+        }
+
+        let mut roles = Vec::new();
+
+        for (role_id, role_name) in rows {
+            match (role_id, role_name) {
+                (Some(id), Some(name)) => {
+                    roles.push(Self::role_from_persisted(id, name, Vec::new())?);
+                }
+                (None, None) => {
+                    // The user has no roles assigned, return an empty list.
+                    continue;
+                }
+                _ => {
+                    // Never should happen, but if it does, return an internal error.
+                    return Err(Error::InternalError(anyhow::anyhow!(
+                        "invalid role row for user_id {user_id}"
+                    )));
+                }
+            }
+        }
+
+        Ok(roles)
+    }
+
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn assign_role_to_user(&self, user_id: UserId, role_id: RoleId) -> Result<()> {
+        let (user_exists, role_exists) = sqlx::query_as::<_, (bool, bool)>(
+            r#"
+            WITH target AS (
+                SELECT
+                    EXISTS (SELECT 1 FROM users WHERE id = $1) AS user_exists,
+                    EXISTS (SELECT 1 FROM roles WHERE id = $2) AS role_exists
+            ),
+            inserted AS (
+                INSERT INTO user_roles (user_id, role_id)
+                SELECT $1, $2
+                FROM target
+                WHERE target.user_exists AND target.role_exists
+                ON CONFLICT DO NOTHING
+                RETURNING 1
+            )
+            SELECT target.user_exists, target.role_exists
+            FROM target
+            "#,
+        )
+        .bind(user_id)
+        .bind(role_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            error!(
+                user_id = %user_id,
+                role_id = %role_id,
+                error = ?err,
+                "failed to assign role to user"
+            );
+            Error::InternalError(err.into())
+        })?;
+
+        if !user_exists {
+            return Err(Error::UserNotFound(user_id));
+        }
+
+        if !role_exists {
+            return Err(Error::RoleNotFound(role_id));
+        }
+
+        // Assign is idempotent, so if the role was already assigned to the user, we still return Ok.
+        Ok(())
+    }
+
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn unassign_role_from_user(&self, user_id: UserId, role_id: RoleId) -> Result<()> {
+        let user_exists = sqlx::query_scalar::<_, bool>(
+            r#"
+            WITH deleted AS (
+                DELETE FROM user_roles
+                WHERE user_id = $1 AND role_id = $2
+                RETURNING user_id
+            )
+            SELECT EXISTS (
+                SELECT 1
+                FROM users
+                WHERE id = $1
+            )
+            "#,
+        )
+        .bind(user_id)
+        .bind(role_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            error!(
+                user_id = %user_id,
+                role_id = %role_id,
+                error = ?err,
+                "failed to unassign role from user"
+            );
+            Error::InternalError(err.into())
+        })?;
+
+        if !user_exists {
+            return Err(Error::UserNotFound(user_id));
+        }
+
+        // Unassign is idempotent, so if the role was not assigned to the user, we still return Ok.
+        Ok(())
+    }
+
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn get_user_permissions(&self, user_id: UserId) -> Result<Vec<Permission>> {
+        let rows = sqlx::query_scalar::<_, Option<String>>(
+            r#"
+            SELECT DISTINCT role_permission.permission
+            FROM users AS user
+            LEFT JOIN user_roles AS user_role ON user_role.user_id = user.id
+            LEFT JOIN role_permissions AS role_permission
+                ON role_permission.role_id = user_role.role_id
+            WHERE user.id = $1
+            ORDER BY role_permission.permission
+            "#,
+        )
+        .bind(user_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|err| {
+            error!(
+                user_id = %user_id,
+                error = ?err,
+                "failed to get user permissions"
+            );
+            Error::InternalError(err.into())
+        })?;
+
+        if rows.is_empty() {
+            return Err(Error::UserNotFound(user_id));
+        }
+
+        rows.into_iter()
+            .flatten()
+            .map(|permission| {
+                permission.parse::<Permission>().map_err(|err| {
+                    error!(
+                        user_id = %user_id,
+                        permission = %permission,
+                        error = ?err,
+                        "invalid permission value stored in database"
+                    );
+                    Error::InternalError(err.into())
+                })
+            })
+            .collect()
     }
 }
 
