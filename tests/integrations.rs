@@ -4,6 +4,7 @@ mod common;
 mod health;
 mod identity;
 mod openapi;
+mod repositories;
 mod router;
 mod settings;
 mod user;

@@ -124,16 +124,16 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         let (name, permissions) = sqlx::query_as::<_, (String, Vec<String>)>(
             r#"
             SELECT
-                role.name,
+                r.name,
                 COALESCE(
-                    ARRAY_AGG(role_permission.permission ORDER BY role_permission.permission)
-                        FILTER (WHERE role_permission.permission IS NOT NULL),
+                    ARRAY_AGG(rp.permission ORDER BY rp.permission)
+                        FILTER (WHERE rp.permission IS NOT NULL),
                     ARRAY[]::TEXT[]
                 )
-            FROM roles AS role
-            LEFT JOIN role_permissions AS role_permission ON role_permission.role_id = role.id
-            WHERE role.id = $1
-            GROUP BY role.id
+            FROM roles AS r
+            LEFT JOIN role_permissions AS rp ON rp.role_id = r.id
+            WHERE r.id = $1
+            GROUP BY r.id
             "#,
         )
         .bind(id)
@@ -153,17 +153,17 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         let rows = sqlx::query_as::<_, (RoleId, String, Vec<String>)>(
             r#"
             SELECT
-                role.id,
-                role.name,
+                r.id,
+                r.name,
                 COALESCE(
-                    ARRAY_AGG(role_permission.permission ORDER BY role_permission.permission)
-                        FILTER (WHERE role_permission.permission IS NOT NULL),
+                    ARRAY_AGG(rp.permission ORDER BY rp.permission)
+                        FILTER (WHERE rp.permission IS NOT NULL),
                     ARRAY[]::TEXT[]
                 )
-            FROM roles AS role
-            LEFT JOIN role_permissions AS role_permission ON role_permission.role_id = role.id
-            GROUP BY role.id
-            ORDER BY role.id
+            FROM roles AS r
+            LEFT JOIN role_permissions AS rp ON rp.role_id = r.id
+            GROUP BY r.id
+            ORDER BY r.id
             LIMIT $1
             OFFSET $2
             "#,
@@ -276,13 +276,13 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         let rows = sqlx::query_as::<_, (Option<RoleId>, Option<String>)>(
             r#"
             SELECT
-                role.id,
-                role.name
+                r.id,
+                r.name
             FROM users AS u
-            LEFT JOIN user_roles AS user_role ON user_role.user_id = u.id
-            LEFT JOIN roles AS role ON role.id = user_role.role_id
+            LEFT JOIN user_roles AS ur ON ur.user_id = u.id
+            LEFT JOIN roles AS r ON r.id = ur.role_id
             WHERE u.id = $1
-            ORDER BY role.name
+            ORDER BY r.name
         "#,
         )
         .bind(user_id)
@@ -409,13 +409,12 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
     async fn get_user_permissions(&self, user_id: UserId) -> Result<Vec<Permission>> {
         let rows = sqlx::query_scalar::<_, Option<String>>(
             r#"
-            SELECT DISTINCT role_permission.permission
-            FROM users AS user
-            LEFT JOIN user_roles AS user_role ON user_role.user_id = user.id
-            LEFT JOIN role_permissions AS role_permission
-                ON role_permission.role_id = user_role.role_id
-            WHERE user.id = $1
-            ORDER BY role_permission.permission
+            SELECT DISTINCT rp.permission
+            FROM users AS u
+            LEFT JOIN user_roles AS ur ON ur.user_id = u.id
+            LEFT JOIN role_permissions AS rp ON rp.role_id = ur.role_id
+            WHERE u.id = $1
+            ORDER BY rp.permission
             "#,
         )
         .bind(user_id)

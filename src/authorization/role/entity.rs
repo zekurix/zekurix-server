@@ -5,7 +5,7 @@ use crate::error::{Error, Result};
 
 use super::{RoleId, RoleName};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Role {
     id: RoleId,
     name: RoleName,

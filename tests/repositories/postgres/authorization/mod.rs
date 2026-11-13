@@ -1,0 +1,11 @@
+mod assign_role_to_user;
+mod common;
+mod create_role;
+mod delete_role;
+mod get_role;
+mod get_user_permissions;
+mod get_user_roles;
+mod list_permissions;
+mod list_roles;
+mod unassign_role_from_user;
+mod update_role;
