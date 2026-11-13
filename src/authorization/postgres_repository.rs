@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 use tracing::{error, instrument};
 
+use crate::authorization::RoleSummary;
 use crate::database::postgres::UNIQUE_VIOLATION;
 use crate::error::{Error, Result};
 use crate::router::Pagination;
@@ -17,7 +18,6 @@ impl PostgresAuthorizationRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
-
     fn role_from_persisted(id: RoleId, name: String, permissions: Vec<String>) -> Result<Role> {
         let name = RoleName::new(&name).map_err(|err| {
             error!(
@@ -44,6 +44,19 @@ impl PostgresAuthorizationRepository {
             .collect::<Result<Vec<_>>>()?;
 
         Ok(Role::from_parts(id, name, permissions))
+    }
+
+    fn role_summary_from_persisted(id: RoleId, name: String) -> Result<RoleSummary> {
+        let name = RoleName::new(&name).map_err(|err| {
+            error!(
+                role_id = %id,
+                error = ?err,
+                "invalid role name stored in database"
+            );
+            Error::InternalError(err.into())
+        })?;
+
+        Ok(RoleSummary::from_parts(id, name))
     }
 }
 
@@ -272,7 +285,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn get_user_roles(&self, user_id: UserId) -> Result<Vec<Role>> {
+    async fn get_user_roles(&self, user_id: UserId) -> Result<Vec<RoleSummary>> {
         let rows = sqlx::query_as::<_, (Option<RoleId>, Option<String>)>(
             r#"
             SELECT
@@ -302,7 +315,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
         for (role_id, role_name) in rows {
             match (role_id, role_name) {
                 (Some(id), Some(name)) => {
-                    roles.push(Self::role_from_persisted(id, name, Vec::new())?);
+                    roles.push(Self::role_summary_from_persisted(id, name)?);
                 }
                 (None, None) => {
                     // The user has no roles assigned, return an empty list.
