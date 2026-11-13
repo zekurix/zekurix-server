@@ -1,5 +1,5 @@
 use zekurix_server::{
-    authorization::{AuthorizationRepository, Role, RoleName},
+    authorization::{AuthorizationRepository, Role, RoleName, RoleSummary},
     error::Error,
     user::{UserId, UserRepository},
 };
@@ -25,9 +25,9 @@ async fn should_get_user_roles_ordered_by_name() {
     let third_role = Role::new(RoleName::new("gamma-role").unwrap(), vec![]);
 
     let expected = vec![
-        Role::from_parts(first_role.id(), first_role.name().clone(), vec![]),
-        Role::from_parts(second_role.id(), second_role.name().clone(), vec![]),
-        Role::from_parts(third_role.id(), third_role.name().clone(), vec![]),
+        RoleSummary::from_parts(first_role.id(), first_role.name().clone()),
+        RoleSummary::from_parts(second_role.id(), second_role.name().clone()),
+        RoleSummary::from_parts(third_role.id(), third_role.name().clone()),
     ];
 
     let first_role_id = first_role.id();

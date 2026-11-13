@@ -10,7 +10,7 @@ mod service;
 pub use permission::Permission;
 pub use postgres_repository::PostgresAuthorizationRepository;
 pub use repository::AuthorizationRepository;
-pub use role::{Role, RoleId, RoleName};
+pub use role::{Role, RoleId, RoleName, RoleSummary};
 pub use routes::{permissions_router, roles_router};
 pub use service::AuthorizationService;
 
