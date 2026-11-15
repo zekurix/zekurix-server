@@ -1,4 +1,4 @@
-mod common;
+pub(crate) mod common;
 mod create_role;
 mod delete_role;
 mod get_role;

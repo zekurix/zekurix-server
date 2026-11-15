@@ -58,6 +58,9 @@ paths:
   /api/v1/users/{id}:
     $ref: "./users/paths.yaml#/paths/~1users~1{id}"
 
+  /api/v1/users/{user_id}/roles/{role_id}:
+    $ref: "./users/paths.yaml#/paths/~1users~1{user_id}~1roles~1{role_id}"
+
 components:
   securitySchemes:
     bearerAuth:

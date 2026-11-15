@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     Router,
-    routing::{get, post},
+    routing::{get, post, put},
 };
 
 use crate::Application;
@@ -16,5 +16,9 @@ pub fn router() -> Router<Arc<Application>> {
         .route(
             "/{id}",
             get(handlers::get_user).delete(handlers::delete_user),
+        )
+        .route(
+            "/{user_id}/roles/{role_id}",
+            put(handlers::assign_role_to_user),
         )
 }

@@ -754,6 +754,55 @@
           }
         }
       }
+    },
+    "/api/v1/users/{user_id}/roles/{role_id}": {
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Assign a role to a user.",
+        "description": "Assigns the specified role to the user. Requires the `roles:assign` permission. Repeating the request has no additional effect.",
+        "operationId": "assignRoleToUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
+            "$ref": "#/components/parameters/UserIdPath"
+          },
+          {
+            "$ref": "#/components/parameters/RoleIdPath"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Role assigned successfully, or was already assigned.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/UserOrRoleNotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -814,6 +863,24 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/UserId"
+        }
+      },
+      "UserIdPath": {
+        "name": "user_id",
+        "in": "path",
+        "description": "Unique identifier of the user.",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/UserId"
+        }
+      },
+      "RoleIdPath": {
+        "name": "role_id",
+        "in": "path",
+        "description": "Unique identifier of the role.",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/RoleId"
         }
       }
     },
@@ -1277,6 +1344,21 @@
       },
       "UserNotFound": {
         "description": "User not found.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/X-Request-Id"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "UserOrRoleNotFound": {
+        "description": "User or role not found.",
         "headers": {
           "X-Request-Id": {
             "$ref": "#/components/headers/X-Request-Id"

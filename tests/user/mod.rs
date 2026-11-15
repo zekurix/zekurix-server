@@ -1,3 +1,4 @@
+mod assign_role;
 mod common;
 mod create;
 mod delete;
