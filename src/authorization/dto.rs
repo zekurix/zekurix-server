@@ -62,10 +62,7 @@ impl From<RoleSummary> for RoleSummaryResponse {
     fn from(summary: RoleSummary) -> Self {
         let (id, name) = summary.into_parts();
 
-        Self {
-            id,
-            name,
-        }
+        Self { id, name }
     }
 }
 
