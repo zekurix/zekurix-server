@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn into_parts_moves_the_role_data_out() {
-        let id = RoleId::nil();
+        let id = RoleId::new();
         let name = role_name();
         let permissions = vec![Permission::RolesRead, Permission::RolesDelete];
 

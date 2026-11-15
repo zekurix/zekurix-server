@@ -7,6 +7,7 @@ mod role;
 mod routes;
 mod service;
 
+pub use dto::{RoleSummariesResponse, RoleSummaryResponse};
 pub use permission::Permission;
 pub use postgres_repository::PostgresAuthorizationRepository;
 pub use repository::AuthorizationRepository;

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Permission, Role, RoleId, RoleName};
+use super::{Permission, Role, RoleId, RoleName, RoleSummary};
 
 #[derive(Serialize)]
 pub struct PermissionsResponse {
@@ -48,6 +48,33 @@ impl From<Vec<Role>> for RolesResponse {
     fn from(roles: Vec<Role>) -> Self {
         Self {
             roles: roles.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+pub struct RoleSummaryResponse {
+    id: RoleId,
+    name: RoleName,
+}
+
+impl From<RoleSummary> for RoleSummaryResponse {
+    fn from(summary: RoleSummary) -> Self {
+        let (id, name) = summary.into_parts();
+
+        Self { id, name }
+    }
+}
+
+#[derive(Serialize)]
+pub struct RoleSummariesResponse {
+    summaries: Vec<RoleSummaryResponse>,
+}
+
+impl From<Vec<RoleSummary>> for RoleSummariesResponse {
+    fn from(summaries: Vec<RoleSummary>) -> Self {
+        Self {
+            summaries: summaries.into_iter().map(Into::into).collect(),
         }
     }
 }
@@ -131,5 +158,45 @@ mod tests {
         let response = RolesResponse::from(vec![]);
 
         assert!(response.roles.is_empty());
+    }
+
+    #[test]
+    fn should_convert_role_summary_to_role_summary_response() {
+        let name = RoleName::new("admin").unwrap();
+        let summary = RoleSummary::new(name.clone());
+        let id = summary.id();
+
+        let response = RoleSummaryResponse::from(summary);
+
+        assert_eq!(response.id, id);
+        assert_eq!(response.name, name);
+    }
+
+    #[test]
+    fn should_convert_role_summaries_to_role_summary_responses() {
+        let first_id = RoleId::new();
+        let second_id = RoleId::new();
+        let first_name = RoleName::new("admin").unwrap();
+        let second_name = RoleName::new("reader").unwrap();
+
+        let summaries = vec![
+            RoleSummary::from_parts(first_id, first_name.clone()),
+            RoleSummary::from_parts(second_id, second_name.clone()),
+        ];
+
+        let response = RoleSummariesResponse::from(summaries);
+
+        assert_eq!(response.summaries.len(), 2);
+        assert_eq!(response.summaries[0].id, first_id);
+        assert_eq!(response.summaries[0].name, first_name);
+        assert_eq!(response.summaries[1].id, second_id);
+        assert_eq!(response.summaries[1].name, second_name);
+    }
+
+    #[test]
+    fn should_convert_empty_role_summaries_to_role_summary_responses() {
+        let response = RoleSummariesResponse::from(vec![]);
+
+        assert!(response.summaries.is_empty());
     }
 }
