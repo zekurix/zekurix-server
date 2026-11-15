@@ -25,6 +25,10 @@ impl RoleSummary {
     pub fn name(&self) -> &RoleName {
         &self.name
     }
+
+    pub fn into_parts(self) -> (RoleId, RoleName) {
+        (self.id, self.name)
+    }
 }
 
 #[cfg(test)]
@@ -54,5 +58,17 @@ mod tests {
 
         assert_eq!(summary.id(), id);
         assert_eq!(summary.name(), &name);
+    }
+
+    #[test]
+    fn into_parts_moves_the_role_data_out() {
+        let id = RoleId::new();
+        let name = role_name();
+
+        let summary = RoleSummary::from_parts(id, name.clone());
+        let (actual_id, actual_name) = summary.into_parts();
+
+        assert_eq!(actual_id, id);
+        assert_eq!(actual_name, name);
     }
 }

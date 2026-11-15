@@ -13,6 +13,7 @@ pub use repository::AuthorizationRepository;
 pub use role::{Role, RoleId, RoleName, RoleSummary};
 pub use routes::{permissions_router, roles_router};
 pub use service::AuthorizationService;
+pub use dto::{RoleSummaryResponse, RoleSummariesResponse};
 
 #[cfg(test)]
 pub use repository::MockAuthorizationRepository;
