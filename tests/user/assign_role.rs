@@ -10,7 +10,7 @@ use crate::common::{TestApplication, assert_unauthorized};
 use super::common::assert_user_not_found;
 use super::create::create_user;
 
-async fn assign_role(
+pub async fn assign_role(
     app: &TestApplication,
     user_id: UserId,
     role_id: RoleId,

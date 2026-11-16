@@ -755,6 +755,59 @@
         }
       }
     },
+    "/api/v1/users/{id}/roles": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Retrieve roles assigned to a user.",
+        "description": "Returns the roles assigned to the specified user. Requires the `roles:read` permission unless the authenticated user is retrieving their own roles.",
+        "operationId": "getUserRoles",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
+            "$ref": "#/components/parameters/UserId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User roles retrieved successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleSummariesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/UserNotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
+    },
     "/api/v1/users/{user_id}/roles/{role_id}": {
       "put": {
         "tags": [
@@ -1169,6 +1222,39 @@
         "properties": {
           "identity": {
             "$ref": "#/components/schemas/Identity"
+          }
+        }
+      },
+      "RoleSummary": {
+        "description": "Summary of a role.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/RoleId"
+          },
+          "name": {
+            "$ref": "#/components/schemas/RoleName"
+          }
+        }
+      },
+      "RoleSummariesResponse": {
+        "description": "Response containing a list of role summaries.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "roles"
+        ],
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleSummary"
+            }
           }
         }
       }

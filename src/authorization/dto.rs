@@ -59,8 +59,8 @@ pub struct RoleSummaryResponse {
 }
 
 impl From<RoleSummary> for RoleSummaryResponse {
-    fn from(summary: RoleSummary) -> Self {
-        let (id, name) = summary.into_parts();
+    fn from(role: RoleSummary) -> Self {
+        let (id, name) = role.into_parts();
 
         Self { id, name }
     }
@@ -68,13 +68,13 @@ impl From<RoleSummary> for RoleSummaryResponse {
 
 #[derive(Serialize)]
 pub struct RoleSummariesResponse {
-    summaries: Vec<RoleSummaryResponse>,
+    roles: Vec<RoleSummaryResponse>,
 }
 
 impl From<Vec<RoleSummary>> for RoleSummariesResponse {
-    fn from(summaries: Vec<RoleSummary>) -> Self {
+    fn from(roles: Vec<RoleSummary>) -> Self {
         Self {
-            summaries: summaries.into_iter().map(Into::into).collect(),
+            roles: roles.into_iter().map(Into::into).collect(),
         }
     }
 }
@@ -163,10 +163,10 @@ mod tests {
     #[test]
     fn should_convert_role_summary_to_role_summary_response() {
         let name = RoleName::new("admin").unwrap();
-        let summary = RoleSummary::new(name.clone());
-        let id = summary.id();
+        let role = RoleSummary::new(name.clone());
+        let id = role.id();
 
-        let response = RoleSummaryResponse::from(summary);
+        let response = RoleSummaryResponse::from(role);
 
         assert_eq!(response.id, id);
         assert_eq!(response.name, name);
@@ -179,24 +179,24 @@ mod tests {
         let first_name = RoleName::new("admin").unwrap();
         let second_name = RoleName::new("reader").unwrap();
 
-        let summaries = vec![
+        let roles = vec![
             RoleSummary::from_parts(first_id, first_name.clone()),
             RoleSummary::from_parts(second_id, second_name.clone()),
         ];
 
-        let response = RoleSummariesResponse::from(summaries);
+        let response = RoleSummariesResponse::from(roles);
 
-        assert_eq!(response.summaries.len(), 2);
-        assert_eq!(response.summaries[0].id, first_id);
-        assert_eq!(response.summaries[0].name, first_name);
-        assert_eq!(response.summaries[1].id, second_id);
-        assert_eq!(response.summaries[1].name, second_name);
+        assert_eq!(response.roles.len(), 2);
+        assert_eq!(response.roles[0].id, first_id);
+        assert_eq!(response.roles[0].name, first_name);
+        assert_eq!(response.roles[1].id, second_id);
+        assert_eq!(response.roles[1].name, second_name);
     }
 
     #[test]
     fn should_convert_empty_role_summaries_to_role_summary_responses() {
         let response = RoleSummariesResponse::from(vec![]);
 
-        assert!(response.summaries.is_empty());
+        assert!(response.roles.is_empty());
     }
 }
