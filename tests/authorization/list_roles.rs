@@ -19,18 +19,22 @@ async fn list_roles(app: &TestApplication, query: Option<&str>) -> TestResponse 
         .await
 }
 
-fn assert_role_ids(response: TestResponse, expected: &[RoleId]) {
+fn role_ids(response: TestResponse) -> Vec<RoleId> {
     response.assert_status_ok();
     assert_eq!(response.content_type(), "application/json");
 
     let body: RolesResponse = response.json();
-    let actual = body
-        .roles
-        .into_iter()
-        .map(|role| role.id)
-        .collect::<Vec<_>>();
+    body.roles.into_iter().map(|role| role.id).collect()
+}
+
+fn assert_role_ids(response: TestResponse, expected: &[RoleId]) {
+    let actual = role_ids(response);
 
     assert_eq!(actual, expected);
+}
+
+async fn existing_role_ids(app: &TestApplication) -> Vec<RoleId> {
+    role_ids(list_roles(app, None).await)
 }
 
 async fn create_roles(app: &TestApplication, names: &[&str]) -> Vec<RoleId> {
@@ -47,7 +51,9 @@ async fn create_roles(app: &TestApplication, names: &[&str]) -> Vec<RoleId> {
 #[tokio::test]
 async fn should_list_roles_with_default_pagination() {
     let app = TestApplication::new().await;
-    let expected = create_roles(&app, &["reader", "editor", "manager"]).await;
+    let mut expected = existing_role_ids(&app).await;
+    expected.extend(create_roles(&app, &["reader", "editor", "manager"]).await);
+    expected.sort();
 
     let response = list_roles(&app, None).await;
 
@@ -57,7 +63,9 @@ async fn should_list_roles_with_default_pagination() {
 #[tokio::test]
 async fn should_apply_limit_and_offset() {
     let app = TestApplication::new().await;
-    let roles = create_roles(&app, &["one", "two", "three", "four"]).await;
+    let mut roles = existing_role_ids(&app).await;
+    roles.extend(create_roles(&app, &["one", "two", "three", "four"]).await);
+    roles.sort();
 
     let response = list_roles(&app, Some("limit=2&offset=1")).await;
 

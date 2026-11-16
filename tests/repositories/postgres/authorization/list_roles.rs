@@ -24,7 +24,12 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
         vec![Permission::RolesUnassign, Permission::RolesAssign],
     );
 
-    let mut expected = vec![
+    let mut expected = test
+        .repository
+        .list_roles(Pagination::default())
+        .await
+        .unwrap();
+    expected.extend([
         Role::from_parts(
             first_role.id(),
             first_role.name().clone(),
@@ -40,7 +45,7 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
             third_role.name().clone(),
             vec![Permission::RolesAssign, Permission::RolesUnassign],
         ),
-    ];
+    ]);
 
     test.repository.create_role(third_role).await.unwrap();
     test.repository.create_role(first_role).await.unwrap();
@@ -50,10 +55,7 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
 
     let roles = test
         .repository
-        .list_roles(Pagination {
-            limit: 100,
-            offset: 0,
-        })
+        .list_roles(Pagination::default())
         .await
         .unwrap();
 
@@ -69,10 +71,15 @@ async fn should_list_roles_without_permissions() {
     let first_role = Role::new(RoleName::new("first-role").unwrap(), vec![]);
     let second_role = Role::new(RoleName::new("second-role").unwrap(), vec![]);
 
-    let mut expected = vec![
+    let mut expected = test
+        .repository
+        .list_roles(Pagination::default())
+        .await
+        .unwrap();
+    expected.extend([
         Role::from_parts(first_role.id(), first_role.name().clone(), vec![]),
         Role::from_parts(second_role.id(), second_role.name().clone(), vec![]),
-    ];
+    ]);
 
     test.repository.create_role(second_role).await.unwrap();
     test.repository.create_role(first_role).await.unwrap();
@@ -81,10 +88,7 @@ async fn should_list_roles_without_permissions() {
 
     let roles = test
         .repository
-        .list_roles(Pagination {
-            limit: 100,
-            offset: 0,
-        })
+        .list_roles(Pagination::default())
         .await
         .unwrap();
 
@@ -97,7 +101,11 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
     // limit and offset to the ordered result set.
     let test = TestRepository::new().await;
 
-    let mut expected = Vec::new();
+    let mut expected = test
+        .repository
+        .list_roles(Pagination::default())
+        .await
+        .unwrap();
 
     for index in 0..5 {
         let role = Role::new(
