@@ -60,8 +60,8 @@ impl AuthorizationService {
             .await
     }
 
-    pub async fn get_user_permissions(&self, user_id: UserId) -> Result<Vec<Permission>> {
-        self.repository.get_user_permissions(user_id).await
+    pub async fn list_user_permissions(&self, user_id: UserId) -> Result<Vec<Permission>> {
+        self.repository.list_user_permissions(user_id).await
     }
 }
 
@@ -454,12 +454,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn should_get_user_permissions() {
+    async fn should_list_user_permissions() {
         let user_id = UserId::new();
         let expected = vec![Permission::RolesRead, Permission::RolesUpdate];
         let mut repository = MockAuthorizationRepository::new();
         repository
-            .expect_get_user_permissions()
+            .expect_list_user_permissions()
             .withf(move |actual_user_id| *actual_user_id == user_id)
             .times(1)
             .return_once({
@@ -468,7 +468,7 @@ mod tests {
             });
 
         let permissions = service(repository)
-            .get_user_permissions(user_id)
+            .list_user_permissions(user_id)
             .await
             .unwrap();
 
@@ -476,16 +476,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn should_propagate_get_user_permissions_error() {
+    async fn should_propagate_list_user_permissions_error() {
         let user_id = UserId::new();
         let mut repository = MockAuthorizationRepository::new();
         repository
-            .expect_get_user_permissions()
+            .expect_list_user_permissions()
             .withf(move |actual_user_id| *actual_user_id == user_id)
             .times(1)
             .return_once(|_| Err(Error::InternalError(anyhow::anyhow!("error"))));
 
-        let result = service(repository).get_user_permissions(user_id).await;
+        let result = service(repository).list_user_permissions(user_id).await;
 
         assert!(matches!(result, Err(Error::InternalError(_))));
     }

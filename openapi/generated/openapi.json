@@ -129,7 +129,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermissionsResponse"
+                  "$ref": "#/components/schemas/NonEmptyPermissionsResponse"
                 }
               }
             }
@@ -532,6 +532,9 @@
               },
               "ListUserRolesById": {
                 "$ref": "#/components/links/ListUserRolesById"
+              },
+              "ListUserPermissionsById": {
+                "$ref": "#/components/links/ListUserPermissionsById"
               }
             }
           },
@@ -647,6 +650,9 @@
               },
               "ListUserRolesById": {
                 "$ref": "#/components/links/ListUserRolesById"
+              },
+              "ListUserPermissionsById": {
+                "$ref": "#/components/links/ListUserPermissionsById"
               }
             }
           },
@@ -702,6 +708,9 @@
               },
               "ListUserRolesById": {
                 "$ref": "#/components/links/ListUserRolesById"
+              },
+              "ListUserPermissionsById": {
+                "$ref": "#/components/links/ListUserPermissionsById"
               }
             }
           },
@@ -912,6 +921,59 @@
           }
         }
       }
+    },
+    "/api/v1/users/{id}/permissions": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "List permissions granted to a user.",
+        "description": "Returns the effective permissions granted to the specified user through their assigned roles. Requires the `roles:read` permission unless the authenticated user is retrieving their own permissions.",
+        "operationId": "listUserPermissions",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
+            "$ref": "#/components/parameters/UserId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User permissions retrieved successfully.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/X-Request-Id"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/UserNotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1105,7 +1167,7 @@
           "roles:delete"
         ]
       },
-      "PermissionsResponse": {
+      "NonEmptyPermissionsResponse": {
         "description": "Response containing all permissions available in the API.",
         "type": "object",
         "additionalProperties": false,
@@ -1312,6 +1374,26 @@
               "$ref": "#/components/schemas/RoleSummary"
             }
           }
+        }
+      },
+      "PermissionsResponse": {
+        "description": "Response containing permissions.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "permissions"
+        ],
+        "properties": {
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions"
+          }
+        },
+        "example": {
+          "permissions": [
+            "roles:create",
+            "roles:read",
+            "roles:delete"
+          ]
         }
       }
     },
@@ -1557,6 +1639,13 @@
           "id": "$response.body#/id"
         },
         "description": "The user identifier returned by this operation can be used as the id parameter of the listUserRoles operation."
+      },
+      "ListUserPermissionsById": {
+        "operationId": "listUserPermissions",
+        "parameters": {
+          "id": "$response.body#/id"
+        },
+        "description": "The user identifier returned by this operation can be used as the id parameter of the listUserPermissions operation."
       }
     }
   }

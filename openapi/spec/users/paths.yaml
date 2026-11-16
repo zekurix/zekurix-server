@@ -42,6 +42,8 @@ paths:
               $ref: "./links.yaml#/components/links/DeleteUserById"
             ListUserRolesById:
               $ref: "./links.yaml#/components/links/ListUserRolesById"
+            ListUserPermissionsById:
+              $ref: "./links.yaml#/components/links/ListUserPermissionsById"
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
@@ -131,6 +133,8 @@ paths:
               $ref: "./links.yaml#/components/links/DeleteUserById"
             ListUserRolesById:
               $ref: "./links.yaml#/components/links/ListUserRolesById"
+            ListUserPermissionsById:
+              $ref: "./links.yaml#/components/links/ListUserPermissionsById"
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
@@ -172,6 +176,8 @@ paths:
               $ref: "./links.yaml#/components/links/DeleteUserById"
             ListUserRolesById:
               $ref: "./links.yaml#/components/links/ListUserRolesById"
+            ListUserPermissionsById:
+              $ref: "./links.yaml#/components/links/ListUserPermissionsById"
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
@@ -338,6 +344,50 @@ paths:
 
         "404":
           $ref: "./responses.yaml#/components/responses/UserOrRoleNotFound"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
+  /users/{id}/permissions:
+    get:
+      tags:
+        - users
+      summary: List permissions granted to a user.
+      description: >-
+        Returns the effective permissions granted to the specified user through
+        their assigned roles. Requires the `roles:read` permission unless the
+        authenticated user is retrieving their own permissions.
+      operationId: listUserPermissions
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./parameters.yaml#/components/parameters/UserId"
+
+      responses:
+        "200":
+          description: User permissions retrieved successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+          content:
+            application/json:
+              schema:
+                $ref: "./../permissions/schemas.yaml#/components/schemas/PermissionsResponse"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
+        "404":
+          $ref: "./responses.yaml#/components/responses/UserNotFound"
 
         "500":
           $ref: "./../common/responses.yaml#/components/responses/InternalServerError"

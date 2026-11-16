@@ -23,6 +23,21 @@ components:
         - roles:delete
 
     PermissionsResponse:
+      description: Response containing permissions.
+      type: object
+      additionalProperties: false
+      required:
+        - permissions
+      properties:
+        permissions:
+          $ref: "#/components/schemas/Permissions"
+      example:
+        permissions:
+          - roles:create
+          - roles:read
+          - roles:delete
+
+    NonEmptyPermissionsResponse:
       description: Response containing all permissions available in the API.
       type: object
       additionalProperties: false
