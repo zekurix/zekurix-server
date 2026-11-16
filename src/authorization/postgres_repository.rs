@@ -285,7 +285,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn get_user_roles(&self, user_id: UserId) -> Result<Vec<RoleSummary>> {
+    async fn list_user_roles(&self, user_id: UserId) -> Result<Vec<RoleSummary>> {
         let rows = sqlx::query_as::<_, (Option<RoleId>, Option<String>)>(
             r#"
             SELECT

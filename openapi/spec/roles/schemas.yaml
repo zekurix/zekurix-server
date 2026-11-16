@@ -54,3 +54,28 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RoleResponse"
+
+    RoleSummary:
+      description: Summary of a role.
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+      properties:
+        id:
+          $ref: "#/components/schemas/RoleId"
+        name:
+          $ref: "#/components/schemas/RoleName"
+
+    RoleSummariesResponse:
+      description: Response containing a list of role summaries.
+      type: object
+      additionalProperties: false
+      required:
+        - roles
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleSummary"

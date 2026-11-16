@@ -46,8 +46,8 @@ impl AuthorizationService {
         self.repository.delete_role(id).await
     }
 
-    pub async fn get_user_roles(&self, user_id: UserId) -> Result<Vec<RoleSummary>> {
-        self.repository.get_user_roles(user_id).await
+    pub async fn list_user_roles(&self, user_id: UserId) -> Result<Vec<RoleSummary>> {
+        self.repository.list_user_roles(user_id).await
     }
 
     pub async fn assign_role_to_user(&self, user_id: UserId, role_id: RoleId) -> Result<()> {
@@ -347,7 +347,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn should_get_user_roles() {
+    async fn should_list_user_roles() {
         let user_id = UserId::new();
         let expected = vec![RoleSummary::from_parts(
             RoleId::new(),
@@ -355,28 +355,28 @@ mod tests {
         )];
         let mut repository = MockAuthorizationRepository::new();
         repository
-            .expect_get_user_roles()
+            .expect_list_user_roles()
             .withf(move |actual_user_id| *actual_user_id == user_id)
             .times(1)
             .return_once(|_| Ok(expected));
 
-        let roles = service(repository).get_user_roles(user_id).await.unwrap();
+        let roles = service(repository).list_user_roles(user_id).await.unwrap();
 
         assert_eq!(roles.len(), 1);
         assert_eq!(roles[0].name().as_str(), "admin");
     }
 
     #[tokio::test]
-    async fn should_propagate_get_user_roles_error() {
+    async fn should_propagate_list_user_roles_error() {
         let user_id = UserId::new();
         let mut repository = MockAuthorizationRepository::new();
         repository
-            .expect_get_user_roles()
+            .expect_list_user_roles()
             .withf(move |actual_user_id| *actual_user_id == user_id)
             .times(1)
             .return_once(|_| Err(Error::InternalError(anyhow::anyhow!("error"))));
 
-        let result = service(repository).get_user_roles(user_id).await;
+        let result = service(repository).list_user_roles(user_id).await;
 
         assert!(matches!(result, Err(Error::InternalError(_))));
     }

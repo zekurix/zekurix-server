@@ -8,8 +8,8 @@ use super::common::TestRepository;
 use crate::repositories::postgres::common::user_with_identity;
 
 #[tokio::test]
-async fn should_get_user_roles_ordered_by_name() {
-    // Assign multiple roles to a user and verify that get_user_roles returns
+async fn should_list_user_roles_ordered_by_name() {
+    // Assign multiple roles to a user and verify that list_user_roles returns
     // the assigned roles ordered by role name.
     let test = TestRepository::new().await;
 
@@ -53,14 +53,14 @@ async fn should_get_user_roles_ordered_by_name() {
         .await
         .unwrap();
 
-    let roles = test.repository.get_user_roles(user.id).await.unwrap();
+    let roles = test.repository.list_user_roles(user.id).await.unwrap();
 
     assert_eq!(roles, expected);
 }
 
 #[tokio::test]
 async fn should_return_empty_roles_for_user_without_roles() {
-    // Persist a user without any assigned role and verify that get_user_roles
+    // Persist a user without any assigned role and verify that list_user_roles
     // returns an empty collection rather than treating the user as missing.
     let test = TestRepository::new().await;
 
@@ -71,7 +71,7 @@ async fn should_return_empty_roles_for_user_without_roles() {
         .await
         .unwrap();
 
-    let roles = test.repository.get_user_roles(user.id).await.unwrap();
+    let roles = test.repository.list_user_roles(user.id).await.unwrap();
 
     assert!(roles.is_empty());
 }
@@ -82,7 +82,7 @@ async fn should_reject_unknown_user() {
     let test = TestRepository::new().await;
     let user_id = UserId::new();
 
-    let error = test.repository.get_user_roles(user_id).await.unwrap_err();
+    let error = test.repository.list_user_roles(user_id).await.unwrap_err();
 
     assert!(matches!(
         error,

@@ -8,7 +8,7 @@ use axum::{
 };
 
 use crate::Application;
-use crate::authorization::RoleId;
+use crate::authorization::{RoleId, RoleSummariesResponse};
 use crate::error::Result;
 use crate::identity::CurrentUserId;
 use crate::router::{ApiJson, ApiPath, Pagination};
@@ -86,4 +86,17 @@ pub async fn assign_role_to_user(
         .await?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn list_user_roles(
+    State(application): State<Arc<Application>>,
+    ApiPath(id): ApiPath<UserId>,
+) -> Result<Json<RoleSummariesResponse>> {
+    let roles = application
+        .services
+        .authorization
+        .list_user_roles(id)
+        .await?;
+
+    Ok(Json(roles.into()))
 }

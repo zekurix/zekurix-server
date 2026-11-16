@@ -215,12 +215,57 @@ paths:
         "504":
           $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
 
+  /users/{id}/roles:
+    get:
+      tags:
+        - users
+      summary: Retrieve roles assigned to a user.
+      description: >-
+        Returns the roles assigned to the specified user. Requires the `roles:read`
+        permission unless the authenticated user is retrieving their own roles.
+      operationId: getUserRoles
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./parameters.yaml#/components/parameters/UserId"
+
+      responses:
+        "200":
+          description: User roles retrieved successfully.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+          content:
+            application/json:
+              schema:
+                $ref: "./../roles/schemas.yaml#/components/schemas/RoleSummariesResponse"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
+        "404":
+          $ref: "./responses.yaml#/components/responses/UserNotFound"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
   /users/{user_id}/roles/{role_id}:
     put:
       tags:
         - users
       summary: Assign a role to a user.
-      description: Assigns the specified role to the user. Requires the `roles:assign` permission. Repeating the request has no additional effect.
+      description: >-
+        Assigns the specified role to the user. Requires the `roles:assign` permission.
+        Repeating the request has no additional effect.
       operationId: assignRoleToUser
 
       parameters:
