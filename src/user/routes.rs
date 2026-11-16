@@ -20,6 +20,6 @@ pub fn router() -> Router<Arc<Application>> {
         .route("/{id}/roles", get(handlers::list_user_roles))
         .route(
             "/{user_id}/roles/{role_id}",
-            put(handlers::assign_role_to_user),
+            put(handlers::assign_role_to_user).delete(handlers::unassign_role_from_user),
         )
 }

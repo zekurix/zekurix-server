@@ -6,3 +6,4 @@ mod get;
 mod get_me;
 mod list;
 mod list_roles;
+mod unassign_role;

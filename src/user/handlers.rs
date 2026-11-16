@@ -100,3 +100,16 @@ pub async fn list_user_roles(
 
     Ok(Json(roles.into()))
 }
+
+pub async fn unassign_role_from_user(
+    State(application): State<Arc<Application>>,
+    ApiPath((user_id, role_id)): ApiPath<(UserId, RoleId)>,
+) -> Result<StatusCode> {
+    application
+        .services
+        .authorization
+        .unassign_role_from_user(user_id, role_id)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}

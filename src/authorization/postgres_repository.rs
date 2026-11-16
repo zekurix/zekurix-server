@@ -382,18 +382,20 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
     async fn unassign_role_from_user(&self, user_id: UserId, role_id: RoleId) -> Result<()> {
-        let user_exists = sqlx::query_scalar::<_, bool>(
+        let (user_exists, role_exists) = sqlx::query_as::<_, (bool, bool)>(
             r#"
-            WITH deleted AS (
+            WITH target AS (
+                SELECT
+                EXISTS (SELECT 1 FROM users WHERE id = $1) AS user_exists,
+                EXISTS (SELECT 1 FROM roles WHERE id = $2) AS role_exists
+            ),
+            deleted AS (
                 DELETE FROM user_roles
                 WHERE user_id = $1 AND role_id = $2
-                RETURNING user_id
+                RETURNING 1
             )
-            SELECT EXISTS (
-                SELECT 1
-                FROM users
-                WHERE id = $1
-            )
+            SELECT target.user_exists, target.role_exists
+            FROM target
             "#,
         )
         .bind(user_id)
@@ -412,6 +414,10 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
 
         if !user_exists {
             return Err(Error::UserNotFound(user_id));
+        }
+
+        if !role_exists {
+            return Err(Error::RoleNotFound(role_id));
         }
 
         // Unassign is idempotent, so if the role was not assigned to the user, we still return Ok.

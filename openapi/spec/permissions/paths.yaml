@@ -5,7 +5,7 @@ paths:
         - permissions
       summary: List permissions.
       description: Returns all permissions supported by the server.
-      operationId: getPermissions
+      operationId: listPermissions
 
       parameters:
         - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
