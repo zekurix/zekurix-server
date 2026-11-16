@@ -81,7 +81,7 @@ paths:
       description: >-
         Returns a paginated list of roles.
         Requires the `roles:read` permission.
-      operationId: getRoles
+      operationId: listRoles
 
       parameters:
         - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"

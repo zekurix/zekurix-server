@@ -40,6 +40,8 @@ paths:
               $ref: "./links.yaml#/components/links/GetUserById"
             DeleteUserById:
               $ref: "./links.yaml#/components/links/DeleteUserById"
+            ListUserRolesById:
+              $ref: "./links.yaml#/components/links/ListUserRolesById"
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
@@ -70,7 +72,7 @@ paths:
         - users
       summary: List users.
       description: Returns a paginated list of users.
-      operationId: getUsers
+      operationId: listUsers
 
       parameters:
         - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
@@ -127,6 +129,8 @@ paths:
               $ref: "./links.yaml#/components/links/GetUserById"
             DeleteUserById:
               $ref: "./links.yaml#/components/links/DeleteUserById"
+            ListUserRolesById:
+              $ref: "./links.yaml#/components/links/ListUserRolesById"
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
@@ -166,6 +170,8 @@ paths:
           links:
             DeleteUserById:
               $ref: "./links.yaml#/components/links/DeleteUserById"
+            ListUserRolesById:
+              $ref: "./links.yaml#/components/links/ListUserRolesById"
 
         "400":
           $ref: "./../common/responses.yaml#/components/responses/BadRequest"
@@ -223,7 +229,7 @@ paths:
       description: >-
         Returns the roles assigned to the specified user. Requires the `roles:read`
         permission unless the authenticated user is retrieving their own roles.
-      operationId: getUserRoles
+      operationId: listUserRoles
 
       parameters:
         - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
@@ -276,6 +282,47 @@ paths:
       responses:
         "204":
           description: Role assigned successfully, or was already assigned.
+          headers:
+            X-Request-Id:
+              $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"
+
+        "400":
+          $ref: "./../common/responses.yaml#/components/responses/BadRequest"
+
+        "401":
+          $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
+        "404":
+          $ref: "./responses.yaml#/components/responses/UserOrRoleNotFound"
+
+        "500":
+          $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
+
+        "504":
+          $ref: "./../common/responses.yaml#/components/responses/GatewayTimeout"
+
+    delete:
+      tags:
+        - users
+      summary: Unassign a role from a user.
+      description: >-
+        Unassigns the specified role from the specified user. Requires the
+        `roles:unassign` permission. This operation is idempotent: if both the user
+        and role exist, a `204 No Content` response is returned even if the role is
+        not assigned to the user.
+      operationId: unassignRoleFromUser
+
+      parameters:
+        - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./parameters.yaml#/components/parameters/UserIdPath"
+        - $ref: "./../roles/parameters.yaml#/components/parameters/RoleIdPath"
+
+      responses:
+        "204":
+          description: Role successfully unassigned from the user, or the assignment did not exist.
           headers:
             X-Request-Id:
               $ref: "./../common/headers.yaml#/components/headers/X-Request-Id"

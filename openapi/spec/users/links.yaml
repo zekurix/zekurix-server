@@ -15,3 +15,11 @@ components:
       description: >-
         The user identifier returned by this operation can be used as the id parameter of
         the deleteUser operation.
+
+    ListUserRolesById:
+      operationId: listUserRoles
+      parameters:
+        id: "$response.body#/id"
+      description: >-
+        The user identifier returned by this operation can be used as the id parameter of
+        the listUserRoles operation.

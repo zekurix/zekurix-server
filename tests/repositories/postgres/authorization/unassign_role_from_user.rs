@@ -61,7 +61,10 @@ async fn should_be_idempotent_when_role_is_not_assigned() {
         .await
         .unwrap();
 
-    let role_id = RoleId::new();
+    let role = Role::new(RoleName::new("test-role").unwrap(), vec![]);
+    let role_id = role.id();
+
+    test.repository.create_role(role).await.unwrap();
 
     test.repository
         .unassign_role_from_user(user.id, role_id)
@@ -82,11 +85,16 @@ async fn should_be_idempotent_when_role_is_not_assigned() {
 
 #[tokio::test]
 async fn should_reject_unknown_user() {
-    // Unassign a role from a non-existing user and verify that UserNotFound is returned.
+    // Unassign an existing role from a non-existing user and verify that
+    // UserNotFound is returned.
     let test = TestRepository::new().await;
 
     let user_id = UserId::new();
-    let role_id = RoleId::new();
+
+    let role = Role::new(RoleName::new("test-role").unwrap(), vec![]);
+    let role_id = role.id();
+
+    test.repository.create_role(role).await.unwrap();
 
     let error = test
         .repository
@@ -97,5 +105,32 @@ async fn should_reject_unknown_user() {
     assert!(matches!(
         error,
         Error::UserNotFound(error_id) if error_id == user_id
+    ));
+}
+
+#[tokio::test]
+async fn should_reject_unknown_role() {
+    // Unassign a non-existing role from an existing user and verify that
+    // RoleNotFound is returned.
+    let test = TestRepository::new().await;
+
+    let (user, identity) = user_with_identity("test-issuer", "test-subject");
+
+    test.user_repository
+        .create(user.clone(), identity)
+        .await
+        .unwrap();
+
+    let role_id = RoleId::new();
+
+    let error = test
+        .repository
+        .unassign_role_from_user(user.id, role_id)
+        .await
+        .unwrap_err();
+
+    assert!(matches!(
+        error,
+        Error::RoleNotFound(error_id) if error_id == role_id
     ));
 }

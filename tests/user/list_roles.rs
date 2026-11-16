@@ -11,7 +11,7 @@ use crate::{
 
 use super::{assign_role::assign_role, common::assert_user_not_found, create::create_user};
 
-async fn list_roles(app: &TestApplication, user_id: UserId, subject: &str) -> TestResponse {
+pub async fn list_roles(app: &TestApplication, user_id: UserId, subject: &str) -> TestResponse {
     app.server
         .get(&format!("/api/v1/users/{user_id}/roles"))
         .add_header(header::AUTHORIZATION, app.auth.header(subject))
