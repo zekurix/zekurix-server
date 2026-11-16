@@ -425,7 +425,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn get_user_permissions(&self, user_id: UserId) -> Result<Vec<Permission>> {
+    async fn list_user_permissions(&self, user_id: UserId) -> Result<Vec<Permission>> {
         let rows = sqlx::query_scalar::<_, Option<String>>(
             r#"
             SELECT DISTINCT rp.permission

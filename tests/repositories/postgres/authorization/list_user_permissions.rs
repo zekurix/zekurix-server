@@ -8,9 +8,9 @@ use super::common::TestRepository;
 use crate::repositories::postgres::common::user_with_identity;
 
 #[tokio::test]
-async fn should_get_distinct_user_permissions_ordered_by_name() {
+async fn should_list_distinct_user_permissions_ordered_by_name() {
     // Assign multiple roles with overlapping permissions to a user and verify
-    // that get_user_permissions returns distinct permissions ordered by name.
+    // that list_user_permissions returns distinct permissions ordered by name.
     let test = TestRepository::new().await;
 
     let (user, identity) = user_with_identity("test-issuer", "test-subject");
@@ -45,7 +45,11 @@ async fn should_get_distinct_user_permissions_ordered_by_name() {
         .await
         .unwrap();
 
-    let permissions = test.repository.get_user_permissions(user.id).await.unwrap();
+    let permissions = test
+        .repository
+        .list_user_permissions(user.id)
+        .await
+        .unwrap();
 
     assert_eq!(
         permissions,
@@ -59,7 +63,7 @@ async fn should_get_distinct_user_permissions_ordered_by_name() {
 
 #[tokio::test]
 async fn should_return_empty_permissions_for_user_without_roles() {
-    // Persist a user without assigned roles and verify that get_user_permissions
+    // Persist a user without assigned roles and verify that list_user_permissions
     // returns an empty collection rather than treating the user as missing.
     let test = TestRepository::new().await;
 
@@ -70,7 +74,11 @@ async fn should_return_empty_permissions_for_user_without_roles() {
         .await
         .unwrap();
 
-    let permissions = test.repository.get_user_permissions(user.id).await.unwrap();
+    let permissions = test
+        .repository
+        .list_user_permissions(user.id)
+        .await
+        .unwrap();
 
     assert!(permissions.is_empty());
 }
@@ -78,7 +86,7 @@ async fn should_return_empty_permissions_for_user_without_roles() {
 #[tokio::test]
 async fn should_return_empty_permissions_for_roles_without_permissions() {
     // Assign a role with no permissions to a user and verify that
-    // get_user_permissions returns an empty collection.
+    // list_user_permissions returns an empty collection.
     let test = TestRepository::new().await;
 
     let (user, identity) = user_with_identity("test-issuer", "test-subject");
@@ -98,7 +106,11 @@ async fn should_return_empty_permissions_for_roles_without_permissions() {
         .await
         .unwrap();
 
-    let permissions = test.repository.get_user_permissions(user.id).await.unwrap();
+    let permissions = test
+        .repository
+        .list_user_permissions(user.id)
+        .await
+        .unwrap();
 
     assert!(permissions.is_empty());
 }
@@ -111,7 +123,7 @@ async fn should_reject_unknown_user() {
 
     let error = test
         .repository
-        .get_user_permissions(user_id)
+        .list_user_permissions(user_id)
         .await
         .unwrap_err();
 

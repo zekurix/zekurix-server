@@ -23,3 +23,11 @@ components:
       description: >-
         The user identifier returned by this operation can be used as the id parameter of
         the listUserRoles operation.
+
+    ListUserPermissionsById:
+      operationId: listUserPermissions
+      parameters:
+        id: "$response.body#/id"
+      description: >-
+        The user identifier returned by this operation can be used as the id parameter of
+        the listUserPermissions operation.
