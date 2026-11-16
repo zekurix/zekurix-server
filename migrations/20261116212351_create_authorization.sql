@@ -30,3 +30,19 @@ CREATE TABLE user_roles (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, role_id));
+
+-- Create super-admin role
+INSERT INTO roles (id, name)
+VALUES (
+    uuidv7(),
+    'super-admin'
+);
+
+-- Grant all permissions to super-admin
+INSERT INTO role_permissions (role_id, permission)
+SELECT
+    r.id,
+    p.name
+FROM roles AS r
+CROSS JOIN permissions AS p
+WHERE r.name = 'super-admin';

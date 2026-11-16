@@ -7,5 +7,6 @@ mod list_permissions;
 mod list_roles;
 mod list_user_permissions;
 mod list_user_roles;
+mod super_admin;
 mod unassign_role_from_user;
 mod update_role;
