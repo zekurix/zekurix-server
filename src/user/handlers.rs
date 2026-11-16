@@ -8,6 +8,7 @@ use axum::{
 };
 
 use crate::Application;
+use crate::authorization::RoleId;
 use crate::error::Result;
 use crate::identity::CurrentUserId;
 use crate::router::{ApiJson, ApiPath, Pagination};
@@ -70,6 +71,19 @@ pub async fn delete_user(
     ApiPath(id): ApiPath<UserId>,
 ) -> Result<StatusCode> {
     application.services.user.delete(id).await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn assign_role_to_user(
+    State(application): State<Arc<Application>>,
+    ApiPath((user_id, role_id)): ApiPath<(UserId, RoleId)>,
+) -> Result<StatusCode> {
+    application
+        .services
+        .authorization
+        .assign_role_to_user(user_id, role_id)
+        .await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
