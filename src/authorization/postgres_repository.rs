@@ -18,6 +18,7 @@ impl PostgresAuthorizationRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
+
     fn role_from_persisted(id: RoleId, name: String, permissions: Vec<String>) -> Result<Role> {
         let name = RoleName::new(&name).map_err(|err| {
             error!(

@@ -1,3 +1,4 @@
+mod bootstrap;
 mod dto;
 mod handlers;
 mod permission;
@@ -7,6 +8,10 @@ mod role;
 mod routes;
 mod service;
 
+pub use bootstrap::{
+    AuthorizationBootstrapRepository, AuthorizationBootstrapService,
+    PostgresAuthorizationBootstrapRepository,
+};
 pub use dto::{PermissionsResponse, RoleSummariesResponse, RoleSummaryResponse};
 pub use permission::Permission;
 pub use postgres_repository::PostgresAuthorizationRepository;
