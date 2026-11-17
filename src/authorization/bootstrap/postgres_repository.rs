@@ -26,7 +26,7 @@ struct PostgresAuthorizationBootstrapTransaction {
 #[async_trait]
 impl AuthorizationBootstrapRepository for PostgresAuthorizationBootstrapRepository {
     #[instrument(skip(self), level = "info", err(level = "info"))]
-    async fn begin(&self) -> Result<Box<dyn AuthorizationBootstrapTransaction + '_>> {
+    async fn begin(&self) -> Result<Box<dyn AuthorizationBootstrapTransaction>> {
         let mut tx = self.pool.begin().await.map_err(|err| {
             error!(error = ?err, "failed to begin authorization bootstrap transaction");
             Error::InternalError(err.into())
@@ -83,7 +83,12 @@ impl AuthorizationBootstrapTransaction for PostgresAuthorizationBootstrapTransac
         ret,
         err(level = "info")
     )]
-    async fn create_super_admin(&mut self, user: User, identity: Identity, role_name: RoleName) -> Result<()> {
+    async fn create_super_admin(
+        &mut self,
+        user: User,
+        identity: Identity,
+        role_name: RoleName,
+    ) -> Result<()> {
         /*
          * Create the user and identity only when the configured identity does
          * not already exist. If the identity exists, its current user is reused.
