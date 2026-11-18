@@ -1,6 +1,6 @@
-mod assign_role;
+pub(crate) mod assign_role;
 mod common;
-mod create;
+pub(crate) mod create;
 mod delete;
 mod get;
 mod get_me;

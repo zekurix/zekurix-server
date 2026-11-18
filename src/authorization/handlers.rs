@@ -8,6 +8,7 @@ use axum::{
 };
 
 use crate::Application;
+use crate::authorization::permission::{RequirePermission, RolesCreate};
 use crate::error::Result;
 use crate::router::{ApiJson, ApiPath, Pagination};
 
@@ -28,6 +29,7 @@ pub async fn list_permissions(
 
 pub async fn create_role(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<RolesCreate>,
     ApiJson(params): ApiJson<RoleRequest>,
 ) -> Result<(
     StatusCode,

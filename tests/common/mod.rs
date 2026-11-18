@@ -4,6 +4,7 @@ mod test_app;
 mod test_auth;
 
 pub use error_response::ErrorResponse;
+pub use error_response::assert_forbidden;
 pub use error_response::assert_invalid_query;
 pub use error_response::assert_json_data_error;
 pub use error_response::assert_problem;

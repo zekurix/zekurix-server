@@ -2,10 +2,13 @@ use axum::http::{StatusCode, header};
 
 use zekurix_server::authorization::RoleId;
 
-use crate::common::{TestApplication, assert_json_data_error, assert_unauthorized};
+use crate::common::{
+    TestApplication, assert_forbidden, assert_json_data_error, assert_unauthorized,
+};
 
 use super::common::{
     RoleResponse, assert_duplicate_permission, assert_role_already_exists, create_role,
+    create_user_with_all_permissions_except, create_user_with_only_permission,
 };
 
 #[tokio::test]
@@ -184,4 +187,62 @@ async fn should_require_authentication_for_create_role() {
         .await;
 
     assert_unauthorized(&response);
+}
+
+#[tokio::test]
+async fn should_reject_role_creation_for_user_without_permissions() {
+    let app = TestApplication::new().await;
+
+    let response = app
+        .server
+        .post("/api/v1/roles")
+        .add_header(
+            header::AUTHORIZATION,
+            app.auth.header("user-without-permissions"),
+        )
+        .json(&serde_json::json!({
+            "name": "user-manager",
+            "permissions": []
+        }))
+        .await;
+
+    assert_forbidden(&response);
+}
+
+#[tokio::test]
+async fn should_create_role_for_user_with_only_roles_create_permission() {
+    let app = TestApplication::new().await;
+    let subject = "user-with-only-roles-create";
+    create_user_with_only_permission(&app, subject, "roles:create").await;
+
+    let response = app
+        .server
+        .post("/api/v1/roles")
+        .add_header(header::AUTHORIZATION, app.auth.header(subject))
+        .json(&serde_json::json!({
+            "name": "user-manager",
+            "permissions": []
+        }))
+        .await;
+
+    response.assert_status(StatusCode::CREATED);
+}
+
+#[tokio::test]
+async fn should_reject_role_creation_for_user_without_roles_create_permission() {
+    let app = TestApplication::new().await;
+    let subject = "user-without-roles-create";
+    create_user_with_all_permissions_except(&app, subject, "roles:create").await;
+
+    let response = app
+        .server
+        .post("/api/v1/roles")
+        .add_header(header::AUTHORIZATION, app.auth.header(subject))
+        .json(&serde_json::json!({
+            "name": "user-manager",
+            "permissions": []
+        }))
+        .await;
+
+    assert_forbidden(&response);
 }
