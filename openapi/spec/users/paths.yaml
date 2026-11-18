@@ -4,7 +4,9 @@ paths:
       tags:
         - users
       summary: Create a new user.
-      description: Creates a user and returns the created user details.
+      description: >-
+        Creates a user and returns the created user details.
+        Requires the `users:create` permission.
       operationId: createUser
 
       parameters:
@@ -51,6 +53,9 @@ paths:
         "401":
           $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
 
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
         "409":
           $ref: "./responses.yaml#/components/responses/UserConflict"
 
@@ -73,7 +78,9 @@ paths:
       tags:
         - users
       summary: List users.
-      description: Returns a paginated list of users.
+      description: >-
+        Returns a paginated list of users.
+        Requires the `users:read` permission.
       operationId: listUsers
 
       parameters:
@@ -97,6 +104,9 @@ paths:
 
         "401":
           $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
 
         "500":
           $ref: "./../common/responses.yaml#/components/responses/InternalServerError"
@@ -153,7 +163,10 @@ paths:
       tags:
         - users
       summary: Retrieve a user.
-      description: Returns the details of the specified user.
+      description: >-
+        Returns the details of the specified user.
+        Requires the `users:read` permission unless the authenticated user is retrieving their
+        own details.
       operationId: getUser
 
       parameters:
@@ -185,6 +198,9 @@ paths:
         "401":
           $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
 
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
+
         "404":
           $ref: "./responses.yaml#/components/responses/UserNotFound"
 
@@ -198,7 +214,10 @@ paths:
       tags:
         - users
       summary: Delete a user.
-      description: Removes the specified user from the system.
+      description: >-
+        Removes the specified user from the system.
+        Requires the `users:delete` permission unless the authenticated user is deleting
+        their own account.
       operationId: deleteUser
 
       parameters:
@@ -217,6 +236,9 @@ paths:
 
         "401":
           $ref: "./../common/responses.yaml#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "./../common/responses.yaml#/components/responses/Forbidden"
 
         "404":
           $ref: "./responses.yaml#/components/responses/UserNotFound"

@@ -482,7 +482,7 @@
           "users"
         ],
         "summary": "Create a new user.",
-        "description": "Creates a user and returns the created user details.",
+        "description": "Creates a user and returns the created user details. Requires the `users:create` permission.",
         "operationId": "createUser",
         "parameters": [
           {
@@ -544,6 +544,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
           "409": {
             "$ref": "#/components/responses/UserConflict"
           },
@@ -569,7 +572,7 @@
           "users"
         ],
         "summary": "List users.",
-        "description": "Returns a paginated list of users.",
+        "description": "Returns a paginated list of users. Requires the `users:read` permission.",
         "operationId": "listUsers",
         "parameters": [
           {
@@ -603,6 +606,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
@@ -677,7 +683,7 @@
           "users"
         ],
         "summary": "Retrieve a user.",
-        "description": "Returns the details of the specified user.",
+        "description": "Returns the details of the specified user. Requires the `users:read` permission unless the authenticated user is retrieving their own details.",
         "operationId": "getUser",
         "parameters": [
           {
@@ -720,6 +726,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
           "404": {
             "$ref": "#/components/responses/UserNotFound"
           },
@@ -736,7 +745,7 @@
           "users"
         ],
         "summary": "Delete a user.",
-        "description": "Removes the specified user from the system.",
+        "description": "Removes the specified user from the system. Requires the `users:delete` permission unless the authenticated user is deleting their own account.",
         "operationId": "deleteUser",
         "parameters": [
           {
@@ -760,6 +769,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           },
           "404": {
             "$ref": "#/components/responses/UserNotFound"
@@ -1151,7 +1163,10 @@
           "roles:update",
           "roles:delete",
           "roles:assign",
-          "roles:unassign"
+          "roles:unassign",
+          "users:create",
+          "users:read",
+          "users:delete"
         ]
       },
       "Permissions": {
@@ -1194,7 +1209,10 @@
             "roles:update",
             "roles:delete",
             "roles:assign",
-            "roles:unassign"
+            "roles:unassign",
+            "users:create",
+            "users:read",
+            "users:delete"
           ]
         }
       },
