@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::authorization::AuthorizationService;
+use crate::authorization::{AuthorizationBootstrapService, AuthorizationService};
 use crate::error::Result;
 use crate::health::{HealthCheck, HealthStatus};
 use crate::identity::{AuthenticationService, JwksService};
@@ -43,6 +43,12 @@ impl Services {
         );
 
         let user = UserService::new(&settings.authentication, repositories.user.clone())?;
+
+        let authorization_bootstrap = AuthorizationBootstrapService::new(
+            &settings.authorization.bootstrap,
+            repositories.authorization_bootstrap.clone(),
+        );
+        authorization_bootstrap.bootstrap().await?;
 
         let authorization = AuthorizationService::new(repositories.authorization.clone())?;
 
