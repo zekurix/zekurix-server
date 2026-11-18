@@ -19,6 +19,12 @@ pub enum Permission {
     RolesAssign,
     #[serde(rename = "roles:unassign")]
     RolesUnassign,
+    #[serde(rename = "users:create")]
+    UsersCreate,
+    #[serde(rename = "users:read")]
+    UsersRead,
+    #[serde(rename = "users:delete")]
+    UsersDelete,
 }
 
 impl Permission {
@@ -30,6 +36,9 @@ impl Permission {
             Self::RolesDelete => "roles:delete",
             Self::RolesAssign => "roles:assign",
             Self::RolesUnassign => "roles:unassign",
+            Self::UsersCreate => "users:create",
+            Self::UsersRead => "users:read",
+            Self::UsersDelete => "users:delete",
         }
     }
 }
@@ -51,6 +60,9 @@ impl FromStr for Permission {
             "roles:delete" => Ok(Self::RolesDelete),
             "roles:assign" => Ok(Self::RolesAssign),
             "roles:unassign" => Ok(Self::RolesUnassign),
+            "users:create" => Ok(Self::UsersCreate),
+            "users:read" => Ok(Self::UsersRead),
+            "users:delete" => Ok(Self::UsersDelete),
             _ => Err(Error::InvalidPermission(value.to_owned())),
         }
     }
@@ -61,13 +73,16 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    const PERMISSIONS: [(Permission, &str); 6] = [
+    const PERMISSIONS: [(Permission, &str); 9] = [
         (Permission::RolesCreate, "roles:create"),
         (Permission::RolesRead, "roles:read"),
         (Permission::RolesUpdate, "roles:update"),
         (Permission::RolesDelete, "roles:delete"),
         (Permission::RolesAssign, "roles:assign"),
         (Permission::RolesUnassign, "roles:unassign"),
+        (Permission::UsersCreate, "users:create"),
+        (Permission::UsersRead, "users:read"),
+        (Permission::UsersDelete, "users:delete"),
     ];
 
     #[test]

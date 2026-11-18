@@ -46,3 +46,24 @@ pub struct RolesUnassign;
 impl RequiredPermission for RolesUnassign {
     const PERMISSION: Permission = Permission::RolesUnassign;
 }
+
+#[allow(dead_code)]
+pub struct UsersCreate;
+
+impl RequiredPermission for UsersCreate {
+    const PERMISSION: Permission = Permission::UsersCreate;
+}
+
+#[allow(dead_code)]
+pub struct UsersRead;
+
+impl RequiredPermission for UsersRead {
+    const PERMISSION: Permission = Permission::UsersRead;
+}
+
+#[allow(dead_code)]
+pub struct UsersDelete;
+
+impl RequiredPermission for UsersDelete {
+    const PERMISSION: Permission = Permission::UsersDelete;
+}

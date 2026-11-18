@@ -20,6 +20,9 @@ async fn should_list_permissions() {
             Permission::RolesRead,
             Permission::RolesUnassign,
             Permission::RolesUpdate,
+            Permission::UsersCreate,
+            Permission::UsersDelete,
+            Permission::UsersRead,
         ]
     );
 }
