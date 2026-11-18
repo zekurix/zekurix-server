@@ -10,7 +10,10 @@ INSERT INTO permissions (name) VALUES
     ('roles:update'),
     ('roles:delete'),
     ('roles:assign'),
-    ('roles:unassign');
+    ('roles:unassign'),
+    ('users:create'),
+    ('users:read'),
+    ('users:delete');
 
 -- Create roles table
 CREATE TABLE roles (

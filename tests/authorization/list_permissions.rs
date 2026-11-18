@@ -26,7 +26,7 @@ async fn should_list_permissions() {
 
     let body: PermissionsResponse = response.json();
 
-    assert_eq!(body.permissions.len(), 6);
+    assert_eq!(body.permissions.len(), 9);
 
     let actual = body.permissions.into_iter().collect::<HashSet<_>>();
     let expected = HashSet::from([
@@ -36,6 +36,9 @@ async fn should_list_permissions() {
         "roles:delete".to_owned(),
         "roles:assign".to_owned(),
         "roles:unassign".to_owned(),
+        "users:create".to_owned(),
+        "users:read".to_owned(),
+        "users:delete".to_owned(),
     ]);
 
     assert_eq!(actual, expected);

@@ -10,6 +10,9 @@ components:
         - roles:delete
         - roles:assign
         - roles:unassign
+        - users:create
+        - users:read
+        - users:delete
 
     Permissions:
       description: A collection of permissions.
@@ -57,3 +60,6 @@ components:
           - roles:delete
           - roles:assign
           - roles:unassign
+          - users:create
+          - users:read
+          - users:delete
