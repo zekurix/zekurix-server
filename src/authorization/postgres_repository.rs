@@ -468,6 +468,45 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
             })
             .collect()
     }
+
+    #[instrument(skip(self), level = "info", ret, err(level = "info"))]
+    async fn user_has_permission(&self, user_id: UserId, permission: Permission) -> Result<bool> {
+        let (user_exists, has_permission) = sqlx::query_as::<_, (bool, bool)>(
+            r#"
+            SELECT
+                EXISTS (
+                    SELECT 1
+                    FROM users
+                    WHERE id = $1
+                ),
+                EXISTS (
+                    SELECT 1
+                    FROM user_roles AS ur
+                    INNER JOIN role_permissions AS rp ON rp.role_id = ur.role_id
+                    WHERE ur.user_id = $1 AND rp.permission = $2
+                )
+            "#,
+        )
+        .bind(user_id)
+        .bind(permission.as_str())
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            error!(
+                user_id = %user_id,
+                permission = %permission,
+                error = ?err,
+                "failed to check user permission"
+            );
+            Error::InternalError(err.into())
+        })?;
+
+        if !user_exists {
+            return Err(Error::UserNotFound(user_id));
+        }
+
+        Ok(has_permission)
+    }
 }
 
 #[cfg(test)]

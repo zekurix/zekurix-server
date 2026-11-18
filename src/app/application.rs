@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use axum::extract::FromRef;
 use tokio::signal;
 use tracing::{debug, info};
 
+use crate::authorization::AuthorizationService;
 use crate::database::postgres::PostgresDatabase;
 use crate::router::routes;
 use crate::secrets::Secrets;
@@ -46,6 +48,12 @@ pub struct Application {
     pub repositories: Repositories,
     pub stores: Stores,
     pub services: Services,
+}
+
+impl FromRef<Arc<Application>> for AuthorizationService {
+    fn from_ref(application: &Arc<Application>) -> Self {
+        application.services.authorization.clone()
+    }
 }
 
 impl Application {

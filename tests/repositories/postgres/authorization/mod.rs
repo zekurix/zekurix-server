@@ -10,3 +10,4 @@ mod list_user_roles;
 mod super_admin;
 mod unassign_role_from_user;
 mod update_role;
+mod user_has_permission;
