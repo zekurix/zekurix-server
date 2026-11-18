@@ -19,4 +19,5 @@ pub trait AuthorizationRepository: Send + Sync {
     async fn assign_role_to_user(&self, user_id: UserId, role_id: RoleId) -> Result<()>;
     async fn unassign_role_from_user(&self, user_id: UserId, role_id: RoleId) -> Result<()>;
     async fn list_user_permissions(&self, user_id: UserId) -> Result<Vec<Permission>>;
+    async fn user_has_permission(&self, user_id: UserId, permission: Permission) -> Result<bool>;
 }

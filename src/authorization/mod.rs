@@ -1,7 +1,7 @@
 mod bootstrap;
 mod dto;
 mod handlers;
-mod permission;
+pub mod permission;
 mod postgres_repository;
 mod repository;
 mod role;
@@ -13,7 +13,7 @@ pub use bootstrap::{
     PostgresAuthorizationBootstrapRepository,
 };
 pub use dto::{PermissionsResponse, RoleSummariesResponse, RoleSummaryResponse};
-pub use permission::Permission;
+pub use permission::{Permission, RequirePermission, SelfOrPermission};
 pub use postgres_repository::PostgresAuthorizationRepository;
 pub use repository::AuthorizationRepository;
 pub use role::{Role, RoleId, RoleName, RoleSummary};

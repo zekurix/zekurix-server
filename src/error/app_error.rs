@@ -34,6 +34,9 @@ pub enum Error {
     #[error("gateway timeout")]
     HttpGatewayTimeout,
 
+    #[error("forbidden")]
+    Forbidden,
+
     #[error("setting '{setting}' invalid: {reason}")]
     InvalidSettings { setting: String, reason: String },
 
@@ -124,6 +127,12 @@ impl From<Error> for ProblemDetails {
                 .with_title("Gateway Timeout")
                 .with_status(StatusCode::GATEWAY_TIMEOUT)
                 .with_detail("Gateway timed out."),
+
+            Error::Forbidden => ProblemDetails::new()
+                .with_type(problem_type::http::FORBIDDEN.as_uri())
+                .with_title("Forbidden")
+                .with_status(StatusCode::FORBIDDEN)
+                .with_detail("You do not have permission to access this resource."),
 
             Error::IdentityAlreadyExists(identity) => ProblemDetails::new()
                 .with_type(problem_type::user::ALREADY_EXISTS.as_uri())
@@ -328,6 +337,25 @@ mod tests {
         assert_eq!(problem.title, Some("Gateway Timeout".to_string()));
         assert_eq!(problem.status, Some(StatusCode::GATEWAY_TIMEOUT));
         assert_eq!(problem.detail, Some("Gateway timed out.".to_string()));
+    }
+
+    #[test]
+    fn forbidden_maps_to_forbidden() {
+        let error = Error::Forbidden;
+        let problem = ProblemDetails::from(error);
+
+        assert_eq!(
+            problem.r#type,
+            Some(problem_details::ProblemType::from(
+                problem_type::http::FORBIDDEN.as_uri()
+            ))
+        );
+        assert_eq!(problem.title, Some("Forbidden".to_string()));
+        assert_eq!(problem.status, Some(StatusCode::FORBIDDEN));
+        assert_eq!(
+            problem.detail,
+            Some("You do not have permission to access this resource.".to_string())
+        );
     }
 
     #[tokio::test]

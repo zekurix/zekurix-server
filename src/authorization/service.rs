@@ -6,6 +6,7 @@ use crate::user::UserId;
 
 use super::{AuthorizationRepository, Permission, Role, RoleId, RoleName, RoleSummary};
 
+#[derive(Clone)]
 pub struct AuthorizationService {
     repository: Arc<dyn AuthorizationRepository>,
 }
@@ -62,6 +63,16 @@ impl AuthorizationService {
 
     pub async fn list_user_permissions(&self, user_id: UserId) -> Result<Vec<Permission>> {
         self.repository.list_user_permissions(user_id).await
+    }
+
+    pub async fn user_has_permission(
+        &self,
+        user_id: UserId,
+        permission: Permission,
+    ) -> Result<bool> {
+        self.repository
+            .user_has_permission(user_id, permission)
+            .await
     }
 }
 
@@ -486,6 +497,71 @@ mod tests {
             .return_once(|_| Err(Error::InternalError(anyhow::anyhow!("error"))));
 
         let result = service(repository).list_user_permissions(user_id).await;
+
+        assert!(matches!(result, Err(Error::InternalError(_))));
+    }
+
+    #[tokio::test]
+    async fn should_return_true_when_user_has_permission() {
+        let user_id = UserId::new();
+        let permission = Permission::RolesRead;
+
+        let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_user_has_permission()
+            .withf(move |actual_user_id, actual_permission| {
+                *actual_user_id == user_id && *actual_permission == permission
+            })
+            .times(1)
+            .return_once(|_, _| Ok(true));
+
+        let has_permission = service(repository)
+            .user_has_permission(user_id, permission)
+            .await
+            .unwrap();
+
+        assert!(has_permission);
+    }
+
+    #[tokio::test]
+    async fn should_return_false_when_user_does_not_have_permission() {
+        let user_id = UserId::new();
+        let permission = Permission::RolesRead;
+
+        let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_user_has_permission()
+            .withf(move |actual_user_id, actual_permission| {
+                *actual_user_id == user_id && *actual_permission == permission
+            })
+            .times(1)
+            .return_once(|_, _| Ok(false));
+
+        let has_permission = service(repository)
+            .user_has_permission(user_id, permission)
+            .await
+            .unwrap();
+
+        assert!(!has_permission);
+    }
+
+    #[tokio::test]
+    async fn should_propagate_user_has_permission_error() {
+        let user_id = UserId::new();
+        let permission = Permission::RolesRead;
+
+        let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_user_has_permission()
+            .withf(move |actual_user_id, actual_permission| {
+                *actual_user_id == user_id && *actual_permission == permission
+            })
+            .times(1)
+            .return_once(|_, _| Err(Error::InternalError(anyhow::anyhow!("error"))));
+
+        let result = service(repository)
+            .user_has_permission(user_id, permission)
+            .await;
 
         assert!(matches!(result, Err(Error::InternalError(_))));
     }
