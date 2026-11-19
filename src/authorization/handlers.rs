@@ -8,7 +8,7 @@ use axum::{
 };
 
 use crate::Application;
-use crate::authorization::permission::{RequirePermission, RolesCreate};
+use crate::authorization::permission::{RequirePermission, RolesCreate, RolesRead};
 use crate::error::Result;
 use crate::router::{ApiJson, ApiPath, Pagination};
 
@@ -60,6 +60,7 @@ pub async fn get_role(
 
 pub async fn list_roles(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<RolesRead>,
     pagination: Pagination,
 ) -> Result<Json<RolesResponse>> {
     let roles = application
