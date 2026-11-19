@@ -1,5 +1,7 @@
 use assert_cmd::Command;
 
+use super::fixtures::test_settings;
+
 #[test]
 fn should_load_example_configuration() {
     Command::cargo_bin("zekurix-server")
@@ -42,4 +44,9 @@ fn should_load_test_configuration() {
         .arg("--dry-run")
         .assert()
         .success();
+}
+
+#[test]
+fn should_load_and_validate_test_configuration() {
+    test_settings();
 }

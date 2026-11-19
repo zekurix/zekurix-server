@@ -8,7 +8,7 @@ use zekurix_server::secrets::Secrets;
 use super::temp_database::TempDatabase;
 use super::test_auth::TestAuth;
 
-use crate::settings::fixtures::test_settings;
+use crate::input::settings::fixtures::test_settings;
 
 pub struct TestApplication {
     // The database is dropped when the TestApp is dropped, so we need to keep it around for the lifetime of the test.

@@ -1,10 +1,9 @@
 mod authorization;
-mod cli;
 mod common;
 mod health;
 mod identity;
+mod input;
 mod openapi;
 mod repositories;
 mod router;
-mod settings;
 mod user;
