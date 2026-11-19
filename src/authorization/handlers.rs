@@ -51,6 +51,7 @@ pub async fn create_role(
 
 pub async fn get_role(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<RolesRead>,
     ApiPath(id): ApiPath<RoleId>,
 ) -> Result<Json<RoleResponse>> {
     let role = application.services.authorization.get_role(id).await?;
