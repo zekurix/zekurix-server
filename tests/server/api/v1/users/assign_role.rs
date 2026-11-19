@@ -69,3 +69,39 @@ async fn should_require_authentication_to_assign_role() {
 
     assert_http_unauthorized(&response);
 }
+
+#[tokio::test]
+async fn should_assign_role_for_user_with_only_roles_assign_permission() {
+    let harness = TestHarness::new().await;
+    let user = create_user(&harness, "Alice").await;
+    let role = create_role(&harness, "reader", &[]).await;
+    let actor = create_user_with_only_permission(&harness, "roles:assign").await;
+
+    let response = assign_role(&harness, &user.id, &role.id, &actor).await;
+
+    response.assert_status(StatusCode::NO_CONTENT);
+}
+
+#[tokio::test]
+async fn should_reject_role_assignment_for_user_without_permissions() {
+    let harness = TestHarness::new().await;
+    let user = create_user(&harness, "Alice").await;
+    let role = create_role(&harness, "reader", &[]).await;
+    let actor = create_user_without_permissions(&harness).await;
+
+    let response = assign_role(&harness, &user.id, &role.id, &actor).await;
+
+    assert_forbidden(&response);
+}
+
+#[tokio::test]
+async fn should_reject_role_assignment_for_user_without_roles_assign_permission() {
+    let harness = TestHarness::new().await;
+    let user = create_user(&harness, "Alice").await;
+    let role = create_role(&harness, "reader", &[]).await;
+    let actor = create_user_with_all_permissions_except(&harness, "roles:assign").await;
+
+    let response = assign_role(&harness, &user.id, &role.id, &actor).await;
+
+    assert_forbidden(&response);
+}

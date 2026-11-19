@@ -22,14 +22,12 @@ impl RequiredPermission for RolesUpdate {
     const PERMISSION: Permission = Permission::RolesUpdate;
 }
 
-#[allow(dead_code)]
 pub struct RolesDelete;
 
 impl RequiredPermission for RolesDelete {
     const PERMISSION: Permission = Permission::RolesDelete;
 }
 
-#[allow(dead_code)]
 pub struct RolesAssign;
 
 impl RequiredPermission for RolesAssign {
