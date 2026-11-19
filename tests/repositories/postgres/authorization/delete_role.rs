@@ -4,15 +4,15 @@ use zekurix_server::{
     user::UserRepository,
 };
 
-use super::common::TestRepository;
+use crate::repositories::postgres::fixtures::user_with_identity;
 
-use crate::repositories::postgres::common::user_with_identity;
+use super::harness::TestHarness;
 
 #[tokio::test]
 async fn should_delete_role_and_cascade_associations() {
     // Delete an existing role and verify that the role, its role-permission
     // associations, and its user-role associations are removed by database cascades.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let role = Role::new(
         RoleName::new("test-role").unwrap(),
@@ -20,26 +20,28 @@ async fn should_delete_role_and_cascade_associations() {
     );
     let role_id = role.id();
 
-    test.repository.create_role(role).await.unwrap();
+    harness.repository.create_role(role).await.unwrap();
 
     let (user, identity) = user_with_identity("test-issuer", "test-subject");
 
-    test.user_repository
+    harness
+        .user_repository
         .create(user.clone(), identity)
         .await
         .unwrap();
 
-    test.repository
+    harness
+        .repository
         .assign_role_to_user(user.id, role_id)
         .await
         .unwrap();
 
-    test.repository.delete_role(role_id).await.unwrap();
+    harness.repository.delete_role(role_id).await.unwrap();
 
     let role_exists =
         sqlx::query_scalar::<_, bool>("SELECT EXISTS (SELECT 1 FROM roles WHERE id = $1)")
             .bind(role_id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -48,7 +50,7 @@ async fn should_delete_role_and_cascade_associations() {
     let role_permission_count =
         sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM role_permissions WHERE role_id = $1")
             .bind(role_id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -57,7 +59,7 @@ async fn should_delete_role_and_cascade_associations() {
     let user_role_count =
         sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM user_roles WHERE role_id = $1")
             .bind(role_id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -67,10 +69,10 @@ async fn should_delete_role_and_cascade_associations() {
 #[tokio::test]
 async fn should_reject_unknown_role() {
     // Delete a non-existing role ID and verify that RoleNotFound is returned.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let id = RoleId::new();
 
-    let error = test.repository.delete_role(id).await.unwrap_err();
+    let error = harness.repository.delete_role(id).await.unwrap_err();
 
     assert!(matches!(error, Error::RoleNotFound(error_id) if error_id == id));
 }

@@ -4,17 +4,17 @@ use zekurix_server::{
     authorization::PostgresAuthorizationRepository, user::PostgresUserRepository,
 };
 
-use crate::repositories::postgres::common::TestDatabase;
+use crate::repositories::postgres::test_database::TestDatabase;
 
-pub struct TestRepository {
+pub(super) struct TestHarness {
     _database: TestDatabase,
-    pub pool: PgPool,
-    pub repository: PostgresAuthorizationRepository,
-    pub user_repository: PostgresUserRepository,
+    pub(super) pool: PgPool,
+    pub(super) repository: PostgresAuthorizationRepository,
+    pub(super) user_repository: PostgresUserRepository,
 }
 
-impl TestRepository {
-    pub async fn new() -> Self {
+impl TestHarness {
+    pub(super) async fn new() -> Self {
         let database = TestDatabase::new().await;
         let pool = database.pool.clone();
         let repository = PostgresAuthorizationRepository::new(pool.clone());

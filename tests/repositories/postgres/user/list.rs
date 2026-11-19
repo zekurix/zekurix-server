@@ -1,34 +1,37 @@
 use zekurix_server::{router::Pagination, user::UserRepository};
 
-use crate::repositories::postgres::common::user_with_identity;
+use crate::repositories::postgres::fixtures::user_with_identity;
 
-use super::common::TestRepository;
+use super::harness::TestHarness;
 
 #[tokio::test]
 async fn should_list_users_ordered_by_id() {
     // Persist multiple users and verify that list returns them ordered by user ID.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let (first_user, first_identity) = user_with_identity("test-issuer", "subject-1");
     let (second_user, second_identity) = user_with_identity("test-issuer", "subject-2");
     let (third_user, third_identity) = user_with_identity("test-issuer", "subject-3");
 
-    test.repository
+    harness
+        .repository
         .create(third_user.clone(), third_identity)
         .await
         .unwrap();
 
-    test.repository
+    harness
+        .repository
         .create(first_user.clone(), first_identity)
         .await
         .unwrap();
 
-    test.repository
+    harness
+        .repository
         .create(second_user.clone(), second_identity)
         .await
         .unwrap();
 
-    let users = test
+    let users = harness
         .repository
         .list(Pagination {
             limit: 100,
@@ -47,14 +50,15 @@ async fn should_list_users_ordered_by_id() {
 async fn should_apply_limit_and_offset_when_listing_users() {
     // Persist multiple users and verify that list applies both the requested
     // limit and offset to the ordered result set.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let mut users = Vec::new();
 
     for index in 0..5 {
         let (user, identity) = user_with_identity("test-issuer", &format!("subject-{index}"));
 
-        test.repository
+        harness
+            .repository
             .create(user.clone(), identity)
             .await
             .unwrap();
@@ -64,7 +68,7 @@ async fn should_apply_limit_and_offset_when_listing_users() {
 
     users.sort_by_key(|user| user.id);
 
-    let listed = test
+    let listed = harness
         .repository
         .list(Pagination {
             limit: 2,

@@ -2,17 +2,17 @@ use zekurix_server::error::Error;
 use zekurix_server::identity::Identity;
 use zekurix_server::user::{UserId, UserRepository};
 
-use crate::repositories::postgres::common::user_with_identity;
+use crate::repositories::postgres::fixtures::user_with_identity;
 
-use super::common::TestRepository;
+use super::harness::TestHarness;
 
 #[tokio::test]
 async fn should_create_user() {
     // Create a user with an identity and verify that both are persisted correctly.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let (user, identity) = user_with_identity("test-issuer", "test-subject");
 
-    let created = test
+    let created = harness
         .repository
         .create(user.clone(), identity.clone())
         .await
@@ -23,7 +23,7 @@ async fn should_create_user() {
     let user_exists =
         sqlx::query_scalar::<_, bool>("SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)")
             .bind(user.id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -34,7 +34,7 @@ async fn should_create_user() {
     )
     .bind(&identity.issuer)
     .bind(&identity.subject)
-    .fetch_one(&test.pool)
+    .fetch_one(&harness.pool)
     .await
     .unwrap();
 
@@ -44,11 +44,12 @@ async fn should_create_user() {
 #[tokio::test]
 async fn should_reject_existing_identity_and_rollback() {
     // Reuse an existing identity and verify that creation fails without persisting the new user.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let (first_user, identity) = user_with_identity("test-issuer", "test-subject");
 
-    test.repository
+    harness
+        .repository
         .create(first_user, identity.clone())
         .await
         .unwrap();
@@ -60,7 +61,7 @@ async fn should_reject_existing_identity_and_rollback() {
         second_user.id,
     );
 
-    let result = test
+    let result = harness
         .repository
         .create(second_user.clone(), second_identity.clone())
         .await;
@@ -73,7 +74,7 @@ async fn should_reject_existing_identity_and_rollback() {
     let user_exists =
         sqlx::query_scalar::<_, bool>("SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)")
             .bind(second_user.id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -83,16 +84,20 @@ async fn should_reject_existing_identity_and_rollback() {
 #[tokio::test]
 async fn should_preserve_identity_uniqueness_under_concurrent_creation() {
     // Create two users concurrently with the same identity and verify that exactly one succeeds.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let (first_user, first_identity) =
         user_with_identity("concurrent-issuer", "concurrent-subject");
     let (second_user, second_identity) =
         user_with_identity("concurrent-issuer", "concurrent-subject");
 
-    let first_result = test.repository.create(first_user.clone(), first_identity);
+    let first_result = harness
+        .repository
+        .create(first_user.clone(), first_identity);
 
-    let second_result = test.repository.create(second_user.clone(), second_identity);
+    let second_result = harness
+        .repository
+        .create(second_user.clone(), second_identity);
 
     let (first_result, second_result) = tokio::join!(first_result, second_result);
 
@@ -107,7 +112,7 @@ async fn should_preserve_identity_uniqueness_under_concurrent_creation() {
     )
     .bind("concurrent-issuer")
     .bind("concurrent-subject")
-    .fetch_one(&test.pool)
+    .fetch_one(&harness.pool)
     .await
     .unwrap();
 
@@ -123,7 +128,7 @@ async fn should_preserve_identity_uniqueness_under_concurrent_creation() {
         sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users WHERE id = $1 OR id = $2")
             .bind(first_user.id)
             .bind(second_user.id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 

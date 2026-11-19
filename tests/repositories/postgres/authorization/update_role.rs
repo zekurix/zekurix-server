@@ -3,13 +3,13 @@ use zekurix_server::{
     error::Error,
 };
 
-use super::common::TestRepository;
+use super::harness::TestHarness;
 
 #[tokio::test]
 async fn should_update_role_name_and_permissions() {
     // Persist a role, update its name and permissions, and verify that both the
     // role row and its role-permission associations reflect the new state.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let role = Role::new(
         RoleName::new("original-role").unwrap(),
@@ -17,7 +17,7 @@ async fn should_update_role_name_and_permissions() {
     );
     let role_id = role.id();
 
-    test.repository.create_role(role).await.unwrap();
+    harness.repository.create_role(role).await.unwrap();
 
     let updated_role = Role::from_parts(
         role_id,
@@ -25,7 +25,7 @@ async fn should_update_role_name_and_permissions() {
         vec![Permission::RolesUpdate, Permission::RolesDelete],
     );
 
-    let updated = test.repository.update_role(updated_role).await.unwrap();
+    let updated = harness.repository.update_role(updated_role).await.unwrap();
 
     assert_eq!(
         updated,
@@ -36,7 +36,7 @@ async fn should_update_role_name_and_permissions() {
         )
     );
 
-    let persisted = test.repository.get_role(role_id).await.unwrap();
+    let persisted = harness.repository.get_role(role_id).await.unwrap();
 
     assert_eq!(
         persisted,
@@ -52,7 +52,7 @@ async fn should_update_role_name_and_permissions() {
 async fn should_remove_all_role_permissions() {
     // Update a role that has permissions with an empty permission list and verify
     // that all previous role-permission associations are removed.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let role = Role::new(
         RoleName::new("test-role").unwrap(),
@@ -60,13 +60,13 @@ async fn should_remove_all_role_permissions() {
     );
     let role_id = role.id();
 
-    test.repository.create_role(role).await.unwrap();
+    harness.repository.create_role(role).await.unwrap();
 
     let updated_role = Role::from_parts(role_id, RoleName::new("test-role").unwrap(), vec![]);
 
-    test.repository.update_role(updated_role).await.unwrap();
+    harness.repository.update_role(updated_role).await.unwrap();
 
-    let persisted = test.repository.get_role(role_id).await.unwrap();
+    let persisted = harness.repository.get_role(role_id).await.unwrap();
 
     assert_eq!(
         persisted,
@@ -76,7 +76,7 @@ async fn should_remove_all_role_permissions() {
     let permission_count =
         sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM role_permissions WHERE role_id = $1")
             .bind(role_id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -87,11 +87,11 @@ async fn should_remove_all_role_permissions() {
 async fn should_reject_existing_role_name_and_rollback() {
     // Update a role to an already-used name and verify that RoleAlreadyExists is
     // returned while the role's original name and permissions remain unchanged.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let existing_role = Role::new(RoleName::new("existing-role").unwrap(), vec![]);
 
-    test.repository.create_role(existing_role).await.unwrap();
+    harness.repository.create_role(existing_role).await.unwrap();
 
     let role = Role::new(
         RoleName::new("original-role").unwrap(),
@@ -99,7 +99,7 @@ async fn should_reject_existing_role_name_and_rollback() {
     );
     let role_id = role.id();
 
-    test.repository.create_role(role).await.unwrap();
+    harness.repository.create_role(role).await.unwrap();
 
     let updated_role = Role::from_parts(
         role_id,
@@ -107,14 +107,18 @@ async fn should_reject_existing_role_name_and_rollback() {
         vec![Permission::RolesUpdate],
     );
 
-    let error = test.repository.update_role(updated_role).await.unwrap_err();
+    let error = harness
+        .repository
+        .update_role(updated_role)
+        .await
+        .unwrap_err();
 
     assert!(matches!(
         error,
         Error::RoleAlreadyExists(name) if name == RoleName::new("existing-role").unwrap()
     ));
 
-    let persisted = test.repository.get_role(role_id).await.unwrap();
+    let persisted = harness.repository.get_role(role_id).await.unwrap();
 
     assert_eq!(
         persisted,
@@ -130,7 +134,7 @@ async fn should_reject_existing_role_name_and_rollback() {
 async fn should_reject_unknown_role() {
     // Update a non-existing role ID and verify that RoleNotFound is returned
     // without persisting any role-permission association.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let role_id = RoleId::new();
     let role = Role::from_parts(
@@ -139,7 +143,7 @@ async fn should_reject_unknown_role() {
         vec![Permission::RolesRead],
     );
 
-    let error = test.repository.update_role(role).await.unwrap_err();
+    let error = harness.repository.update_role(role).await.unwrap_err();
 
     assert!(matches!(
         error,
@@ -149,7 +153,7 @@ async fn should_reject_unknown_role() {
     let permission_count =
         sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM role_permissions WHERE role_id = $1")
             .bind(role_id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -161,7 +165,7 @@ async fn should_preserve_role_consistency_under_concurrent_updates() {
     // Update the same role concurrently with two different names and permission
     // sets, and verify that the final persisted role exactly matches one complete
     // update without mixing data from both transactions.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let role = Role::new(
         RoleName::new("original-role").unwrap(),
@@ -169,7 +173,7 @@ async fn should_preserve_role_consistency_under_concurrent_updates() {
     );
     let role_id = role.id();
 
-    test.repository.create_role(role).await.unwrap();
+    harness.repository.create_role(role).await.unwrap();
 
     let first_update = Role::from_parts(
         role_id,
@@ -183,15 +187,15 @@ async fn should_preserve_role_consistency_under_concurrent_updates() {
         vec![Permission::RolesDelete, Permission::RolesUpdate],
     );
 
-    let first_result = test.repository.update_role(first_update);
-    let second_result = test.repository.update_role(second_update);
+    let first_result = harness.repository.update_role(first_update);
+    let second_result = harness.repository.update_role(second_update);
 
     let (first_result, second_result) = tokio::join!(first_result, second_result);
 
     assert!(first_result.is_ok());
     assert!(second_result.is_ok());
 
-    let persisted = test.repository.get_role(role_id).await.unwrap();
+    let persisted = harness.repository.get_role(role_id).await.unwrap();
 
     let expected_first = Role::from_parts(
         role_id,

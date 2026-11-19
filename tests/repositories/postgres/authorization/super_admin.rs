@@ -1,13 +1,13 @@
 use zekurix_server::{authorization::AuthorizationRepository, router::Pagination};
 
-use super::common::TestRepository;
+use super::harness::TestHarness;
 
 #[tokio::test]
 async fn should_create_super_admin_with_all_permissions() {
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
-    let permissions = test.repository.list_permissions().await.unwrap();
-    let roles = test
+    let permissions = harness.repository.list_permissions().await.unwrap();
+    let roles = harness
         .repository
         .list_roles(Pagination::default())
         .await

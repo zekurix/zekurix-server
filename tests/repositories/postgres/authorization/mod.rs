@@ -1,8 +1,8 @@
 mod assign_role_to_user;
-mod common;
 mod create_role;
 mod delete_role;
 mod get_role;
+mod harness;
 mod list_permissions;
 mod list_roles;
 mod list_user_permissions;
