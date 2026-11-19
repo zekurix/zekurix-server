@@ -4,18 +4,20 @@ use zekurix_server::{
     user::{UserId, UserRepository},
 };
 
-use super::common::TestRepository;
-use crate::repositories::postgres::common::user_with_identity;
+use crate::repositories::postgres::fixtures::user_with_identity;
+
+use super::harness::TestHarness;
 
 #[tokio::test]
 async fn should_list_user_roles_ordered_by_name() {
     // Assign multiple roles to a user and verify that list_user_roles returns
     // the assigned roles ordered by role name.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let (user, identity) = user_with_identity("test-issuer", "test-subject");
 
-    test.user_repository
+    harness
+        .user_repository
         .create(user.clone(), identity)
         .await
         .unwrap();
@@ -34,26 +36,29 @@ async fn should_list_user_roles_ordered_by_name() {
     let second_role_id = second_role.id();
     let third_role_id = third_role.id();
 
-    test.repository.create_role(third_role).await.unwrap();
-    test.repository.create_role(first_role).await.unwrap();
-    test.repository.create_role(second_role).await.unwrap();
+    harness.repository.create_role(third_role).await.unwrap();
+    harness.repository.create_role(first_role).await.unwrap();
+    harness.repository.create_role(second_role).await.unwrap();
 
-    test.repository
+    harness
+        .repository
         .assign_role_to_user(user.id, third_role_id)
         .await
         .unwrap();
 
-    test.repository
+    harness
+        .repository
         .assign_role_to_user(user.id, first_role_id)
         .await
         .unwrap();
 
-    test.repository
+    harness
+        .repository
         .assign_role_to_user(user.id, second_role_id)
         .await
         .unwrap();
 
-    let roles = test.repository.list_user_roles(user.id).await.unwrap();
+    let roles = harness.repository.list_user_roles(user.id).await.unwrap();
 
     assert_eq!(roles, expected);
 }
@@ -62,16 +67,17 @@ async fn should_list_user_roles_ordered_by_name() {
 async fn should_return_empty_roles_for_user_without_roles() {
     // Persist a user without any assigned role and verify that list_user_roles
     // returns an empty collection rather than treating the user as missing.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let (user, identity) = user_with_identity("test-issuer", "test-subject");
 
-    test.user_repository
+    harness
+        .user_repository
         .create(user.clone(), identity)
         .await
         .unwrap();
 
-    let roles = test.repository.list_user_roles(user.id).await.unwrap();
+    let roles = harness.repository.list_user_roles(user.id).await.unwrap();
 
     assert!(roles.is_empty());
 }
@@ -79,10 +85,14 @@ async fn should_return_empty_roles_for_user_without_roles() {
 #[tokio::test]
 async fn should_reject_unknown_user() {
     // Query roles for a non-existing user ID and verify that UserNotFound is returned.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let user_id = UserId::new();
 
-    let error = test.repository.list_user_roles(user_id).await.unwrap_err();
+    let error = harness
+        .repository
+        .list_user_roles(user_id)
+        .await
+        .unwrap_err();
 
     assert!(matches!(
         error,

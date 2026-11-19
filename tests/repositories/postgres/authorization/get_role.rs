@@ -3,13 +3,13 @@ use zekurix_server::{
     error::Error,
 };
 
-use super::common::TestRepository;
+use super::harness::TestHarness;
 
 #[tokio::test]
 async fn should_get_role_with_permissions_ordered_by_name() {
     // Persist a role with multiple permissions and verify that get_role returns
     // the expected role with its permissions ordered by permission name.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let role = Role::new(
         RoleName::new("test-role").unwrap(),
@@ -21,9 +21,9 @@ async fn should_get_role_with_permissions_ordered_by_name() {
     );
     let role_id = role.id();
 
-    test.repository.create_role(role).await.unwrap();
+    harness.repository.create_role(role).await.unwrap();
 
-    let found = test.repository.get_role(role_id).await.unwrap();
+    let found = harness.repository.get_role(role_id).await.unwrap();
 
     assert_eq!(found.id(), role_id);
     assert_eq!(found.name().as_str(), "test-role");
@@ -41,14 +41,14 @@ async fn should_get_role_with_permissions_ordered_by_name() {
 async fn should_get_role_without_permissions() {
     // Persist a role without permissions and verify that get_role returns it
     // with an empty permissions collection.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let role = Role::new(RoleName::new("test-role").unwrap(), vec![]);
     let role_id = role.id();
 
-    test.repository.create_role(role).await.unwrap();
+    harness.repository.create_role(role).await.unwrap();
 
-    let found = test.repository.get_role(role_id).await.unwrap();
+    let found = harness.repository.get_role(role_id).await.unwrap();
 
     assert_eq!(found.id(), role_id);
     assert_eq!(found.name().as_str(), "test-role");
@@ -58,10 +58,10 @@ async fn should_get_role_without_permissions() {
 #[tokio::test]
 async fn should_reject_unknown_role() {
     // Look up a non-existing role ID and verify that RoleNotFound is returned.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let id = RoleId::new();
 
-    let error = test.repository.get_role(id).await.unwrap_err();
+    let error = harness.repository.get_role(id).await.unwrap_err();
 
     assert!(matches!(
         error,

@@ -2,20 +2,18 @@ use dotenvy::dotenv;
 use sqlx::PgPool;
 
 use zekurix_server::database::postgres::PostgresDatabase;
-use zekurix_server::identity::{Identity, Issuer, Subject};
 use zekurix_server::secrets::Secrets;
-use zekurix_server::user::User;
 
 use crate::common::TempDatabase;
 use crate::input::settings::fixtures::test_settings;
 
-pub struct TestDatabase {
+pub(super) struct TestDatabase {
     _temp_database: TempDatabase,
-    pub pool: PgPool,
+    pub(super) pool: PgPool,
 }
 
 impl TestDatabase {
-    pub async fn new() -> Self {
+    pub(super) async fn new() -> Self {
         dotenv().ok();
 
         let mut settings = test_settings();
@@ -37,15 +35,4 @@ impl TestDatabase {
             pool: postgres.pool,
         }
     }
-}
-
-pub fn user_with_identity(issuer: &str, subject: &str) -> (User, Identity) {
-    let user = User::new();
-    let identity = Identity::new(
-        Issuer::new(issuer).unwrap(),
-        Subject::new(subject).unwrap(),
-        user.id,
-    );
-
-    (user, identity)
 }

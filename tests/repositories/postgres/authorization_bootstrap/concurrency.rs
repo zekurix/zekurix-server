@@ -5,7 +5,7 @@ use zekurix_server::authorization::{
     AuthorizationBootstrapRepository, PostgresAuthorizationBootstrapRepository,
 };
 
-use super::common::TestRepository;
+use super::harness::TestHarness;
 
 const BOOTSTRAP_NAME: &str = "test-authorization";
 const BLOCKING_TIMEOUT: Duration = Duration::from_millis(100);
@@ -15,11 +15,11 @@ const COMPLETION_TIMEOUT: Duration = Duration::from_secs(2);
 async fn should_serialize_concurrent_bootstrap_transactions() {
     // A second bootstrap transaction must wait while another transaction holds
     // the authorization bootstrap advisory lock.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
-    let first_tx = test.repository.begin().await.unwrap();
+    let first_tx = harness.repository.begin().await.unwrap();
 
-    let second_repository = PostgresAuthorizationBootstrapRepository::new(test.pool.clone());
+    let second_repository = PostgresAuthorizationBootstrapRepository::new(harness.pool.clone());
 
     let second = timeout(BLOCKING_TIMEOUT, second_repository.begin()).await;
 
@@ -39,13 +39,13 @@ async fn should_serialize_concurrent_bootstrap_transactions() {
 async fn should_observe_completed_bootstrap_after_waiting_for_concurrent_transaction() {
     // After waiting for the winning bootstrap transaction, the second transaction
     // must observe that the bootstrap has already been completed.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
-    let mut first_tx = test.repository.begin().await.unwrap();
+    let mut first_tx = harness.repository.begin().await.unwrap();
 
     first_tx.mark_completed(BOOTSTRAP_NAME).await.unwrap();
 
-    let second_repository = PostgresAuthorizationBootstrapRepository::new(test.pool.clone());
+    let second_repository = PostgresAuthorizationBootstrapRepository::new(harness.pool.clone());
 
     let second_handle = tokio::spawn(async move {
         let mut tx = second_repository.begin().await.unwrap();
@@ -76,11 +76,11 @@ async fn should_observe_completed_bootstrap_after_waiting_for_concurrent_transac
 async fn should_release_bootstrap_lock_when_transaction_is_dropped() {
     // Dropping the transaction without committing must release the advisory lock
     // so another bootstrap transaction can proceed.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
-    let first_tx = test.repository.begin().await.unwrap();
+    let first_tx = harness.repository.begin().await.unwrap();
 
-    let second_repository = PostgresAuthorizationBootstrapRepository::new(test.pool.clone());
+    let second_repository = PostgresAuthorizationBootstrapRepository::new(harness.pool.clone());
 
     let second_handle = tokio::spawn(async move { second_repository.begin().await.unwrap() });
 

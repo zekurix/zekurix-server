@@ -1,4 +1,5 @@
 mod authorization;
 mod authorization_bootstrap;
-mod common;
+mod fixtures;
+mod test_database;
 mod user;

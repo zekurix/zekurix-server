@@ -3,28 +3,29 @@ use zekurix_server::{
     user::{UserId, UserRepository},
 };
 
-use crate::repositories::postgres::common::user_with_identity;
+use crate::repositories::postgres::fixtures::user_with_identity;
 
-use super::common::TestRepository;
+use super::harness::TestHarness;
 
 #[tokio::test]
 async fn should_delete_user_and_cascade_identity() {
     // Delete an existing user and verify that both the user and its identity
     // are removed through the database cascade.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let (user, identity) = user_with_identity("test-issuer", "test-subject");
 
-    test.repository
+    harness
+        .repository
         .create(user.clone(), identity.clone())
         .await
         .unwrap();
 
-    test.repository.delete(user.id).await.unwrap();
+    harness.repository.delete(user.id).await.unwrap();
 
     let user_exists =
         sqlx::query_scalar::<_, bool>("SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)")
             .bind(user.id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -35,7 +36,7 @@ async fn should_delete_user_and_cascade_identity() {
     )
     .bind(&identity.issuer)
     .bind(&identity.subject)
-    .fetch_one(&test.pool)
+    .fetch_one(&harness.pool)
     .await
     .unwrap();
 
@@ -45,10 +46,10 @@ async fn should_delete_user_and_cascade_identity() {
 #[tokio::test]
 async fn should_reject_unknown_user() {
     // Delete a non-existing user ID and verify that UserNotFound is returned.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let id = UserId::new();
 
-    let error = test.repository.delete(id).await.unwrap_err();
+    let error = harness.repository.delete(id).await.unwrap_err();
 
     assert!(matches!(error, Error::UserNotFound(error_id) if error_id == id));
 }

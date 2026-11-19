@@ -2,16 +2,16 @@ use sqlx::PgPool;
 
 use zekurix_server::user::PostgresUserRepository;
 
-use crate::repositories::postgres::common::TestDatabase;
+use crate::repositories::postgres::test_database::TestDatabase;
 
-pub struct TestRepository {
+pub(super) struct TestHarness {
     _database: TestDatabase,
-    pub pool: PgPool,
-    pub repository: PostgresUserRepository,
+    pub(super) pool: PgPool,
+    pub(super) repository: PostgresUserRepository,
 }
 
-impl TestRepository {
-    pub async fn new() -> Self {
+impl TestHarness {
+    pub(super) async fn new() -> Self {
         let database = TestDatabase::new().await;
         let pool = database.pool.clone();
         let repository = PostgresUserRepository::new(pool.clone());

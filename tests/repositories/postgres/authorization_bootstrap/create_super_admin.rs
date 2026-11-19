@@ -5,9 +5,9 @@ use zekurix_server::{
     user::{UserId, UserRepository},
 };
 
-use crate::repositories::postgres::common::user_with_identity;
+use crate::repositories::postgres::fixtures::user_with_identity;
 
-use super::common::TestRepository;
+use super::harness::TestHarness;
 
 const SUPER_ADMIN_ROLE_NAME: &str = "super-admin";
 const ISSUER: &str = "https://auth.example.com/my-issuer";
@@ -17,11 +17,11 @@ const SUBJECT: &str = "admin";
 async fn should_create_user_and_identity_for_super_admin() {
     // When the configured identity does not exist, the bootstrap must create
     // both the user and its identity.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let (user, identity) = user_with_identity(ISSUER, SUBJECT);
     let user_id = user.id;
 
-    let mut tx = test.repository.begin().await.unwrap();
+    let mut tx = harness.repository.begin().await.unwrap();
     tx.create_super_admin(
         user,
         identity,
@@ -41,7 +41,7 @@ async fn should_create_user_and_identity_for_super_admin() {
     )
     .bind(ISSUER)
     .bind(SUBJECT)
-    .fetch_one(&test.pool)
+    .fetch_one(&harness.pool)
     .await
     .unwrap();
 
@@ -51,11 +51,11 @@ async fn should_create_user_and_identity_for_super_admin() {
 #[tokio::test]
 async fn should_assign_super_admin_role_to_user() {
     // The created super-admin user must be assigned the requested role.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let (user, identity) = user_with_identity(ISSUER, SUBJECT);
     let user_id = user.id;
 
-    let mut tx = test.repository.begin().await.unwrap();
+    let mut tx = harness.repository.begin().await.unwrap();
     tx.create_super_admin(
         user,
         identity,
@@ -77,7 +77,7 @@ async fn should_assign_super_admin_role_to_user() {
     )
     .bind(user_id)
     .bind(SUPER_ADMIN_ROLE_NAME)
-    .fetch_one(&test.pool)
+    .fetch_one(&harness.pool)
     .await
     .unwrap();
 
@@ -88,12 +88,13 @@ async fn should_assign_super_admin_role_to_user() {
 async fn should_reuse_existing_user_when_identity_already_exists() {
     // When the configured identity already exists, the bootstrap must reuse
     // its existing user and must not persist the newly supplied user.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let (existing_user, existing_identity) = user_with_identity(ISSUER, SUBJECT);
     let existing_user_id = existing_user.id;
 
-    test.user_repository
+    harness
+        .user_repository
         .create(existing_user, existing_identity)
         .await
         .unwrap();
@@ -101,7 +102,7 @@ async fn should_reuse_existing_user_when_identity_already_exists() {
     let (new_user, new_identity) = user_with_identity(ISSUER, SUBJECT);
     let new_user_id = new_user.id;
 
-    let mut tx = test.repository.begin().await.unwrap();
+    let mut tx = harness.repository.begin().await.unwrap();
     tx.create_super_admin(
         new_user,
         new_identity,
@@ -120,7 +121,7 @@ async fn should_reuse_existing_user_when_identity_already_exists() {
     )
     .bind(ISSUER)
     .bind(SUBJECT)
-    .fetch_one(&test.pool)
+    .fetch_one(&harness.pool)
     .await
     .unwrap();
 
@@ -129,7 +130,7 @@ async fn should_reuse_existing_user_when_identity_already_exists() {
     let new_user_exists =
         sqlx::query_scalar::<_, bool>("SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)")
             .bind(new_user_id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -140,16 +141,17 @@ async fn should_reuse_existing_user_when_identity_already_exists() {
 async fn should_succeed_when_super_admin_role_is_already_assigned() {
     // Assigning the role when the existing user already has it must succeed
     // without creating a duplicate assignment.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
 
     let (existing_user, existing_identity) = user_with_identity(ISSUER, SUBJECT);
     let existing_user_id = existing_user.id;
 
-    test.user_repository
+    harness
+        .user_repository
         .create(existing_user, existing_identity)
         .await
         .unwrap();
-    let role = test
+    let role = harness
         .authorization_repository
         .list_roles(Pagination::default())
         .await
@@ -158,14 +160,15 @@ async fn should_succeed_when_super_admin_role_is_already_assigned() {
         .find(|role| role.name().as_str() == SUPER_ADMIN_ROLE_NAME)
         .unwrap();
 
-    test.authorization_repository
+    harness
+        .authorization_repository
         .assign_role_to_user(existing_user_id, role.id())
         .await
         .unwrap();
 
     let (new_user, new_identity) = user_with_identity(ISSUER, SUBJECT);
 
-    let mut tx = test.repository.begin().await.unwrap();
+    let mut tx = harness.repository.begin().await.unwrap();
     tx.create_super_admin(
         new_user,
         new_identity,
@@ -185,7 +188,7 @@ async fn should_succeed_when_super_admin_role_is_already_assigned() {
     )
     .bind(existing_user_id)
     .bind(SUPER_ADMIN_ROLE_NAME)
-    .fetch_one(&test.pool)
+    .fetch_one(&harness.pool)
     .await
     .unwrap();
 
@@ -195,10 +198,10 @@ async fn should_succeed_when_super_admin_role_is_already_assigned() {
 #[tokio::test]
 async fn should_fail_when_super_admin_role_does_not_exist() {
     // The bootstrap must fail when the requested super-admin role does not exist.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let (user, identity) = user_with_identity(ISSUER, SUBJECT);
 
-    let mut tx = test.repository.begin().await.unwrap();
+    let mut tx = harness.repository.begin().await.unwrap();
 
     let result = tx
         .create_super_admin(user, identity, RoleName::new("missing-role").unwrap())
@@ -211,11 +214,11 @@ async fn should_fail_when_super_admin_role_does_not_exist() {
 async fn should_rollback_user_and_identity_when_role_assignment_fails() {
     // Failure to assign the super-admin role must roll back the user and identity
     // created earlier in the same transaction.
-    let test = TestRepository::new().await;
+    let harness = TestHarness::new().await;
     let (user, identity) = user_with_identity(ISSUER, SUBJECT);
     let user_id = user.id;
 
-    let mut tx = test.repository.begin().await.unwrap();
+    let mut tx = harness.repository.begin().await.unwrap();
 
     let result = tx
         .create_super_admin(user, identity, RoleName::new("missing-role").unwrap())
@@ -228,7 +231,7 @@ async fn should_rollback_user_and_identity_when_role_assignment_fails() {
     let user_exists =
         sqlx::query_scalar::<_, bool>("SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)")
             .bind(user_id)
-            .fetch_one(&test.pool)
+            .fetch_one(&harness.pool)
             .await
             .unwrap();
 
@@ -245,7 +248,7 @@ async fn should_rollback_user_and_identity_when_role_assignment_fails() {
     )
     .bind(ISSUER)
     .bind(SUBJECT)
-    .fetch_one(&test.pool)
+    .fetch_one(&harness.pool)
     .await
     .unwrap();
 
