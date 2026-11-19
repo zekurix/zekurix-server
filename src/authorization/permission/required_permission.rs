@@ -16,7 +16,6 @@ impl RequiredPermission for RolesRead {
     const PERMISSION: Permission = Permission::RolesRead;
 }
 
-#[allow(dead_code)]
 pub struct RolesUpdate;
 
 impl RequiredPermission for RolesUpdate {

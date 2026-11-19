@@ -4,19 +4,31 @@ use serde_json::Value;
 
 use zekurix_server::authorization::RoleId;
 
-use crate::common::{TestApplication, assert_json_data_error, assert_unauthorized};
+use crate::common::{
+    TestApplication, assert_forbidden, assert_json_data_error, assert_unauthorized,
+};
 
 use super::common::{
     RoleResponse, assert_duplicate_permission, assert_role_already_exists, assert_role_not_found,
-    create_role, get_role,
+    create_role, create_user_with_all_permissions_except, create_user_with_only_permission,
+    create_user_without_permissions, get_role,
 };
 
-async fn update_role(app: &TestApplication, role_id: RoleId, body: Value) -> TestResponse {
+async fn update_role_as(
+    app: &TestApplication,
+    role_id: RoleId,
+    subject: &str,
+    body: Value,
+) -> TestResponse {
     app.server
         .put(&format!("/api/v1/roles/{role_id}"))
-        .add_header(header::AUTHORIZATION, app.auth.header("admin"))
+        .add_header(header::AUTHORIZATION, app.auth.header(subject))
         .json(&body)
         .await
+}
+
+async fn update_role(app: &TestApplication, role_id: RoleId, body: Value) -> TestResponse {
+    update_role_as(app, role_id, "admin", body).await
 }
 
 #[tokio::test]
@@ -241,4 +253,71 @@ async fn should_require_authentication_to_update_role() {
         .await;
 
     assert_unauthorized(&response);
+}
+
+#[tokio::test]
+async fn should_update_role_for_user_with_only_roles_update_permission() {
+    let app = TestApplication::new().await;
+    let created = create_role(&app, "reader", &[]).await;
+    let subject = "user-with-only-roles-update";
+    create_user_with_only_permission(&app, subject, "roles:update").await;
+
+    let response = update_role_as(
+        &app,
+        created.id,
+        subject,
+        serde_json::json!({
+            "name": "editor",
+            "permissions": ["roles:read"]
+        }),
+    )
+    .await;
+
+    response.assert_status_ok();
+    let updated: RoleResponse = response.json();
+    assert_eq!(updated.id, created.id);
+    assert_eq!(updated.name, "editor");
+    assert_eq!(updated.permissions, vec!["roles:read"]);
+}
+
+#[tokio::test]
+async fn should_reject_role_update_for_user_without_permissions() {
+    let app = TestApplication::new().await;
+    let role = create_role(&app, "reader", &[]).await;
+    let subject = "user-without-permissions";
+    create_user_without_permissions(&app, subject).await;
+
+    let response = update_role_as(
+        &app,
+        role.id,
+        subject,
+        serde_json::json!({
+            "name": "editor",
+            "permissions": []
+        }),
+    )
+    .await;
+
+    assert_forbidden(&response);
+}
+
+#[tokio::test]
+async fn should_reject_role_update_for_user_without_roles_update_permission() {
+    let app = TestApplication::new().await;
+    let role = create_role(&app, "reader", &[]).await;
+    let subject = "user-without-roles-update";
+    create_user_with_all_permissions_except(&app, subject, "roles:update").await;
+
+    let response = update_role_as(
+        &app,
+        role.id,
+        subject,
+        serde_json::json!({
+            "name": "editor",
+            "permissions": []
+        }),
+    )
+    .await;
+
+    assert_forbidden(&response);
 }
