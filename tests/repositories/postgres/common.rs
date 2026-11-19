@@ -7,7 +7,7 @@ use zekurix_server::secrets::Secrets;
 use zekurix_server::user::User;
 
 use crate::common::TempDatabase;
-use crate::settings::fixtures::test_settings;
+use crate::input::settings::fixtures::test_settings;
 
 pub struct TestDatabase {
     _temp_database: TempDatabase,
