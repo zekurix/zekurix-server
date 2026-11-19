@@ -1,11 +1,9 @@
 use super::Permission;
 
-#[allow(dead_code)]
 pub trait RequiredPermission {
     const PERMISSION: Permission;
 }
 
-#[allow(dead_code)]
 pub struct RolesCreate;
 
 impl RequiredPermission for RolesCreate {

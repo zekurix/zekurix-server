@@ -38,6 +38,14 @@ pub fn assert_unauthorized(response: &TestResponse) {
     assert_eq!(www_authenticate.to_str().unwrap(), "Bearer");
 }
 
+pub fn assert_forbidden(response: &TestResponse) {
+    assert_problem(
+        response,
+        StatusCode::FORBIDDEN,
+        "https://api.zekurix.com/problems/http/forbidden",
+    );
+}
+
 pub fn assert_json_data_error(response: &TestResponse) {
     assert_problem(
         response,
