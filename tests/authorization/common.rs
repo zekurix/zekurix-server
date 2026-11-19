@@ -81,6 +81,10 @@ pub async fn get_role(app: &TestApplication, role_id: RoleId, subject: &str) -> 
         .await
 }
 
+pub async fn create_user_without_permissions(app: &TestApplication, subject: &str) {
+    create_user(app, subject).await;
+}
+
 pub async fn create_user_with_only_permission(
     app: &TestApplication,
     subject: &str,
