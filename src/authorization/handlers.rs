@@ -8,7 +8,9 @@ use axum::{
 };
 
 use crate::Application;
-use crate::authorization::permission::{RequirePermission, RolesCreate, RolesRead, RolesUpdate};
+use crate::authorization::permission::{
+    RequirePermission, RolesCreate, RolesDelete, RolesRead, RolesUpdate,
+};
 use crate::error::Result;
 use crate::router::{ApiJson, ApiPath, Pagination};
 
@@ -90,6 +92,7 @@ pub async fn update_role(
 
 pub async fn delete_role(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<RolesDelete>,
     ApiPath(id): ApiPath<RoleId>,
 ) -> Result<StatusCode> {
     application.services.authorization.delete_role(id).await?;
