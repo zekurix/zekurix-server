@@ -8,6 +8,7 @@ use axum::{
 };
 
 use crate::Application;
+use crate::authorization::permission::{RequirePermission, RolesAssign};
 use crate::authorization::{PermissionsResponse, RoleId, RoleSummariesResponse};
 use crate::error::Result;
 use crate::identity::CurrentUserId;
@@ -77,6 +78,7 @@ pub async fn delete_user(
 
 pub async fn assign_role_to_user(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<RolesAssign>,
     ApiPath((user_id, role_id)): ApiPath<(UserId, RoleId)>,
 ) -> Result<StatusCode> {
     application

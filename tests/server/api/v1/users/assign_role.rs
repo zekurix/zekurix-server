@@ -4,10 +4,13 @@ use uuid::Uuid;
 use crate::server::api::v1::roles::fixtures::create_role;
 use crate::server::harness::TestHarness;
 use crate::server::problem::{
-    assert_http_unauthorized, assert_role_not_found, assert_user_not_found,
+    assert_http_forbidden, assert_http_unauthorized, assert_role_not_found, assert_user_not_found,
 };
 
-use super::fixtures::create_user;
+use super::fixtures::{
+    create_user, create_user_with_all_permissions_except, create_user_with_only_permission,
+    create_user_without_permissions,
+};
 use super::requests::assign_role;
 
 #[tokio::test]
@@ -68,4 +71,40 @@ async fn should_require_authentication_to_assign_role() {
         .await;
 
     assert_http_unauthorized(&response);
+}
+
+#[tokio::test]
+async fn should_assign_role_for_user_with_only_roles_assign_permission() {
+    let harness = TestHarness::new().await;
+    let user = create_user(&harness, "Alice").await;
+    let role = create_role(&harness, "reader", &[]).await;
+    let actor = create_user_with_only_permission(&harness, "roles:assign").await;
+
+    let response = assign_role(&harness, &user.id, &role.id, &actor).await;
+
+    response.assert_status(StatusCode::NO_CONTENT);
+}
+
+#[tokio::test]
+async fn should_reject_role_assignment_for_user_without_permissions() {
+    let harness = TestHarness::new().await;
+    let user = create_user(&harness, "Alice").await;
+    let role = create_role(&harness, "reader", &[]).await;
+    let actor = create_user_without_permissions(&harness).await;
+
+    let response = assign_role(&harness, &user.id, &role.id, &actor).await;
+
+    assert_http_forbidden(&response);
+}
+
+#[tokio::test]
+async fn should_reject_role_assignment_for_user_without_roles_assign_permission() {
+    let harness = TestHarness::new().await;
+    let user = create_user(&harness, "Alice").await;
+    let role = create_role(&harness, "reader", &[]).await;
+    let actor = create_user_with_all_permissions_except(&harness, "roles:assign").await;
+
+    let response = assign_role(&harness, &user.id, &role.id, &actor).await;
+
+    assert_http_forbidden(&response);
 }
