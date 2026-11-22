@@ -34,7 +34,6 @@ impl RequiredPermission for RolesAssign {
     const PERMISSION: Permission = Permission::RolesAssign;
 }
 
-#[allow(dead_code)]
 pub struct RolesUnassign;
 
 impl RequiredPermission for RolesUnassign {

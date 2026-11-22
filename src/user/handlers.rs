@@ -8,7 +8,7 @@ use axum::{
 };
 
 use crate::Application;
-use crate::authorization::permission::{RequirePermission, RolesAssign};
+use crate::authorization::permission::{RequirePermission, RolesAssign, RolesUnassign};
 use crate::authorization::{PermissionsResponse, RoleId, RoleSummariesResponse};
 use crate::error::Result;
 use crate::identity::CurrentUserId;
@@ -105,6 +105,7 @@ pub async fn list_user_roles(
 
 pub async fn unassign_role_from_user(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<RolesUnassign>,
     ApiPath((user_id, role_id)): ApiPath<(UserId, RoleId)>,
 ) -> Result<StatusCode> {
     application
