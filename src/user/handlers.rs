@@ -8,7 +8,9 @@ use axum::{
 };
 
 use crate::Application;
-use crate::authorization::permission::{RequirePermission, RolesAssign, RolesUnassign};
+use crate::authorization::permission::{
+    RequirePermission, RolesAssign, RolesUnassign, UsersCreate,
+};
 use crate::authorization::{PermissionsResponse, RoleId, RoleSummariesResponse};
 use crate::error::Result;
 use crate::identity::CurrentUserId;
@@ -21,6 +23,7 @@ use super::{
 
 pub async fn create_user(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<UsersCreate>,
     ApiJson(params): ApiJson<CreateUserRequest>,
 ) -> Result<(
     StatusCode,
