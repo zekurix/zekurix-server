@@ -28,7 +28,7 @@ async fn should_create_current_user_just_in_time() {
 
     let current: UserResponse = response.json();
 
-    let response = get_user(&harness, &current.id, "Alice").await;
+    let response = get_user(&harness, &current.id, "admin").await;
 
     response.assert_status_ok();
 
