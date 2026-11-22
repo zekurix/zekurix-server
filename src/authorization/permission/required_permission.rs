@@ -46,7 +46,6 @@ impl RequiredPermission for UsersCreate {
     const PERMISSION: Permission = Permission::UsersCreate;
 }
 
-#[allow(dead_code)]
 pub struct UsersRead;
 
 impl RequiredPermission for UsersRead {

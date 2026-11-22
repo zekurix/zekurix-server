@@ -9,7 +9,7 @@ use axum::{
 
 use crate::Application;
 use crate::authorization::permission::{
-    RequirePermission, RolesAssign, RolesUnassign, UsersCreate,
+    RequirePermission, RolesAssign, RolesUnassign, UsersCreate, UsersRead,
 };
 use crate::authorization::{PermissionsResponse, RoleId, RoleSummariesResponse};
 use crate::error::Result;
@@ -54,6 +54,7 @@ pub async fn get_current_user(
 
 pub async fn get_user(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<UsersRead>,
     ApiPath(id): ApiPath<UserId>,
 ) -> Result<Json<UserResponse>> {
     let user = application.services.user.find(id).await?;
