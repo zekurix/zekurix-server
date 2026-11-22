@@ -2,9 +2,14 @@ use axum::http::StatusCode;
 use uuid::Uuid;
 
 use crate::server::harness::TestHarness;
-use crate::server::problem::{assert_http_unauthorized, assert_user_not_found};
+use crate::server::problem::{
+    assert_http_forbidden, assert_http_unauthorized, assert_user_not_found,
+};
 
-use super::fixtures::create_user;
+use super::fixtures::{
+    create_user, create_user_with_all_permissions_except, create_user_with_only_permission,
+    create_user_without_permissions,
+};
 use super::models::UserResponse;
 use super::requests::{delete_user, get_current_user, get_user};
 
@@ -93,4 +98,59 @@ async fn should_require_authentication_to_delete_user() {
         .await;
 
     assert_http_unauthorized(&response);
+}
+
+#[tokio::test]
+async fn should_allow_user_without_permissions_to_delete_themselves() {
+    let harness = TestHarness::new().await;
+    let actor = create_user_without_permissions(&harness).await;
+
+    let response = get_current_user(&harness, &actor).await;
+    response.assert_status_ok();
+    let user: UserResponse = response.json();
+
+    let response = delete_user(&harness, &user.id, &actor).await;
+
+    response.assert_status(StatusCode::NO_CONTENT);
+
+    let response = get_user(&harness, &user.id, "admin").await;
+
+    assert_user_not_found(&response);
+}
+
+#[tokio::test]
+async fn should_delete_user_for_user_with_only_users_delete_permission() {
+    let harness = TestHarness::new().await;
+    let target = create_user(&harness, "Alice").await;
+    let actor = create_user_with_only_permission(&harness, "users:delete").await;
+
+    let response = delete_user(&harness, &target.id, &actor).await;
+
+    response.assert_status(StatusCode::NO_CONTENT);
+
+    let response = get_user(&harness, &target.id, "admin").await;
+
+    assert_user_not_found(&response);
+}
+
+#[tokio::test]
+async fn should_reject_user_deletion_without_permissions() {
+    let harness = TestHarness::new().await;
+    let target = create_user(&harness, "Alice").await;
+    let actor = create_user_without_permissions(&harness).await;
+
+    let response = delete_user(&harness, &target.id, &actor).await;
+
+    assert_http_forbidden(&response);
+}
+
+#[tokio::test]
+async fn should_reject_user_deletion_without_users_delete_permission() {
+    let harness = TestHarness::new().await;
+    let target = create_user(&harness, "Alice").await;
+    let actor = create_user_with_all_permissions_except(&harness, "users:delete").await;
+
+    let response = delete_user(&harness, &target.id, &actor).await;
+
+    assert_http_forbidden(&response);
 }

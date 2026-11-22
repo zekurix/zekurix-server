@@ -52,7 +52,6 @@ impl RequiredPermission for UsersRead {
     const PERMISSION: Permission = Permission::UsersRead;
 }
 
-#[allow(dead_code)]
 pub struct UsersDelete;
 
 impl RequiredPermission for UsersDelete {
