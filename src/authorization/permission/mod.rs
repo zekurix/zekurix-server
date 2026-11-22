@@ -6,5 +6,4 @@ mod self_or_permission;
 pub use entity::Permission;
 pub use require_permission::RequirePermission;
 pub use required_permission::*;
-#[allow(unused_imports)]
 pub use self_or_permission::SelfOrPermission;

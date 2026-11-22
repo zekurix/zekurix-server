@@ -9,7 +9,8 @@ use axum::{
 
 use crate::Application;
 use crate::authorization::permission::{
-    RequirePermission, RolesAssign, RolesUnassign, UsersCreate, UsersRead,
+    RequirePermission, RolesAssign, RolesUnassign, SelfOrPermission, UsersCreate, UsersDelete,
+    UsersRead,
 };
 use crate::authorization::{PermissionsResponse, RoleId, RoleSummariesResponse};
 use crate::error::Result;
@@ -73,6 +74,7 @@ pub async fn list_users(
 
 pub async fn delete_user(
     State(application): State<Arc<Application>>,
+    _: SelfOrPermission<UsersDelete>,
     ApiPath(id): ApiPath<UserId>,
 ) -> Result<StatusCode> {
     application.services.user.delete(id).await?;
