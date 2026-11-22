@@ -4,11 +4,14 @@ use uuid::Uuid;
 
 use crate::server::harness::TestHarness;
 use crate::server::problem::{
-    assert_http_unauthorized, assert_identity_invalid_issuer, assert_json_data_error,
-    assert_user_already_exists,
+    assert_http_forbidden, assert_http_unauthorized, assert_identity_invalid_issuer,
+    assert_json_data_error, assert_user_already_exists,
 };
 
-use super::fixtures::create_user;
+use super::fixtures::{
+    create_user, create_user_with_all_permissions_except, create_user_with_only_permission,
+    create_user_without_permissions,
+};
 use super::models::UserResponse;
 use super::requests::create_user as request_create_user;
 
@@ -236,4 +239,73 @@ async fn should_require_authentication_for_create_user() {
     let response = harness.server.post("/api/v1/users").json(&body).await;
 
     assert_http_unauthorized(&response);
+}
+
+#[tokio::test]
+async fn should_create_user_for_user_with_only_users_create_permission() {
+    let harness = TestHarness::new().await;
+    let actor = create_user_with_only_permission(&harness, "users:create").await;
+    let issuer = harness
+        .settings
+        .authentication
+        .issuers
+        .first()
+        .expect("at least one issuer must be configured");
+
+    let body = json!({
+        "identity": {
+            "issuer": issuer,
+            "subject": "Alice",
+        }
+    });
+
+    let response = request_create_user(&harness, body, &actor).await;
+
+    response.assert_status(StatusCode::CREATED);
+}
+
+#[tokio::test]
+async fn should_reject_user_creation_for_user_without_permissions() {
+    let harness = TestHarness::new().await;
+    let actor = create_user_without_permissions(&harness).await;
+    let issuer = harness
+        .settings
+        .authentication
+        .issuers
+        .first()
+        .expect("at least one issuer must be configured");
+
+    let body = json!({
+        "identity": {
+            "issuer": issuer,
+            "subject": "Alice",
+        }
+    });
+
+    let response = request_create_user(&harness, body, &actor).await;
+
+    assert_http_forbidden(&response);
+}
+
+#[tokio::test]
+async fn should_reject_user_creation_for_user_without_users_create_permission() {
+    let harness = TestHarness::new().await;
+    let actor = create_user_with_all_permissions_except(&harness, "users:create").await;
+    let issuer = harness
+        .settings
+        .authentication
+        .issuers
+        .first()
+        .expect("at least one issuer must be configured");
+
+    let body = json!({
+        "identity": {
+            "issuer": issuer,
+            "subject": "Alice",
+        }
+    });
+
+    let response = request_create_user(&harness, body, &actor).await;
+
+    assert_http_forbidden(&response);
 }
