@@ -65,6 +65,18 @@ async fn should_require_authentication_to_get_user() {
 }
 
 #[tokio::test]
+async fn should_get_current_user_without_permissions() {
+    let harness = TestHarness::new().await;
+    let created = create_user(&harness, "Alice").await;
+
+    let response = get_user(&harness, &created.id, "Alice").await;
+
+    response.assert_status_ok();
+    let fetched: UserResponse = response.json();
+    assert_eq!(fetched, created);
+}
+
+#[tokio::test]
 async fn should_get_user_for_user_with_only_users_read_permission() {
     let harness = TestHarness::new().await;
     let user = create_user(&harness, "Alice").await;
