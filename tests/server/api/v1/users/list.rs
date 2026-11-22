@@ -1,11 +1,16 @@
 use axum_test::TestResponse;
 
 use crate::server::harness::TestHarness;
-use crate::server::problem::{assert_http_unauthorized, assert_query_invalid};
+use crate::server::problem::{
+    assert_http_forbidden, assert_http_unauthorized, assert_query_invalid,
+};
 
-use super::fixtures::create_users;
-use super::models::UsersResponse;
-use super::requests::list_users;
+use super::fixtures::{
+    create_user_with_all_permissions_except, create_user_with_only_permission,
+    create_user_without_permissions, create_users,
+};
+use super::models::{UserResponse, UsersResponse};
+use super::requests::{get_current_user, list_users};
 
 fn assert_user_ids(response: TestResponse, expected: &[String]) {
     response.assert_status_ok();
@@ -192,4 +197,41 @@ async fn should_require_authentication_to_list_users() {
     let response = harness.server.get("/api/v1/users").await;
 
     assert_http_unauthorized(&response);
+}
+
+#[tokio::test]
+async fn should_list_users_for_user_with_only_users_read_permission() {
+    let harness = TestHarness::new().await;
+    let mut expected = create_users(&harness, &["admin", "Alice"]).await;
+    let actor = create_user_with_only_permission(&harness, "users:read").await;
+
+    let response = get_current_user(&harness, &actor).await;
+    response.assert_status_ok();
+    let actor_user: UserResponse = response.json();
+    expected.push(actor_user.id);
+    expected.sort();
+
+    let response = list_users(&harness, None, &actor).await;
+
+    assert_user_ids(response, &expected);
+}
+
+#[tokio::test]
+async fn should_reject_user_listing_for_user_without_permissions() {
+    let harness = TestHarness::new().await;
+    let actor = create_user_without_permissions(&harness).await;
+
+    let response = list_users(&harness, None, &actor).await;
+
+    assert_http_forbidden(&response);
+}
+
+#[tokio::test]
+async fn should_reject_user_listing_for_user_without_users_read_permission() {
+    let harness = TestHarness::new().await;
+    let actor = create_user_with_all_permissions_except(&harness, "users:read").await;
+
+    let response = list_users(&harness, None, &actor).await;
+
+    assert_http_forbidden(&response);
 }

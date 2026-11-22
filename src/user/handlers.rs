@@ -55,7 +55,7 @@ pub async fn get_current_user(
 
 pub async fn get_user(
     State(application): State<Arc<Application>>,
-    _: RequirePermission<UsersRead>,
+    _: SelfOrPermission<UsersRead>,
     ApiPath(id): ApiPath<UserId>,
 ) -> Result<Json<UserResponse>> {
     let user = application.services.user.find(id).await?;
@@ -65,6 +65,7 @@ pub async fn get_user(
 
 pub async fn list_users(
     State(application): State<Arc<Application>>,
+    _: RequirePermission<UsersRead>,
     pagination: Pagination,
 ) -> Result<Json<UsersResponse>> {
     let users = application.services.user.list(pagination).await?;
