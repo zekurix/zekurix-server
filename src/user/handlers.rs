@@ -9,8 +9,8 @@ use axum::{
 
 use crate::Application;
 use crate::authorization::permission::{
-    RequirePermission, RolesAssign, RolesUnassign, SelfOrPermission, UsersCreate, UsersDelete,
-    UsersRead,
+    RequirePermission, RolesAssign, RolesRead, RolesUnassign, SelfOrPermission, UsersCreate,
+    UsersDelete, UsersRead,
 };
 use crate::authorization::{PermissionsResponse, RoleId, RoleSummariesResponse};
 use crate::error::Result;
@@ -126,6 +126,7 @@ pub async fn unassign_role_from_user(
 
 pub async fn list_user_permissions(
     State(application): State<Arc<Application>>,
+    _: SelfOrPermission<RolesRead>,
     ApiPath(id): ApiPath<UserId>,
 ) -> Result<Json<PermissionsResponse>> {
     let permissions = application
