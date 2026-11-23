@@ -99,6 +99,7 @@ pub async fn assign_role_to_user(
 
 pub async fn list_user_roles(
     State(application): State<Arc<Application>>,
+    _: SelfOrPermission<RolesRead>,
     ApiPath(id): ApiPath<UserId>,
 ) -> Result<Json<RoleSummariesResponse>> {
     let roles = application
