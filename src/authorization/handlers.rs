@@ -12,6 +12,7 @@ use crate::authorization::permission::{
     RequirePermission, RolesCreate, RolesDelete, RolesRead, RolesUpdate,
 };
 use crate::error::Result;
+use crate::identity::CurrentUserId;
 use crate::router::{ApiJson, ApiPath, Pagination};
 
 use super::RoleId;
@@ -31,6 +32,7 @@ pub async fn list_permissions(
 
 pub async fn create_role(
     State(application): State<Arc<Application>>,
+    CurrentUserId(actor_id): CurrentUserId,
     _: RequirePermission<RolesCreate>,
     ApiJson(params): ApiJson<RoleRequest>,
 ) -> Result<(
@@ -41,7 +43,7 @@ pub async fn create_role(
     let role = application
         .services
         .authorization
-        .create_role(params.name, params.permissions)
+        .create_role(actor_id, params.name, params.permissions)
         .await?;
 
     Ok((
@@ -77,6 +79,7 @@ pub async fn list_roles(
 
 pub async fn update_role(
     State(application): State<Arc<Application>>,
+    CurrentUserId(actor_id): CurrentUserId,
     _: RequirePermission<RolesUpdate>,
     ApiPath(id): ApiPath<RoleId>,
     ApiJson(params): ApiJson<RoleRequest>,
@@ -84,7 +87,7 @@ pub async fn update_role(
     let role = application
         .services
         .authorization
-        .update_role(id, params.name, params.permissions)
+        .update_role(actor_id, id, params.name, params.permissions)
         .await?;
 
     Ok(Json(role.into()))

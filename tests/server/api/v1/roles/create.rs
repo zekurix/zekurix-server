@@ -187,6 +187,21 @@ async fn should_create_role_for_user_with_only_roles_create_permission() {
 }
 
 #[tokio::test]
+async fn should_reject_role_creation_with_permissions_the_user_does_not_have() {
+    let harness = TestHarness::new().await;
+    let actor = create_user_with_only_permission(&harness, "roles:create").await;
+
+    let body = json!({
+        "name": "privileged-role",
+        "permissions": ["roles:delete"],
+    });
+
+    let response = request_create_role(&harness, body, &actor).await;
+
+    assert_http_forbidden(&response);
+}
+
+#[tokio::test]
 async fn should_reject_role_creation_for_user_without_permissions() {
     let harness = TestHarness::new().await;
     let actor = create_user_without_permissions(&harness).await;

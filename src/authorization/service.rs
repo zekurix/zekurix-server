@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::router::Pagination;
 use crate::user::UserId;
 
@@ -20,8 +20,15 @@ impl AuthorizationService {
         self.repository.list_permissions().await
     }
 
-    pub async fn create_role(&self, name: RoleName, permissions: Vec<Permission>) -> Result<Role> {
+    pub async fn create_role(
+        &self,
+        actor_id: UserId,
+        name: RoleName,
+        permissions: Vec<Permission>,
+    ) -> Result<Role> {
         let role = Role::try_new(name, permissions)?;
+        self.ensure_user_has_permissions(actor_id, role.permissions())
+            .await?;
         self.repository.create_role(role).await
     }
 
@@ -35,11 +42,14 @@ impl AuthorizationService {
 
     pub async fn update_role(
         &self,
+        actor_id: UserId,
         id: RoleId,
         name: RoleName,
         permissions: Vec<Permission>,
     ) -> Result<Role> {
         let role = Role::try_from_parts(id, name, permissions)?;
+        self.ensure_user_has_permissions(actor_id, role.permissions())
+            .await?;
         self.repository.update_role(role).await
     }
 
@@ -51,8 +61,18 @@ impl AuthorizationService {
         self.repository.list_user_roles(user_id).await
     }
 
-    pub async fn assign_role_to_user(&self, user_id: UserId, role_id: RoleId) -> Result<()> {
-        self.repository.assign_role_to_user(user_id, role_id).await
+    pub async fn assign_role_to_user(
+        &self,
+        actor_id: UserId,
+        target_user_id: UserId,
+        role_id: RoleId,
+    ) -> Result<()> {
+        let role = self.repository.get_role(role_id).await?;
+        self.ensure_user_has_permissions(actor_id, role.permissions())
+            .await?;
+        self.repository
+            .assign_role_to_user(target_user_id, role_id)
+            .await
     }
 
     pub async fn unassign_role_from_user(&self, user_id: UserId, role_id: RoleId) -> Result<()> {
@@ -73,6 +93,22 @@ impl AuthorizationService {
         self.repository
             .user_has_permission(user_id, permission)
             .await
+    }
+
+    async fn ensure_user_has_permissions(
+        &self,
+        actor_id: UserId,
+        permissions: &[Permission],
+    ) -> Result<()> {
+        let user_permissions = self.repository.list_user_permissions(actor_id).await?;
+        if permissions
+            .iter()
+            .all(|permission| user_permissions.contains(permission))
+        {
+            Ok(())
+        } else {
+            Err(Error::Forbidden)
+        }
     }
 }
 
@@ -123,6 +159,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_create_role() {
+        let actor_id = UserId::new();
         let name = RoleName::new("admin").unwrap();
         let permissions = vec![Permission::RolesRead, Permission::RolesUpdate];
         let expected_name = name.clone();
@@ -131,6 +168,14 @@ mod tests {
         let expected_permissions_for_match = expected_permissions.clone();
 
         let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once({
+                let expected_permissions = expected_permissions.clone();
+                move |_| Ok(expected_permissions)
+            });
         repository
             .expect_create_role()
             .withf(move |role| {
@@ -141,7 +186,7 @@ mod tests {
             .return_once(Ok);
 
         let role = service(repository)
-            .create_role(name, permissions)
+            .create_role(actor_id, name, permissions)
             .await
             .unwrap();
 
@@ -151,13 +196,16 @@ mod tests {
 
     #[tokio::test]
     async fn should_reject_duplicate_permissions_when_creating_role() {
+        let actor_id = UserId::new();
         let name = RoleName::new("admin").unwrap();
         let permissions = vec![Permission::RolesRead, Permission::RolesRead];
 
         let mut repository = MockAuthorizationRepository::new();
         repository.expect_create_role().times(0);
 
-        let result = service(repository).create_role(name, permissions).await;
+        let result = service(repository)
+            .create_role(actor_id, name, permissions)
+            .await;
 
         assert!(matches!(
             result,
@@ -166,17 +214,46 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn should_reject_permissions_the_user_does_not_have_when_creating_role() {
+        let actor_id = UserId::new();
+        let name = RoleName::new("admin").unwrap();
+        let permissions = vec![Permission::RolesRead, Permission::RolesDelete];
+
+        let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once(|_| Ok(vec![Permission::RolesRead]));
+        repository.expect_create_role().times(0);
+
+        let result = service(repository)
+            .create_role(actor_id, name, permissions)
+            .await;
+
+        assert!(matches!(result, Err(Error::Forbidden)));
+    }
+
+    #[tokio::test]
     async fn should_propagate_create_role_error() {
+        let actor_id = UserId::new();
         let name = RoleName::new("admin").unwrap();
         let permissions = vec![Permission::RolesRead];
 
         let mut repository = MockAuthorizationRepository::new();
         repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once(|_| Ok(vec![Permission::RolesRead]));
+        repository
             .expect_create_role()
             .times(1)
             .return_once(|_| Err(Error::InternalError(anyhow::anyhow!("error"))));
 
-        let result = service(repository).create_role(name, permissions).await;
+        let result = service(repository)
+            .create_role(actor_id, name, permissions)
+            .await;
 
         assert!(matches!(result, Err(Error::InternalError(_))));
     }
@@ -265,6 +342,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_update_role() {
+        let actor_id = UserId::new();
         let id = RoleId::new();
         let name = RoleName::new("editor").unwrap();
         let permissions = vec![Permission::RolesRead, Permission::RolesUpdate];
@@ -272,6 +350,11 @@ mod tests {
         let expected_permissions = permissions.clone();
 
         let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once(|_| Ok(vec![Permission::RolesRead, Permission::RolesUpdate]));
         repository
             .expect_update_role()
             .withf(move |role| {
@@ -283,7 +366,7 @@ mod tests {
             .return_once(Ok);
 
         let role = service(repository)
-            .update_role(id, name, permissions)
+            .update_role(actor_id, id, name, permissions)
             .await
             .unwrap();
 
@@ -297,6 +380,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_reject_duplicate_permissions_when_updating_role() {
+        let actor_id = UserId::new();
         let id = RoleId::new();
         let name = RoleName::new("editor").unwrap();
         let permissions = vec![Permission::RolesUpdate, Permission::RolesUpdate];
@@ -304,7 +388,9 @@ mod tests {
         let mut repository = MockAuthorizationRepository::new();
         repository.expect_update_role().times(0);
 
-        let result = service(repository).update_role(id, name, permissions).await;
+        let result = service(repository)
+            .update_role(actor_id, id, name, permissions)
+            .await;
 
         assert!(matches!(
             result,
@@ -313,18 +399,48 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn should_reject_permissions_the_user_does_not_have_when_updating_role() {
+        let actor_id = UserId::new();
+        let id = RoleId::new();
+        let name = RoleName::new("editor").unwrap();
+        let permissions = vec![Permission::RolesUpdate, Permission::RolesDelete];
+
+        let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once(|_| Ok(vec![Permission::RolesUpdate]));
+        repository.expect_update_role().times(0);
+
+        let result = service(repository)
+            .update_role(actor_id, id, name, permissions)
+            .await;
+
+        assert!(matches!(result, Err(Error::Forbidden)));
+    }
+
+    #[tokio::test]
     async fn should_propagate_update_role_error() {
+        let actor_id = UserId::new();
         let id = RoleId::new();
         let name = RoleName::new("editor").unwrap();
         let permissions = vec![Permission::RolesUpdate];
 
         let mut repository = MockAuthorizationRepository::new();
         repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once(|_| Ok(vec![Permission::RolesUpdate]));
+        repository
             .expect_update_role()
             .times(1)
             .return_once(|_| Err(Error::InternalError(anyhow::anyhow!("error"))));
 
-        let result = service(repository).update_role(id, name, permissions).await;
+        let result = service(repository)
+            .update_role(actor_id, id, name, permissions)
+            .await;
 
         assert!(matches!(result, Err(Error::InternalError(_))));
     }
@@ -394,35 +510,96 @@ mod tests {
 
     #[tokio::test]
     async fn should_assign_role_to_user() {
-        let user_id = UserId::new();
+        let actor_id = UserId::new();
+        let target_user_id = UserId::new();
         let role_id = RoleId::new();
+        let role = Role::from_parts(
+            role_id,
+            RoleName::new("reader").unwrap(),
+            vec![Permission::RolesRead],
+        );
+
         let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_get_role()
+            .withf(move |actual_role_id| *actual_role_id == role_id)
+            .times(1)
+            .return_once(|_| Ok(role));
+        repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once(|_| Ok(vec![Permission::RolesRead]));
         repository
             .expect_assign_role_to_user()
             .withf(move |actual_user_id, actual_role_id| {
-                *actual_user_id == user_id && *actual_role_id == role_id
+                *actual_user_id == target_user_id && *actual_role_id == role_id
             })
             .times(1)
             .return_once(|_, _| Ok(()));
 
         service(repository)
-            .assign_role_to_user(user_id, role_id)
+            .assign_role_to_user(actor_id, target_user_id, role_id)
             .await
             .unwrap();
     }
 
     #[tokio::test]
-    async fn should_propagate_assign_role_to_user_error() {
-        let user_id = UserId::new();
+    async fn should_reject_assigning_role_with_permissions_the_user_does_not_have() {
+        let actor_id = UserId::new();
+        let target_user_id = UserId::new();
         let role_id = RoleId::new();
+        let role = Role::from_parts(
+            role_id,
+            RoleName::new("editor").unwrap(),
+            vec![Permission::RolesRead, Permission::RolesDelete],
+        );
+
         let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_get_role()
+            .withf(move |actual_role_id| *actual_role_id == role_id)
+            .times(1)
+            .return_once(|_| Ok(role));
+        repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once(|_| Ok(vec![Permission::RolesRead]));
+        repository.expect_assign_role_to_user().times(0);
+
+        let result = service(repository)
+            .assign_role_to_user(actor_id, target_user_id, role_id)
+            .await;
+
+        assert!(matches!(result, Err(Error::Forbidden)));
+    }
+
+    #[tokio::test]
+    async fn should_propagate_assign_role_to_user_error() {
+        let actor_id = UserId::new();
+        let target_user_id = UserId::new();
+        let role_id = RoleId::new();
+        let role = Role::from_parts(role_id, RoleName::new("reader").unwrap(), vec![]);
+
+        let mut repository = MockAuthorizationRepository::new();
+        repository
+            .expect_get_role()
+            .withf(move |actual_role_id| *actual_role_id == role_id)
+            .times(1)
+            .return_once(|_| Ok(role));
+        repository
+            .expect_list_user_permissions()
+            .withf(move |actual_user_id| *actual_user_id == actor_id)
+            .times(1)
+            .return_once(|_| Ok(vec![]));
         repository
             .expect_assign_role_to_user()
             .times(1)
             .return_once(|_, _| Err(Error::InternalError(anyhow::anyhow!("error"))));
 
         let result = service(repository)
-            .assign_role_to_user(user_id, role_id)
+            .assign_role_to_user(actor_id, target_user_id, role_id)
             .await;
 
         assert!(matches!(result, Err(Error::InternalError(_))));

@@ -155,7 +155,7 @@
           "roles"
         ],
         "summary": "Create a role.",
-        "description": "Creates a role with the given name and permission set. Requires the `roles:create` permission. Additionally, the caller may only grant permissions they possess themselves: any requested permission missing from the caller's own permission set causes the request to fail with 403 Forbidden, preventing privilege escalation.",
+        "description": "Creates a role with the given name and permission set. Requires the `roles:create` permission. The caller may only grant permissions included in their effective permissions; any requested permission missing from that set causes the request to fail with 403 Forbidden, preventing privilege escalation.",
         "operationId": "createRole",
         "parameters": [
           {
@@ -354,7 +354,7 @@
           "roles"
         ],
         "summary": "Update a role.",
-        "description": "Replaces the name and permission set of the role identified by the provided ID. Requires the `roles:update` permission. The caller may only grant permissions they possess themselves, preventing privilege escalation.",
+        "description": "Replaces the name and permission set of the role identified by the provided ID. Requires the `roles:update` permission. The updated role's permissions must all be included in the caller's effective permissions; otherwise, the request fails with 403 Forbidden, preventing privilege escalation.",
         "operationId": "updateRole",
         "parameters": [
           {
@@ -844,7 +844,7 @@
           "users"
         ],
         "summary": "Assign a role to a user.",
-        "description": "Assigns the specified role to the user. Requires the `roles:assign` permission. Repeating the request has no additional effect.",
+        "description": "Assigns the specified role to the user. Requires the `roles:assign` permission. The role's permissions must all be included in the caller's effective permissions; otherwise, the request fails with 403 Forbidden, preventing privilege escalation. Repeating the request has no additional effect.",
         "operationId": "assignRoleToUser",
         "parameters": [
           {

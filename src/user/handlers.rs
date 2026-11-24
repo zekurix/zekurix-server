@@ -85,13 +85,14 @@ pub async fn delete_user(
 
 pub async fn assign_role_to_user(
     State(application): State<Arc<Application>>,
+    CurrentUserId(actor_id): CurrentUserId,
     _: RequirePermission<RolesAssign>,
-    ApiPath((user_id, role_id)): ApiPath<(UserId, RoleId)>,
+    ApiPath((target_user_id, role_id)): ApiPath<(UserId, RoleId)>,
 ) -> Result<StatusCode> {
     application
         .services
         .authorization
-        .assign_role_to_user(user_id, role_id)
+        .assign_role_to_user(actor_id, target_user_id, role_id)
         .await?;
 
     Ok(StatusCode::NO_CONTENT)
