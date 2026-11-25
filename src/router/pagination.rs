@@ -1,10 +1,9 @@
-use axum::{
-    extract::{FromRequestParts, Query},
-    http::request::Parts,
-};
+use axum::{extract::FromRequestParts, http::request::Parts};
 use serde::Deserialize;
 
 use crate::error::Error;
+
+use super::api_query::ApiQuery;
 
 const DEFAULT_PAGE_LIMIT: u32 = 50;
 const MAX_PAGE_LIMIT: u32 = 100;
@@ -38,9 +37,7 @@ where
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let Query(pagination) = Query::<Pagination>::from_request_parts(parts, state)
-            .await
-            .map_err(|rejection| Error::InvalidQuery(rejection.body_text()))?;
+        let ApiQuery(pagination) = ApiQuery::<Pagination>::from_request_parts(parts, state).await?;
 
         if pagination.limit == 0 {
             return Err(Error::InvalidQuery(

@@ -242,11 +242,14 @@
           "roles"
         ],
         "summary": "List roles.",
-        "description": "Returns a paginated list of roles. Requires the `roles:read` permission.",
+        "description": "Returns a paginated list of roles, optionally filtered by exact name. Requires the `roles:read` permission.",
         "operationId": "listRoles",
         "parameters": [
           {
             "$ref": "#/components/parameters/X-Request-Id"
+          },
+          {
+            "$ref": "#/components/parameters/RoleNameFilter"
           },
           {
             "$ref": "#/components/parameters/Limit"
@@ -1006,6 +1009,15 @@
           "type": "string"
         }
       },
+      "RoleNameFilter": {
+        "name": "name",
+        "in": "query",
+        "description": "Filter roles by exact role name.",
+        "required": false,
+        "schema": {
+          "$ref": "#/components/schemas/RoleName"
+        }
+      },
       "Limit": {
         "name": "limit",
         "in": "query",
@@ -1216,12 +1228,6 @@
           ]
         }
       },
-      "RoleId": {
-        "description": "Unique identifier of a role.",
-        "type": "string",
-        "format": "uuid",
-        "example": "01a1c232-15fa-7748-9e58-26bcfe04c941"
-      },
       "RoleName": {
         "description": "Unique name of a role.",
         "type": "string",
@@ -1229,6 +1235,12 @@
         "maxLength": 255,
         "pattern": "^[^\\u0000]*$",
         "example": "admin"
+      },
+      "RoleId": {
+        "description": "Unique identifier of a role.",
+        "type": "string",
+        "format": "uuid",
+        "example": "01a1c232-15fa-7748-9e58-26bcfe04c941"
       },
       "RoleResponse": {
         "description": "Response containing role details.",

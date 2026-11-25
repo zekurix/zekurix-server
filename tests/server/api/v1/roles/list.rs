@@ -58,6 +58,29 @@ async fn should_list_roles_with_default_pagination() {
 }
 
 #[tokio::test]
+async fn should_filter_roles_by_exact_name() {
+    let harness = TestHarness::new().await;
+
+    let reader = create_role(&harness, "reader", &[]).await;
+    create_role(&harness, "reader-admin", &[]).await;
+
+    let response = list_roles(&harness, Some("name=reader"), "admin").await;
+
+    assert_role_ids(response, &[reader.id]);
+}
+
+#[tokio::test]
+async fn should_return_empty_list_when_no_role_matches_name() {
+    let harness = TestHarness::new().await;
+
+    create_role(&harness, "reader", &[]).await;
+
+    let response = list_roles(&harness, Some("name=unknown"), "admin").await;
+
+    assert_role_ids(response, &[]);
+}
+
+#[tokio::test]
 async fn should_apply_limit_and_offset() {
     let harness = TestHarness::new().await;
 
@@ -82,7 +105,7 @@ async fn should_return_an_empty_page_when_offset_exceeds_role_count() {
 }
 
 #[tokio::test]
-async fn should_reject_invalid_pagination() {
+async fn should_reject_invalid_query() {
     let harness = TestHarness::new().await;
 
     for query in [
@@ -91,6 +114,7 @@ async fn should_reject_invalid_pagination() {
         "limit=-1",
         "limit=invalid",
         "offset=-1",
+        "name=",
     ] {
         let response = list_roles(&harness, Some(query), "admin").await;
 

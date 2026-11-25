@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 use tracing::{error, instrument};
 
-use crate::authorization::RoleSummary;
+use crate::authorization::role::{RoleFilter, RoleSummary};
 use crate::database::postgres::UNIQUE_VIOLATION;
 use crate::error::{Error, Result};
 use crate::router::Pagination;
@@ -163,7 +163,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn list_roles(&self, pagination: Pagination) -> Result<Vec<Role>> {
+    async fn list_roles(&self, filter: &RoleFilter, pagination: Pagination) -> Result<Vec<Role>> {
         let rows = sqlx::query_as::<_, (RoleId, String, Vec<String>)>(
             r#"
             SELECT
@@ -176,12 +176,14 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
                 )
             FROM roles AS r
             LEFT JOIN role_permissions AS rp ON rp.role_id = r.id
+            WHERE ($1::TEXT IS NULL OR r.name = $1)
             GROUP BY r.id
             ORDER BY r.id
-            LIMIT $1
-            OFFSET $2
+            LIMIT $2
+            OFFSET $3
             "#,
         )
+        .bind(&filter.name)
         .bind(i64::from(pagination.limit))
         .bind(i64::from(pagination.offset))
         .fetch_all(&self.pool)

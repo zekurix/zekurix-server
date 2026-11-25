@@ -1,5 +1,5 @@
 use zekurix_server::{
-    authorization::{AuthorizationRepository, Permission, Role, RoleName},
+    authorization::{AuthorizationRepository, Permission, Role, RoleFilter, RoleName},
     router::Pagination,
 };
 
@@ -26,7 +26,7 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
 
     let mut expected = harness
         .repository
-        .list_roles(Pagination::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap();
     expected.extend([
@@ -55,7 +55,7 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
 
     let roles = harness
         .repository
-        .list_roles(Pagination::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap();
 
@@ -73,7 +73,7 @@ async fn should_list_roles_without_permissions() {
 
     let mut expected = harness
         .repository
-        .list_roles(Pagination::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap();
     expected.extend([
@@ -88,7 +88,7 @@ async fn should_list_roles_without_permissions() {
 
     let roles = harness
         .repository
-        .list_roles(Pagination::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap();
 
@@ -103,7 +103,7 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
 
     let mut expected = harness
         .repository
-        .list_roles(Pagination::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap();
 
@@ -126,12 +126,74 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
 
     let roles = harness
         .repository
-        .list_roles(Pagination {
-            limit: 2,
-            offset: 1,
-        })
+        .list_roles(
+            &RoleFilter::default(),
+            Pagination {
+                limit: 2,
+                offset: 1,
+            },
+        )
         .await
         .unwrap();
 
     assert_eq!(roles, expected[1..3]);
+}
+
+#[tokio::test]
+async fn should_filter_roles_by_exact_name() {
+    let harness = TestHarness::new().await;
+
+    let matching_role = Role::new(
+        RoleName::new("matching-role").unwrap(),
+        vec![Permission::RolesRead],
+    );
+    let other_role = Role::new(
+        RoleName::new("other-role").unwrap(),
+        vec![Permission::RolesDelete],
+    );
+
+    let expected = Role::from_parts(
+        matching_role.id(),
+        matching_role.name().clone(),
+        matching_role.permissions().to_vec(),
+    );
+
+    harness.repository.create_role(matching_role).await.unwrap();
+    harness.repository.create_role(other_role).await.unwrap();
+
+    let filter = RoleFilter {
+        name: Some(RoleName::new("matching-role").unwrap()),
+    };
+
+    let roles = harness
+        .repository
+        .list_roles(&filter, Pagination::default())
+        .await
+        .unwrap();
+
+    assert_eq!(roles, vec![expected]);
+}
+
+#[tokio::test]
+async fn should_return_empty_list_when_no_role_matches_name() {
+    let harness = TestHarness::new().await;
+
+    let role = Role::new(
+        RoleName::new("existing-role").unwrap(),
+        vec![Permission::RolesRead],
+    );
+
+    harness.repository.create_role(role).await.unwrap();
+
+    let filter = RoleFilter {
+        name: Some(RoleName::new("unknown-role").unwrap()),
+    };
+
+    let roles = harness
+        .repository
+        .list_roles(&filter, Pagination::default())
+        .await
+        .unwrap();
+
+    assert!(roles.is_empty());
 }
