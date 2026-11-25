@@ -86,6 +86,18 @@ async fn should_assign_role_for_user_with_only_roles_assign_permission() {
 }
 
 #[tokio::test]
+async fn should_reject_assigning_role_with_permissions_the_user_does_not_have() {
+    let harness = TestHarness::new().await;
+    let user = create_user(&harness, "Alice").await;
+    let role = create_role(&harness, "privileged", &["roles:assign", "roles:delete"]).await;
+    let actor = create_user_with_only_permission(&harness, "roles:assign").await;
+
+    let response = assign_role(&harness, &user.id, &role.id, &actor).await;
+
+    assert_http_forbidden(&response);
+}
+
+#[tokio::test]
 async fn should_reject_role_assignment_for_user_without_permissions() {
     let harness = TestHarness::new().await;
     let user = create_user(&harness, "Alice").await;

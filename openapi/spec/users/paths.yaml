@@ -299,6 +299,8 @@ paths:
       summary: Assign a role to a user.
       description: >-
         Assigns the specified role to the user. Requires the `roles:assign` permission.
+        The role's permissions must all be included in the caller's effective permissions;
+        otherwise, the request fails with 403 Forbidden, preventing privilege escalation.
         Repeating the request has no additional effect.
       operationId: assignRoleToUser
 

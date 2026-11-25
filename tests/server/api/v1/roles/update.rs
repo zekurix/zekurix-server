@@ -221,7 +221,7 @@ async fn should_update_role_for_user_with_only_roles_update_permission() {
 
     let body = json!({
         "name": "editor",
-        "permissions": ["roles:read"],
+        "permissions": ["roles:update"],
     });
 
     let response = update_role(&harness, &created.id, body, &actor).await;
@@ -231,7 +231,23 @@ async fn should_update_role_for_user_with_only_roles_update_permission() {
     let updated: RoleResponse = response.json();
     assert_eq!(updated.id, created.id);
     assert_eq!(updated.name, "editor");
-    assert_eq!(updated.permissions, vec!["roles:read"]);
+    assert_eq!(updated.permissions, vec!["roles:update"]);
+}
+
+#[tokio::test]
+async fn should_reject_role_update_with_permissions_the_user_does_not_have() {
+    let harness = TestHarness::new().await;
+    let created = create_role(&harness, "reader", &[]).await;
+    let actor = create_user_with_only_permission(&harness, "roles:update").await;
+
+    let body = json!({
+        "name": "editor",
+        "permissions": ["roles:update", "roles:delete"],
+    });
+
+    let response = update_role(&harness, &created.id, body, &actor).await;
+
+    assert_http_forbidden(&response);
 }
 
 #[tokio::test]
