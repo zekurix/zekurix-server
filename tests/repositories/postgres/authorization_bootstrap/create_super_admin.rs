@@ -1,5 +1,7 @@
 use zekurix_server::{
-    authorization::{AuthorizationBootstrapRepository, AuthorizationRepository, RoleName},
+    authorization::{
+        AuthorizationBootstrapRepository, AuthorizationRepository, RoleFilter, RoleName,
+    },
     error::Error,
     router::Pagination,
     user::{UserId, UserRepository},
@@ -151,14 +153,19 @@ async fn should_succeed_when_super_admin_role_is_already_assigned() {
         .create(existing_user, existing_identity)
         .await
         .unwrap();
+
+    let filter = RoleFilter {
+        name: Some(RoleName::new(SUPER_ADMIN_ROLE_NAME).unwrap()),
+    };
+
     let role = harness
         .authorization_repository
-        .list_roles(Pagination::default())
+        .list_roles(&filter, Pagination::default())
         .await
         .unwrap()
         .into_iter()
-        .find(|role| role.name().as_str() == SUPER_ADMIN_ROLE_NAME)
-        .unwrap();
+        .next()
+        .expect("the super-admin role should exist");
 
     harness
         .authorization_repository

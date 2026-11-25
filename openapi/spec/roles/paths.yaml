@@ -79,12 +79,13 @@ paths:
         - roles
       summary: List roles.
       description: >-
-        Returns a paginated list of roles.
+        Returns a paginated list of roles, optionally filtered by exact name.
         Requires the `roles:read` permission.
       operationId: listRoles
 
       parameters:
         - $ref: "./../common/parameters.yaml#/components/parameters/X-Request-Id"
+        - $ref: "./parameters.yaml#/components/parameters/RoleNameFilter"
         - $ref: "./../common/parameters.yaml#/components/parameters/Limit"
         - $ref: "./../common/parameters.yaml#/components/parameters/Offset"
 

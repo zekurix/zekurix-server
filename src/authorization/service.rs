@@ -4,7 +4,8 @@ use crate::error::{Error, Result};
 use crate::router::Pagination;
 use crate::user::UserId;
 
-use super::{AuthorizationRepository, Permission, Role, RoleId, RoleName, RoleSummary};
+use super::role::{Role, RoleFilter, RoleId, RoleName, RoleSummary};
+use super::{AuthorizationRepository, Permission};
 
 #[derive(Clone)]
 pub struct AuthorizationService {
@@ -36,8 +37,12 @@ impl AuthorizationService {
         self.repository.get_role(id).await
     }
 
-    pub async fn list_roles(&self, pagination: Pagination) -> Result<Vec<Role>> {
-        self.repository.list_roles(pagination).await
+    pub async fn list_roles(
+        &self,
+        filter: &RoleFilter,
+        pagination: Pagination,
+    ) -> Result<Vec<Role>> {
+        self.repository.list_roles(filter, pagination).await
     }
 
     pub async fn update_role(
@@ -300,6 +305,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_list_roles() {
+        let filter = RoleFilter::default();
         let pagination = Pagination::default();
         let expected = vec![Role::from_parts(
             RoleId::new(),
@@ -309,15 +315,21 @@ mod tests {
         let expected_id = expected[0].id();
         let expected_name = expected[0].name().clone();
         let expected_permissions = expected[0].permissions().to_vec();
+        let expected_filter = filter.clone();
 
         let mut repository = MockAuthorizationRepository::new();
         repository
             .expect_list_roles()
-            .withf(move |actual_pagination| *actual_pagination == pagination)
+            .withf(move |actual_filter, actual_pagination| {
+                *actual_filter == expected_filter && *actual_pagination == pagination
+            })
             .times(1)
-            .return_once(|_| Ok(expected));
+            .return_once(|_, _| Ok(expected));
 
-        let roles = service(repository).list_roles(pagination).await.unwrap();
+        let roles = service(repository)
+            .list_roles(&filter, pagination)
+            .await
+            .unwrap();
 
         assert_eq!(roles.len(), 1);
         assert_eq!(roles[0].id(), expected_id);
@@ -327,15 +339,20 @@ mod tests {
 
     #[tokio::test]
     async fn should_propagate_list_roles_error() {
+        let filter = RoleFilter::default();
         let pagination = Pagination::default();
+        let expected_filter = filter.clone();
+
         let mut repository = MockAuthorizationRepository::new();
         repository
             .expect_list_roles()
-            .withf(move |actual_pagination| *actual_pagination == pagination)
+            .withf(move |actual_filter, actual_pagination| {
+                *actual_filter == expected_filter && *actual_pagination == pagination
+            })
             .times(1)
-            .return_once(|_| Err(Error::InternalError(anyhow::anyhow!("error"))));
+            .return_once(|_, _| Err(Error::InternalError(anyhow::anyhow!("error"))));
 
-        let result = service(repository).list_roles(pagination).await;
+        let result = service(repository).list_roles(&filter, pagination).await;
 
         assert!(matches!(result, Err(Error::InternalError(_))));
     }

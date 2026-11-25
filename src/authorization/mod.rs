@@ -16,7 +16,7 @@ pub use dto::{PermissionsResponse, RoleSummariesResponse, RoleSummaryResponse};
 pub use permission::{Permission, RequirePermission, SelfOrPermission};
 pub use postgres_repository::PostgresAuthorizationRepository;
 pub use repository::AuthorizationRepository;
-pub use role::{Role, RoleId, RoleName, RoleSummary};
+pub use role::{Role, RoleFilter, RoleId, RoleName, RoleSummary};
 pub use routes::{permissions_router, roles_router};
 pub use service::AuthorizationService;
 
