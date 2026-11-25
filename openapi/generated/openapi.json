@@ -1024,10 +1024,7 @@
         "description": "Maximum number of items to return per page.",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100,
-          "default": 50
+          "$ref": "#/components/schemas/Limit"
         }
       },
       "Offset": {
@@ -1036,10 +1033,7 @@
         "description": "Number of items to skip for pagination.",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295,
-          "default": 0
+          "$ref": "#/components/schemas/Offset"
         }
       },
       "RoleId": {
@@ -1236,6 +1230,20 @@
         "pattern": "^[^\\u0000]*$",
         "example": "admin"
       },
+      "Limit": {
+        "description": "Maximum number of items to return per page.",
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 50
+      },
+      "Offset": {
+        "description": "Number of items to skip for pagination. Offset is zero-based.",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295,
+        "default": 0
+      },
       "RoleId": {
         "description": "Unique identifier of a role.",
         "type": "string",
@@ -1263,12 +1271,44 @@
           }
         }
       },
+      "Total": {
+        "description": "The total number of items matching the request filters, before applying limit and offset.",
+        "type": "integer",
+        "minimum": 0
+      },
+      "Pagination": {
+        "description": "Pagination metadata for the requested page. limit and offset contain the values applied to the request. offset is zero-based.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "limit",
+          "offset",
+          "total"
+        ],
+        "properties": {
+          "limit": {
+            "$ref": "#/components/schemas/Limit"
+          },
+          "offset": {
+            "$ref": "#/components/schemas/Offset"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Total"
+          }
+        },
+        "example": {
+          "limit": 50,
+          "offset": 0,
+          "total": 75
+        }
+      },
       "RolesResponse": {
         "description": "Response containing a list of roles.",
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "roles"
+          "roles",
+          "pagination"
         ],
         "properties": {
           "roles": {
@@ -1276,6 +1316,9 @@
             "items": {
               "$ref": "#/components/schemas/RoleResponse"
             }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
           }
         }
       },
@@ -1320,7 +1363,8 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "users"
+          "users",
+          "pagination"
         ],
         "properties": {
           "users": {
@@ -1328,6 +1372,9 @@
             "items": {
               "$ref": "#/components/schemas/UserResponse"
             }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
           }
         }
       },

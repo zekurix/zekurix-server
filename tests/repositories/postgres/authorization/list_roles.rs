@@ -1,6 +1,6 @@
 use zekurix_server::{
     authorization::{AuthorizationRepository, Permission, Role, RoleFilter, RoleName},
-    router::Pagination,
+    router::PaginationQuery,
 };
 
 use super::harness::TestHarness;
@@ -26,9 +26,10 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
 
     let mut expected = harness
         .repository
-        .list_roles(&RoleFilter::default(), Pagination::default())
+        .list_roles(&RoleFilter::default(), PaginationQuery::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
     expected.extend([
         Role::from_parts(
             first_role.id(),
@@ -55,9 +56,10 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
 
     let roles = harness
         .repository
-        .list_roles(&RoleFilter::default(), Pagination::default())
+        .list_roles(&RoleFilter::default(), PaginationQuery::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert_eq!(roles, expected);
 }
@@ -73,9 +75,10 @@ async fn should_list_roles_without_permissions() {
 
     let mut expected = harness
         .repository
-        .list_roles(&RoleFilter::default(), Pagination::default())
+        .list_roles(&RoleFilter::default(), PaginationQuery::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
     expected.extend([
         Role::from_parts(first_role.id(), first_role.name().clone(), vec![]),
         Role::from_parts(second_role.id(), second_role.name().clone(), vec![]),
@@ -88,9 +91,10 @@ async fn should_list_roles_without_permissions() {
 
     let roles = harness
         .repository
-        .list_roles(&RoleFilter::default(), Pagination::default())
+        .list_roles(&RoleFilter::default(), PaginationQuery::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert_eq!(roles, expected);
 }
@@ -103,9 +107,10 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
 
     let mut expected = harness
         .repository
-        .list_roles(&RoleFilter::default(), Pagination::default())
+        .list_roles(&RoleFilter::default(), PaginationQuery::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     for index in 0..5 {
         let role = Role::new(
@@ -128,13 +133,14 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
         .repository
         .list_roles(
             &RoleFilter::default(),
-            Pagination {
+            PaginationQuery {
                 limit: 2,
                 offset: 1,
             },
         )
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert_eq!(roles, expected[1..3]);
 }
@@ -167,9 +173,10 @@ async fn should_filter_roles_by_exact_name() {
 
     let roles = harness
         .repository
-        .list_roles(&filter, Pagination::default())
+        .list_roles(&filter, PaginationQuery::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert_eq!(roles, vec![expected]);
 }
@@ -191,9 +198,10 @@ async fn should_return_empty_list_when_no_role_matches_name() {
 
     let roles = harness
         .repository
-        .list_roles(&filter, Pagination::default())
+        .list_roles(&filter, PaginationQuery::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert!(roles.is_empty());
 }

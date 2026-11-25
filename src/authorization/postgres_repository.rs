@@ -5,7 +5,7 @@ use tracing::{error, instrument};
 use crate::authorization::role::{RoleFilter, RoleSummary};
 use crate::database::postgres::UNIQUE_VIOLATION;
 use crate::error::{Error, Result};
-use crate::router::Pagination;
+use crate::router::{Page, PaginationQuery};
 use crate::user::UserId;
 
 use super::{Permission, Role, RoleId, RoleName, repository::AuthorizationRepository};
@@ -163,7 +163,22 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn list_roles(&self, filter: &RoleFilter, pagination: Pagination) -> Result<Vec<Role>> {
+    async fn list_roles(
+        &self,
+        filter: &RoleFilter,
+        pagination: PaginationQuery,
+    ) -> Result<Page<Role>> {
+        let total = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM roles WHERE ($1::TEXT IS NULL OR name = $1)",
+        )
+        .bind(&filter.name)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            error!(error = ?err, "failed to count roles");
+            Error::InternalError(err.into())
+        })?;
+
         let rows = sqlx::query_as::<_, (RoleId, String, Vec<String>)>(
             r#"
             SELECT
@@ -193,9 +208,17 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
             Error::InternalError(err.into())
         })?;
 
-        rows.into_iter()
+        let roles = rows
+            .into_iter()
             .map(|(id, name, permissions)| Self::role_from_persisted(id, name, permissions))
-            .collect()
+            .collect::<Result<Vec<_>>>()?;
+
+        let total = u64::try_from(total).map_err(|err| {
+            error!(error = ?err, "role count is out of range");
+            Error::InternalError(err.into())
+        })?;
+
+        Ok(Page::new(roles, pagination, total))
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]

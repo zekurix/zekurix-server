@@ -49,11 +49,14 @@ components:
       additionalProperties: false
       required:
         - roles
+        - pagination
       properties:
         roles:
           type: array
           items:
             $ref: "#/components/schemas/RoleResponse"
+        pagination:
+          $ref: "./../common/schemas.yaml#/components/schemas/Pagination"
 
     RoleSummary:
       description: Summary of a role.

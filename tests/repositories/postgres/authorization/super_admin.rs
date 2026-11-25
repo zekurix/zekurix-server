@@ -1,6 +1,6 @@
 use zekurix_server::{
     authorization::{AuthorizationRepository, RoleFilter, RoleName},
-    router::Pagination,
+    router::PaginationQuery,
 };
 
 use super::harness::TestHarness;
@@ -17,11 +17,14 @@ async fn should_create_super_admin_with_all_permissions() {
 
     let roles = harness
         .repository
-        .list_roles(&filter, Pagination::default())
+        .list_roles(&filter, PaginationQuery::default())
         .await
         .unwrap();
 
-    let super_admin = roles.first().expect("the super-admin role should exist");
+    let super_admin = roles
+        .items
+        .first()
+        .expect("the super-admin role should exist");
 
     assert_eq!(
         super_admin.permissions(),

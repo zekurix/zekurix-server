@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::error::{Error, Result};
 use crate::identity::{Identity, Issuer, Subject};
-use crate::router::Pagination;
+use crate::router::{Page, PaginationQuery};
 use crate::settings::AuthenticationSettings;
 
 use super::{User, UserId, UserRepository};
@@ -43,7 +43,7 @@ impl UserService {
         self.repository.find(id).await
     }
 
-    pub async fn list(&self, pagination: Pagination) -> Result<Vec<User>> {
+    pub async fn list(&self, pagination: PaginationQuery) -> Result<Page<User>> {
         self.repository.list(pagination).await
     }
 
@@ -188,7 +188,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_list_users() {
-        let pagination = Pagination::default();
+        let pagination = PaginationQuery::default();
         let expected_users = vec![User::new(), User::new()];
         let expected_ids = expected_users
             .iter()
@@ -200,19 +200,20 @@ mod tests {
             .expect_list()
             .with(eq(pagination))
             .times(1)
-            .return_once(move |_| Ok(expected_users));
+            .return_once(move |_| Ok(Page::new(expected_users, pagination, 2)));
 
         let users = service(repository).list(pagination).await.unwrap();
 
         assert_eq!(
-            users.iter().map(|user| user.id).collect::<Vec<_>>(),
+            users.items.iter().map(|user| user.id).collect::<Vec<_>>(),
             expected_ids
         );
+        assert_eq!(users.total, 2);
     }
 
     #[tokio::test]
     async fn should_propagate_list_error() {
-        let pagination = Pagination::default();
+        let pagination = PaginationQuery::default();
 
         let mut repository = MockUserRepository::new();
         repository

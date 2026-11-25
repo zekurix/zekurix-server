@@ -15,11 +15,11 @@ use crate::authorization::permission::{
 use crate::authorization::{PermissionsResponse, RoleId, RoleSummariesResponse};
 use crate::error::Result;
 use crate::identity::CurrentUserId;
-use crate::router::{ApiJson, ApiPath, Pagination};
+use crate::router::{ApiJson, ApiPath, PaginationQuery};
 
 use super::{
     UserId,
-    dto::{CreateUserRequest, UserResponse, UsersResponse},
+    dto::{CreateUserRequest, UserResponse, UsersPageResponse},
 };
 
 pub async fn create_user(
@@ -66,8 +66,8 @@ pub async fn get_user(
 pub async fn list_users(
     State(application): State<Arc<Application>>,
     _: RequirePermission<UsersRead>,
-    pagination: Pagination,
-) -> Result<Json<UsersResponse>> {
+    pagination: PaginationQuery,
+) -> Result<Json<UsersPageResponse>> {
     let users = application.services.user.list(pagination).await?;
 
     Ok(Json(users.into()))

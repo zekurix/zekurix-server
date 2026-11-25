@@ -56,8 +56,11 @@ components:
       additionalProperties: false
       required:
         - users
+        - pagination
       properties:
         users:
           type: array
           items:
             $ref: "#/components/schemas/UserResponse"
+        pagination:
+          $ref: "./../common/schemas.yaml#/components/schemas/Pagination"
