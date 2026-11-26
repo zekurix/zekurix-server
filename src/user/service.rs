@@ -208,6 +208,7 @@ mod tests {
             users.items.iter().map(|user| user.id).collect::<Vec<_>>(),
             expected_ids
         );
+        assert_eq!(users.pagination, pagination);
         assert_eq!(users.total, 2);
     }
 

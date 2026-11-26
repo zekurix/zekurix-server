@@ -69,15 +69,14 @@ async fn should_apply_limit_and_offset_when_listing_users() {
 
     users.sort_by_key(|user| user.id);
 
-    let page = harness
-        .repository
-        .list(Pagination {
-            limit: 2,
-            offset: 1,
-        })
-        .await
-        .unwrap();
+    let pagination = Pagination {
+        limit: 2,
+        offset: 1,
+    };
+
+    let page = harness.repository.list(pagination).await.unwrap();
 
     assert_eq!(page.items, users[1..3]);
-    assert_eq!(page.total, 5);
+    assert_eq!(page.pagination, pagination);
+    assert_eq!(page.total, users.len() as u64);
 }

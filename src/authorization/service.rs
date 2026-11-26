@@ -338,6 +338,7 @@ mod tests {
             roles.items[0].permissions(),
             expected_permissions.as_slice()
         );
+        assert_eq!(roles.pagination, pagination);
         assert_eq!(roles.total, 1);
     }
 

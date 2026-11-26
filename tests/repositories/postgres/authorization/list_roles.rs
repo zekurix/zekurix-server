@@ -129,20 +129,20 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
 
     expected.sort_by_key(Role::id);
 
-    let roles = harness
-        .repository
-        .list_roles(
-            &RoleFilter::default(),
-            Pagination {
-                limit: 2,
-                offset: 1,
-            },
-        )
-        .await
-        .unwrap()
-        .items;
+    let pagination = Pagination {
+        limit: 2,
+        offset: 1,
+    };
 
-    assert_eq!(roles, expected[1..3]);
+    let page = harness
+        .repository
+        .list_roles(&RoleFilter::default(), pagination)
+        .await
+        .unwrap();
+
+    assert_eq!(page.items, expected[1..3]);
+    assert_eq!(page.pagination, pagination);
+    assert_eq!(page.total, expected.len() as u64);
 }
 
 #[tokio::test]
