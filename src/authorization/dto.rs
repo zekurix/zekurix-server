@@ -42,20 +42,16 @@ impl From<Role> for RoleResponse {
 }
 
 #[derive(Serialize)]
-pub struct RolesPageResponse {
+pub struct RolesResponse {
     roles: Vec<RoleResponse>,
     pagination: PaginationResponse,
 }
 
-impl From<Page<Role>> for RolesPageResponse {
+impl From<Page<Role>> for RolesResponse {
     fn from(page: Page<Role>) -> Self {
         Self {
             roles: page.items.into_iter().map(Into::into).collect(),
-            pagination: PaginationResponse {
-                limit: page.pagination.limit,
-                offset: page.pagination.offset,
-                total: page.total,
-            },
+            pagination: PaginationResponse::new(page.pagination, page.total),
         }
     }
 }
@@ -89,6 +85,8 @@ impl From<Vec<RoleSummary>> for RoleSummariesResponse {
 
 #[cfg(test)]
 mod tests {
+    use crate::router::Pagination;
+
     use super::*;
 
     #[test]
@@ -134,6 +132,36 @@ mod tests {
         let result: Result<RoleRequest, _> = serde_json::from_str(json);
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn should_convert_page_to_roles_response() {
+        let roles = vec![
+            Role::new(RoleName::new("admin").unwrap(), vec![Permission::RolesRead]),
+            Role::new(
+                RoleName::new("reader").unwrap(),
+                vec![Permission::RolesRead],
+            ),
+        ];
+        let expected_ids = roles.iter().map(Role::id).collect::<Vec<_>>();
+        let pagination = Pagination {
+            limit: 25,
+            offset: 50,
+        };
+
+        let response = RolesResponse::from(Page::new(roles, pagination, 100));
+
+        assert_eq!(
+            response
+                .roles
+                .iter()
+                .map(|role| role.id)
+                .collect::<Vec<_>>(),
+            expected_ids
+        );
+        assert_eq!(response.pagination.limit, 25);
+        assert_eq!(response.pagination.offset, 50);
+        assert_eq!(response.pagination.total, 100);
     }
 
     #[test]

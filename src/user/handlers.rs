@@ -19,7 +19,7 @@ use crate::router::{ApiJson, ApiPath, PaginationQuery};
 
 use super::{
     UserId,
-    dto::{CreateUserRequest, UserResponse, UsersPageResponse},
+    dto::{CreateUserRequest, UserResponse, UsersResponse},
 };
 
 pub async fn create_user(
@@ -67,7 +67,7 @@ pub async fn list_users(
     State(application): State<Arc<Application>>,
     _: RequirePermission<UsersRead>,
     pagination: PaginationQuery,
-) -> Result<Json<UsersPageResponse>> {
+) -> Result<Json<UsersResponse>> {
     let users = application.services.user.list(pagination.into()).await?;
 
     Ok(Json(users.into()))

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use super::page::Page;
+use super::Pagination;
 
 #[derive(Serialize)]
 pub struct PaginationResponse {
@@ -9,21 +9,31 @@ pub struct PaginationResponse {
     pub total: u64,
 }
 
-#[derive(Serialize)]
-pub struct PageResponse<T> {
-    pub items: Vec<T>,
-    pub pagination: PaginationResponse,
+impl PaginationResponse {
+    pub const fn new(pagination: Pagination, total: u64) -> Self {
+        Self {
+            limit: pagination.limit,
+            offset: pagination.offset,
+            total,
+        }
+    }
 }
 
-impl<T> From<Page<T>> for PageResponse<T> {
-    fn from(page: Page<T>) -> Self {
-        Self {
-            items: page.items,
-            pagination: PaginationResponse {
-                limit: page.pagination.limit,
-                offset: page.pagination.offset,
-                total: page.total,
-            },
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_preserves_pagination_and_total() {
+        let pagination = Pagination {
+            limit: 25,
+            offset: 100,
+        };
+
+        let response = PaginationResponse::new(pagination, 200);
+
+        assert_eq!(response.limit, 25);
+        assert_eq!(response.offset, 100);
+        assert_eq!(response.total, 200);
     }
 }

@@ -30,26 +30,24 @@ impl From<User> for UserResponse {
 }
 
 #[derive(Serialize)]
-pub struct UsersPageResponse {
+pub struct UsersResponse {
     users: Vec<UserResponse>,
     pagination: PaginationResponse,
 }
 
-impl From<Page<User>> for UsersPageResponse {
+impl From<Page<User>> for UsersResponse {
     fn from(page: Page<User>) -> Self {
         Self {
             users: page.items.into_iter().map(Into::into).collect(),
-            pagination: PaginationResponse {
-                limit: page.pagination.limit,
-                offset: page.pagination.offset,
-                total: page.total,
-            },
+            pagination: PaginationResponse::new(page.pagination, page.total),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::router::Pagination;
+
     use super::*;
 
     #[test]
@@ -60,5 +58,29 @@ mod tests {
         let response = UserResponse::from(user);
 
         assert_eq!(response.id, id);
+    }
+
+    #[test]
+    fn should_convert_page_to_users_response() {
+        let users = vec![User::new(), User::new()];
+        let expected_ids = users.iter().map(|user| user.id).collect::<Vec<_>>();
+        let pagination = Pagination {
+            limit: 25,
+            offset: 50,
+        };
+
+        let response = UsersResponse::from(Page::new(users, pagination, 100));
+
+        assert_eq!(
+            response
+                .users
+                .iter()
+                .map(|user| user.id)
+                .collect::<Vec<_>>(),
+            expected_ids
+        );
+        assert_eq!(response.pagination.limit, 25);
+        assert_eq!(response.pagination.offset, 50);
+        assert_eq!(response.pagination.total, 100);
     }
 }

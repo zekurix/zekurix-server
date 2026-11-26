@@ -15,7 +15,7 @@ use crate::error::Result;
 use crate::identity::CurrentUserId;
 use crate::router::{ApiJson, ApiPath, ApiQuery, PaginationQuery};
 
-use super::dto::{PermissionsResponse, RoleRequest, RoleResponse, RolesPageResponse};
+use super::dto::{PermissionsResponse, RoleRequest, RoleResponse, RolesResponse};
 use super::role::{RoleFilter, RoleId, RoleQuery};
 
 pub async fn list_permissions(
@@ -68,7 +68,7 @@ pub async fn list_roles(
     _: RequirePermission<RolesRead>,
     ApiQuery(query): ApiQuery<RoleQuery>,
     pagination: PaginationQuery,
-) -> Result<Json<RolesPageResponse>> {
+) -> Result<Json<RolesResponse>> {
     let filter = RoleFilter::from(query);
 
     let roles = application

@@ -8,4 +8,4 @@ pub mod routes;
 pub use api_json::ApiJson;
 pub use api_path::ApiPath;
 pub use api_query::ApiQuery;
-pub use pagination::{Page, PageResponse, Pagination, PaginationQuery, PaginationResponse};
+pub use pagination::{Page, Pagination, PaginationQuery, PaginationResponse};
