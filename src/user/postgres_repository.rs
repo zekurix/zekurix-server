@@ -4,7 +4,7 @@ use tracing::{error, instrument};
 
 use crate::error::{Error, Result};
 use crate::identity::Identity;
-use crate::router::Pagination;
+use crate::router::{Page, Pagination};
 
 use super::{User, UserId, repository::UserRepository};
 
@@ -75,16 +75,32 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn list(&self, pagination: Pagination) -> Result<Vec<User>> {
-        sqlx::query_as::<_, User>("SELECT id FROM users ORDER BY id LIMIT $1 OFFSET $2")
-            .bind(i64::from(pagination.limit))
-            .bind(i64::from(pagination.offset))
-            .fetch_all(&self.pool)
+    async fn list(&self, pagination: Pagination) -> Result<Page<User>> {
+        let total = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users")
+            .fetch_one(&self.pool)
             .await
             .map_err(|err| {
-                error!(error = ?err, "failed to list users");
+                error!(error = ?err, "failed to count users");
                 Error::InternalError(err.into())
-            })
+            })?;
+
+        let users =
+            sqlx::query_as::<_, User>("SELECT id FROM users ORDER BY id LIMIT $1 OFFSET $2")
+                .bind(i64::from(pagination.limit))
+                .bind(i64::from(pagination.offset))
+                .fetch_all(&self.pool)
+                .await
+                .map_err(|err| {
+                    error!(error = ?err, "failed to list users");
+                    Error::InternalError(err.into())
+                })?;
+
+        let total = u64::try_from(total).map_err(|err| {
+            error!(error = ?err, "user count is out of range");
+            Error::InternalError(err.into())
+        })?;
+
+        Ok(Page::new(users, pagination, total))
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]

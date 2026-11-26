@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::error::{Error, Result};
-use crate::router::Pagination;
+use crate::router::{Page, Pagination};
 use crate::user::UserId;
 
 use super::role::{Role, RoleFilter, RoleId, RoleName, RoleSummary};
@@ -41,7 +41,7 @@ impl AuthorizationService {
         &self,
         filter: &RoleFilter,
         pagination: Pagination,
-    ) -> Result<Vec<Role>> {
+    ) -> Result<Page<Role>> {
         self.repository.list_roles(filter, pagination).await
     }
 
@@ -324,17 +324,22 @@ mod tests {
                 *actual_filter == expected_filter && *actual_pagination == pagination
             })
             .times(1)
-            .return_once(|_, _| Ok(expected));
+            .return_once(move |_, _| Ok(Page::new(expected, pagination, 1)));
 
         let roles = service(repository)
             .list_roles(&filter, pagination)
             .await
             .unwrap();
 
-        assert_eq!(roles.len(), 1);
-        assert_eq!(roles[0].id(), expected_id);
-        assert_eq!(roles[0].name(), &expected_name);
-        assert_eq!(roles[0].permissions(), expected_permissions.as_slice());
+        assert_eq!(roles.items.len(), 1);
+        assert_eq!(roles.items[0].id(), expected_id);
+        assert_eq!(roles.items[0].name(), &expected_name);
+        assert_eq!(
+            roles.items[0].permissions(),
+            expected_permissions.as_slice()
+        );
+        assert_eq!(roles.pagination, pagination);
+        assert_eq!(roles.total, 1);
     }
 
     #[tokio::test]

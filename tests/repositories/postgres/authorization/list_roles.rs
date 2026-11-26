@@ -28,7 +28,8 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
         .repository
         .list_roles(&RoleFilter::default(), Pagination::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
     expected.extend([
         Role::from_parts(
             first_role.id(),
@@ -57,7 +58,8 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
         .repository
         .list_roles(&RoleFilter::default(), Pagination::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert_eq!(roles, expected);
 }
@@ -75,7 +77,8 @@ async fn should_list_roles_without_permissions() {
         .repository
         .list_roles(&RoleFilter::default(), Pagination::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
     expected.extend([
         Role::from_parts(first_role.id(), first_role.name().clone(), vec![]),
         Role::from_parts(second_role.id(), second_role.name().clone(), vec![]),
@@ -90,7 +93,8 @@ async fn should_list_roles_without_permissions() {
         .repository
         .list_roles(&RoleFilter::default(), Pagination::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert_eq!(roles, expected);
 }
@@ -105,7 +109,8 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
         .repository
         .list_roles(&RoleFilter::default(), Pagination::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     for index in 0..5 {
         let role = Role::new(
@@ -124,19 +129,20 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
 
     expected.sort_by_key(Role::id);
 
-    let roles = harness
+    let pagination = Pagination {
+        limit: 2,
+        offset: 1,
+    };
+
+    let page = harness
         .repository
-        .list_roles(
-            &RoleFilter::default(),
-            Pagination {
-                limit: 2,
-                offset: 1,
-            },
-        )
+        .list_roles(&RoleFilter::default(), pagination)
         .await
         .unwrap();
 
-    assert_eq!(roles, expected[1..3]);
+    assert_eq!(page.items, expected[1..3]);
+    assert_eq!(page.pagination, pagination);
+    assert_eq!(page.total, expected.len() as u64);
 }
 
 #[tokio::test]
@@ -169,7 +175,8 @@ async fn should_filter_roles_by_exact_name() {
         .repository
         .list_roles(&filter, Pagination::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert_eq!(roles, vec![expected]);
 }
@@ -193,7 +200,8 @@ async fn should_return_empty_list_when_no_role_matches_name() {
         .repository
         .list_roles(&filter, Pagination::default())
         .await
-        .unwrap();
+        .unwrap()
+        .items;
 
     assert!(roles.is_empty());
 }

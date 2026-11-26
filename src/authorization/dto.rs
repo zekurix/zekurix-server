@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::router::{Page, PaginationResponse};
+
 use super::{Permission, Role, RoleId, RoleName, RoleSummary};
 
 #[derive(Serialize)]
@@ -42,12 +44,14 @@ impl From<Role> for RoleResponse {
 #[derive(Serialize)]
 pub struct RolesResponse {
     roles: Vec<RoleResponse>,
+    pagination: PaginationResponse,
 }
 
-impl From<Vec<Role>> for RolesResponse {
-    fn from(roles: Vec<Role>) -> Self {
+impl From<Page<Role>> for RolesResponse {
+    fn from(page: Page<Role>) -> Self {
         Self {
-            roles: roles.into_iter().map(Into::into).collect(),
+            roles: page.items.into_iter().map(Into::into).collect(),
+            pagination: PaginationResponse::new(page.pagination, page.total),
         }
     }
 }
@@ -81,6 +85,8 @@ impl From<Vec<RoleSummary>> for RoleSummariesResponse {
 
 #[cfg(test)]
 mod tests {
+    use crate::router::Pagination;
+
     use super::*;
 
     #[test]
@@ -129,35 +135,33 @@ mod tests {
     }
 
     #[test]
-    fn should_convert_roles_to_roles_response() {
-        let first_id = RoleId::new();
-        let second_id = RoleId::new();
-        let first_name = RoleName::new("admin").unwrap();
-        let second_name = RoleName::new("reader").unwrap();
-        let first_permissions = vec![Permission::RolesRead];
-        let second_permissions = vec![Permission::RolesCreate, Permission::RolesRead];
-
+    fn should_convert_page_to_roles_response() {
         let roles = vec![
-            Role::from_parts(first_id, first_name.clone(), first_permissions.clone()),
-            Role::from_parts(second_id, second_name.clone(), second_permissions.clone()),
+            Role::new(RoleName::new("admin").unwrap(), vec![Permission::RolesRead]),
+            Role::new(
+                RoleName::new("reader").unwrap(),
+                vec![Permission::RolesRead],
+            ),
         ];
+        let expected_ids = roles.iter().map(Role::id).collect::<Vec<_>>();
+        let pagination = Pagination {
+            limit: 25,
+            offset: 50,
+        };
 
-        let response = RolesResponse::from(roles);
+        let response = RolesResponse::from(Page::new(roles, pagination, 100));
 
-        assert_eq!(response.roles.len(), 2);
-        assert_eq!(response.roles[0].id, first_id);
-        assert_eq!(response.roles[0].name, first_name);
-        assert_eq!(response.roles[0].permissions, first_permissions);
-        assert_eq!(response.roles[1].id, second_id);
-        assert_eq!(response.roles[1].name, second_name);
-        assert_eq!(response.roles[1].permissions, second_permissions);
-    }
-
-    #[test]
-    fn should_convert_empty_roles_to_roles_response() {
-        let response = RolesResponse::from(vec![]);
-
-        assert!(response.roles.is_empty());
+        assert_eq!(
+            response
+                .roles
+                .iter()
+                .map(|role| role.id)
+                .collect::<Vec<_>>(),
+            expected_ids
+        );
+        assert_eq!(response.pagination.limit, 25);
+        assert_eq!(response.pagination.offset, 50);
+        assert_eq!(response.pagination.total, 100);
     }
 
     #[test]

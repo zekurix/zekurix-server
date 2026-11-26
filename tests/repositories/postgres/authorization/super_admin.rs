@@ -21,7 +21,10 @@ async fn should_create_super_admin_with_all_permissions() {
         .await
         .unwrap();
 
-    let super_admin = roles.first().expect("the super-admin role should exist");
+    let super_admin = roles
+        .items
+        .first()
+        .expect("the super-admin role should exist");
 
     assert_eq!(
         super_admin.permissions(),

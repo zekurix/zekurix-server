@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::server::pagination::PaginationResponse;
+
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct RoleResponse {
@@ -12,4 +14,5 @@ pub(crate) struct RoleResponse {
 #[serde(deny_unknown_fields)]
 pub(super) struct RolesResponse {
     pub(super) roles: Vec<RoleResponse>,
+    pub(super) pagination: PaginationResponse,
 }

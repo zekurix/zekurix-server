@@ -51,13 +51,23 @@ components:
           $ref: "#/components/schemas/UserId"
 
     UsersResponse:
-      description: Response containing a list of users.
+      description: Response containing a paginated list of users.
       type: object
       additionalProperties: false
       required:
         - users
+        - pagination
       properties:
         users:
           type: array
           items:
             $ref: "#/components/schemas/UserResponse"
+        pagination:
+          $ref: "./../common/schemas.yaml#/components/schemas/Pagination"
+      example:
+        users:
+          - id: "01a05d6f-ca97-7801-8c05-097d2e1c727a"
+        pagination:
+          limit: 50
+          offset: 0
+          total: 1

@@ -13,7 +13,7 @@ use crate::authorization::permission::{
 };
 use crate::error::Result;
 use crate::identity::CurrentUserId;
-use crate::router::{ApiJson, ApiPath, ApiQuery, Pagination};
+use crate::router::{ApiJson, ApiPath, ApiQuery, PaginationQuery};
 
 use super::dto::{PermissionsResponse, RoleRequest, RoleResponse, RolesResponse};
 use super::role::{RoleFilter, RoleId, RoleQuery};
@@ -67,14 +67,14 @@ pub async fn list_roles(
     State(application): State<Arc<Application>>,
     _: RequirePermission<RolesRead>,
     ApiQuery(query): ApiQuery<RoleQuery>,
-    pagination: Pagination,
+    pagination: PaginationQuery,
 ) -> Result<Json<RolesResponse>> {
     let filter = RoleFilter::from(query);
 
     let roles = application
         .services
         .authorization
-        .list_roles(&filter, pagination)
+        .list_roles(&filter, pagination.into())
         .await?;
 
     Ok(Json(roles.into()))

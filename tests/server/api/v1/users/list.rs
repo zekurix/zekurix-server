@@ -12,11 +12,15 @@ use super::fixtures::{
 use super::models::{UserResponse, UsersResponse};
 use super::requests::{get_current_user, list_users};
 
-fn assert_user_ids(response: TestResponse, expected: &[String]) {
+fn users_response(response: TestResponse) -> UsersResponse {
     response.assert_status_ok();
     assert_eq!(response.content_type(), "application/json");
 
-    let body: UsersResponse = response.json();
+    response.json()
+}
+
+fn assert_user_ids(response: TestResponse, expected: &[String]) {
+    let body = users_response(response);
     let actual = body
         .users
         .into_iter()
@@ -33,7 +37,17 @@ async fn should_use_default_pagination_when_parameters_are_omitted() {
 
     let response = list_users(&harness, None, "admin").await;
 
-    assert_user_ids(response, &expected);
+    let body = users_response(response);
+    assert_eq!(
+        body.users
+            .into_iter()
+            .map(|user| user.id)
+            .collect::<Vec<_>>(),
+        expected
+    );
+    assert_eq!(body.pagination.limit, 50);
+    assert_eq!(body.pagination.offset, 0);
+    assert_eq!(body.pagination.total, expected.len() as u64);
 }
 
 #[tokio::test]
@@ -67,7 +81,17 @@ async fn should_apply_limit_and_offset() {
 
     let response = list_users(&harness, Some("limit=2&offset=1"), "admin").await;
 
-    assert_user_ids(response, &users[1..3]);
+    let body = users_response(response);
+    assert_eq!(
+        body.users
+            .into_iter()
+            .map(|user| user.id)
+            .collect::<Vec<_>>(),
+        users[1..3]
+    );
+    assert_eq!(body.pagination.limit, 2);
+    assert_eq!(body.pagination.offset, 1);
+    assert_eq!(body.pagination.total, users.len() as u64);
 }
 
 #[tokio::test]
@@ -99,11 +123,15 @@ async fn should_return_empty_page_when_offset_equals_user_count() {
 async fn should_return_empty_page_when_offset_exceeds_user_count() {
     let harness = TestHarness::new().await;
 
-    create_users(&harness, &["admin", "Alice", "Bob", "Charlie"]).await;
+    let users = create_users(&harness, &["admin", "Alice", "Bob", "Charlie"]).await;
 
     let response = list_users(&harness, Some("limit=2&offset=100"), "admin").await;
 
-    assert_user_ids(response, &[]);
+    let body = users_response(response);
+    assert!(body.users.is_empty());
+    assert_eq!(body.pagination.limit, 2);
+    assert_eq!(body.pagination.offset, 100);
+    assert_eq!(body.pagination.total, users.len() as u64);
 }
 
 #[tokio::test]

@@ -163,6 +163,7 @@ async fn should_succeed_when_super_admin_role_is_already_assigned() {
         .list_roles(&filter, Pagination::default())
         .await
         .unwrap()
+        .items
         .into_iter()
         .next()
         .expect("the super-admin role should exist");

@@ -54,7 +54,21 @@ async fn should_list_roles_with_default_pagination() {
 
     let response = list_roles(&harness, None, "admin").await;
 
-    assert_role_ids(response, &expected);
+    response.assert_status_ok();
+    assert_eq!(response.content_type(), "application/json");
+
+    let body: RolesResponse = response.json();
+
+    assert_eq!(
+        body.roles
+            .into_iter()
+            .map(|role| role.id)
+            .collect::<Vec<_>>(),
+        expected
+    );
+    assert_eq!(body.pagination.limit, 50);
+    assert_eq!(body.pagination.offset, 0);
+    assert_eq!(body.pagination.total, expected.len() as u64);
 }
 
 #[tokio::test]
@@ -66,7 +80,17 @@ async fn should_filter_roles_by_exact_name() {
 
     let response = list_roles(&harness, Some("name=reader"), "admin").await;
 
-    assert_role_ids(response, &[reader.id]);
+    response.assert_status_ok();
+    let body: RolesResponse = response.json();
+
+    assert_eq!(
+        body.roles
+            .into_iter()
+            .map(|role| role.id)
+            .collect::<Vec<_>>(),
+        [reader.id]
+    );
+    assert_eq!(body.pagination.total, 1);
 }
 
 #[tokio::test]
@@ -90,18 +114,37 @@ async fn should_apply_limit_and_offset() {
 
     let response = list_roles(&harness, Some("limit=2&offset=1"), "admin").await;
 
-    assert_role_ids(response, &roles[1..3]);
+    response.assert_status_ok();
+    let body: RolesResponse = response.json();
+    assert_eq!(body.pagination.limit, 2);
+    assert_eq!(body.pagination.offset, 1);
+    assert_eq!(body.pagination.total, roles.len() as u64);
+
+    assert_eq!(
+        body.roles
+            .into_iter()
+            .map(|role| role.id)
+            .collect::<Vec<_>>(),
+        roles[1..3]
+    );
 }
 
 #[tokio::test]
-async fn should_return_an_empty_page_when_offset_exceeds_role_count() {
+async fn should_return_empty_page_when_offset_exceeds_role_count() {
     let harness = TestHarness::new().await;
 
+    let existing_roles = existing_role_ids(&harness).await;
     create_roles(&harness, &["one", "two"]).await;
 
     let response = list_roles(&harness, Some("limit=2&offset=100"), "admin").await;
 
-    assert_role_ids(response, &[]);
+    response.assert_status_ok();
+    let body: RolesResponse = response.json();
+
+    assert!(body.roles.is_empty());
+    assert_eq!(body.pagination.limit, 2);
+    assert_eq!(body.pagination.offset, 100);
+    assert_eq!(body.pagination.total, (existing_roles.len() + 2) as u64);
 }
 
 #[tokio::test]

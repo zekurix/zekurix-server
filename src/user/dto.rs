@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::identity::{Issuer, Subject};
+use crate::router::{Page, PaginationResponse};
 
 use super::{User, UserId};
 
@@ -31,18 +32,22 @@ impl From<User> for UserResponse {
 #[derive(Serialize)]
 pub struct UsersResponse {
     users: Vec<UserResponse>,
+    pagination: PaginationResponse,
 }
 
-impl From<Vec<User>> for UsersResponse {
-    fn from(users: Vec<User>) -> Self {
+impl From<Page<User>> for UsersResponse {
+    fn from(page: Page<User>) -> Self {
         Self {
-            users: users.into_iter().map(Into::into).collect(),
+            users: page.items.into_iter().map(Into::into).collect(),
+            pagination: PaginationResponse::new(page.pagination, page.total),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::router::Pagination;
+
     use super::*;
 
     #[test]
@@ -56,23 +61,26 @@ mod tests {
     }
 
     #[test]
-    fn should_convert_users_to_users_response() {
-        let first_id = UserId::new();
-        let second_id = UserId::new();
+    fn should_convert_page_to_users_response() {
+        let users = vec![User::new(), User::new()];
+        let expected_ids = users.iter().map(|user| user.id).collect::<Vec<_>>();
+        let pagination = Pagination {
+            limit: 25,
+            offset: 50,
+        };
 
-        let users = vec![User { id: first_id }, User { id: second_id }];
+        let response = UsersResponse::from(Page::new(users, pagination, 100));
 
-        let response = UsersResponse::from(users);
-
-        assert_eq!(response.users.len(), 2);
-        assert_eq!(response.users[0].id, first_id);
-        assert_eq!(response.users[1].id, second_id);
-    }
-
-    #[test]
-    fn should_convert_empty_users_to_users_response() {
-        let response = UsersResponse::from(vec![]);
-
-        assert!(response.users.is_empty());
+        assert_eq!(
+            response
+                .users
+                .iter()
+                .map(|user| user.id)
+                .collect::<Vec<_>>(),
+            expected_ids
+        );
+        assert_eq!(response.pagination.limit, 25);
+        assert_eq!(response.pagination.offset, 50);
+        assert_eq!(response.pagination.total, 100);
     }
 }

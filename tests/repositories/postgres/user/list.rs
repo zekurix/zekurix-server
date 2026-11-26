@@ -31,7 +31,7 @@ async fn should_list_users_ordered_by_id() {
         .await
         .unwrap();
 
-    let users = harness
+    let page = harness
         .repository
         .list(Pagination {
             limit: 100,
@@ -43,7 +43,8 @@ async fn should_list_users_ordered_by_id() {
     let mut expected = vec![first_user, second_user, third_user];
     expected.sort_by_key(|user| user.id);
 
-    assert_eq!(users, expected);
+    assert_eq!(page.items, expected);
+    assert_eq!(page.total, 3);
 }
 
 #[tokio::test]
@@ -68,14 +69,14 @@ async fn should_apply_limit_and_offset_when_listing_users() {
 
     users.sort_by_key(|user| user.id);
 
-    let listed = harness
-        .repository
-        .list(Pagination {
-            limit: 2,
-            offset: 1,
-        })
-        .await
-        .unwrap();
+    let pagination = Pagination {
+        limit: 2,
+        offset: 1,
+    };
 
-    assert_eq!(listed, users[1..3]);
+    let page = harness.repository.list(pagination).await.unwrap();
+
+    assert_eq!(page.items, users[1..3]);
+    assert_eq!(page.pagination, pagination);
+    assert_eq!(page.total, users.len() as u64);
 }

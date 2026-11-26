@@ -2,42 +2,40 @@ use axum::{extract::FromRequestParts, http::request::Parts};
 use serde::Deserialize;
 
 use crate::error::Error;
+use crate::router::api_query::ApiQuery;
 
-use super::api_query::ApiQuery;
-
-const DEFAULT_PAGE_LIMIT: u32 = 50;
-const MAX_PAGE_LIMIT: u32 = 100;
+use super::model::{DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, MAX_PAGE_LIMIT};
 
 const fn default_page_limit() -> u32 {
     DEFAULT_PAGE_LIMIT
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
-pub struct Pagination {
+pub struct PaginationQuery {
     #[serde(default = "default_page_limit")]
     pub limit: u32,
-
     #[serde(default)]
     pub offset: u32,
 }
 
-impl Default for Pagination {
+impl Default for PaginationQuery {
     fn default() -> Self {
         Self {
             limit: DEFAULT_PAGE_LIMIT,
-            offset: 0,
+            offset: DEFAULT_PAGE_OFFSET,
         }
     }
 }
 
-impl<S> FromRequestParts<S> for Pagination
+impl<S> FromRequestParts<S> for PaginationQuery
 where
     S: Send + Sync,
 {
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let ApiQuery(pagination) = ApiQuery::<Pagination>::from_request_parts(parts, state).await?;
+        let ApiQuery(pagination) =
+            ApiQuery::<PaginationQuery>::from_request_parts(parts, state).await?;
 
         if pagination.limit == 0 {
             return Err(Error::InvalidQuery(
@@ -61,20 +59,20 @@ mod tests {
 
     use super::*;
 
-    async fn extract_pagination(uri: &str) -> Result<Pagination, Error> {
+    async fn extract_pagination(uri: &str) -> Result<PaginationQuery, Error> {
         let request = Request::builder().uri(uri).body(()).unwrap();
 
         let (mut parts, _) = request.into_parts();
 
-        Pagination::from_request_parts(&mut parts, &()).await
+        PaginationQuery::from_request_parts(&mut parts, &()).await
     }
 
     #[test]
     fn default_has_expected_values() {
-        let pagination = Pagination::default();
+        let pagination = PaginationQuery::default();
 
         assert_eq!(pagination.limit, DEFAULT_PAGE_LIMIT);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]
@@ -82,7 +80,7 @@ mod tests {
         let pagination = extract_pagination("/").await.unwrap();
 
         assert_eq!(pagination.limit, DEFAULT_PAGE_LIMIT);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]
@@ -98,7 +96,7 @@ mod tests {
         let pagination = extract_pagination("/?limit=25").await.unwrap();
 
         assert_eq!(pagination.limit, 25);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]
@@ -114,7 +112,7 @@ mod tests {
         let pagination = extract_pagination("/?limit=1").await.unwrap();
 
         assert_eq!(pagination.limit, 1);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]
@@ -122,7 +120,7 @@ mod tests {
         let pagination = extract_pagination("/?limit=100").await.unwrap();
 
         assert_eq!(pagination.limit, MAX_PAGE_LIMIT);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]

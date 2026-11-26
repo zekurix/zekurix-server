@@ -14,10 +14,7 @@ components:
       description: Maximum number of items to return per page.
       required: false
       schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 50
+        $ref: "./schemas.yaml#/components/schemas/Limit"
 
     Offset:
       name: offset
@@ -25,7 +22,4 @@ components:
       description: Number of items to skip for pagination.
       required: false
       schema:
-        type: integer
-        minimum: 0
-        maximum: 4294967295
-        default: 0
+        $ref: "./schemas.yaml#/components/schemas/Offset"
