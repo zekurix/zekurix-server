@@ -44,7 +44,7 @@ components:
           $ref: "./../permissions/schemas.yaml#/components/schemas/Permissions"
 
     RolesResponse:
-      description: Response containing a list of roles.
+      description: Response containing a paginated list of roles.
       type: object
       additionalProperties: false
       required:
@@ -57,6 +57,17 @@ components:
             $ref: "#/components/schemas/RoleResponse"
         pagination:
           $ref: "./../common/schemas.yaml#/components/schemas/Pagination"
+      example:
+        roles:
+          - id: "01a1c232-15fa-7748-9e58-26bcfe04c941"
+            name: "admin"
+            permissions:
+              - "roles:read"
+              - "roles:create"
+        pagination:
+          limit: 50
+          offset: 0
+          total: 1
 
     RoleSummary:
       description: Summary of a role.

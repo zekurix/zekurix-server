@@ -60,15 +60,20 @@ components:
     Total:
       description: >-
         The total number of items matching the request filters,
-        before applying limit and offset.
+        before applying `limit` and `offset`.
       type: integer
+      format: int64
       minimum: 0
+      example: 75
 
     Pagination:
       description: >-
         Pagination metadata for the requested page.
-        limit and offset contain the values applied to the request.
-        offset is zero-based.
+        `limit` and `offset` contain the values applied to the request.
+        `offset` is zero-based. `total` is the total number of items
+        matching the request filters before applying `limit` and `offset`.
+        When `offset` is greater than or equal to `total`, the returned
+        item collection is empty.
       type: object
       additionalProperties: false
       required:

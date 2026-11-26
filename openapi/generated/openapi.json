@@ -1272,12 +1272,14 @@
         }
       },
       "Total": {
-        "description": "The total number of items matching the request filters, before applying limit and offset.",
+        "description": "The total number of items matching the request filters, before applying `limit` and `offset`.",
         "type": "integer",
-        "minimum": 0
+        "format": "int64",
+        "minimum": 0,
+        "example": 75
       },
       "Pagination": {
-        "description": "Pagination metadata for the requested page. limit and offset contain the values applied to the request. offset is zero-based.",
+        "description": "Pagination metadata for the requested page. `limit` and `offset` contain the values applied to the request. `offset` is zero-based. `total` is the total number of items matching the request filters before applying `limit` and `offset`. When `offset` is greater than or equal to `total`, the returned item collection is empty.",
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1303,7 +1305,7 @@
         }
       },
       "RolesResponse": {
-        "description": "Response containing a list of roles.",
+        "description": "Response containing a paginated list of roles.",
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1319,6 +1321,23 @@
           },
           "pagination": {
             "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "example": {
+          "roles": [
+            {
+              "id": "01a1c232-15fa-7748-9e58-26bcfe04c941",
+              "name": "admin",
+              "permissions": [
+                "roles:read",
+                "roles:create"
+              ]
+            }
+          ],
+          "pagination": {
+            "limit": 50,
+            "offset": 0,
+            "total": 1
           }
         }
       },
@@ -1359,7 +1378,7 @@
         }
       },
       "UsersResponse": {
-        "description": "Response containing a list of users.",
+        "description": "Response containing a paginated list of users.",
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1375,6 +1394,18 @@
           },
           "pagination": {
             "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "example": {
+          "users": [
+            {
+              "id": "01a05d6f-ca97-7801-8c05-097d2e1c727a"
+            }
+          ],
+          "pagination": {
+            "limit": 50,
+            "offset": 0,
+            "total": 1
           }
         }
       },
