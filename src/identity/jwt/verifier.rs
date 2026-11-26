@@ -348,7 +348,7 @@ mod tests {
         let token = encode(
             &header,
             &claims(),
-            &EncodingKey::from_secret(b"not-the-ec-key"),
+            &EncodingKey::from_secret(b"not-the-ec-key").expect("failed to create encoding key"),
         )
         .unwrap();
 
