@@ -49,7 +49,7 @@ async fn should_reject_token_with_unexpected_algorithm() {
     let token = encode(
         &jwt_header,
         &claims,
-        &EncodingKey::from_secret("invalid key".as_bytes()),
+        &EncodingKey::from_secret(b"invalid key").expect("failed to create encoding key"),
     )
     .expect("failed to generate test JWT");
 
