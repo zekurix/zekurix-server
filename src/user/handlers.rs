@@ -68,7 +68,7 @@ pub async fn list_users(
     _: RequirePermission<UsersRead>,
     pagination: PaginationQuery,
 ) -> Result<Json<UsersPageResponse>> {
-    let users = application.services.user.list(pagination).await?;
+    let users = application.services.user.list(pagination.into()).await?;
 
     Ok(Json(users.into()))
 }

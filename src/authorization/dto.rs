@@ -52,8 +52,8 @@ impl From<Page<Role>> for RolesPageResponse {
         Self {
             roles: page.items.into_iter().map(Into::into).collect(),
             pagination: PaginationResponse {
-                limit: page.query.limit,
-                offset: page.query.offset,
+                limit: page.pagination.limit,
+                offset: page.pagination.offset,
                 total: page.total,
             },
         }

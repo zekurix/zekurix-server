@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::error::{Error, Result};
-use crate::router::{Page, PaginationQuery};
+use crate::router::{Page, Pagination};
 use crate::user::UserId;
 
 use super::role::{Role, RoleFilter, RoleId, RoleName, RoleSummary};
@@ -40,7 +40,7 @@ impl AuthorizationService {
     pub async fn list_roles(
         &self,
         filter: &RoleFilter,
-        pagination: PaginationQuery,
+        pagination: Pagination,
     ) -> Result<Page<Role>> {
         self.repository.list_roles(filter, pagination).await
     }
@@ -306,7 +306,7 @@ mod tests {
     #[tokio::test]
     async fn should_list_roles() {
         let filter = RoleFilter::default();
-        let pagination = PaginationQuery::default();
+        let pagination = Pagination::default();
         let expected = vec![Role::from_parts(
             RoleId::new(),
             RoleName::new("admin").unwrap(),
@@ -344,7 +344,7 @@ mod tests {
     #[tokio::test]
     async fn should_propagate_list_roles_error() {
         let filter = RoleFilter::default();
-        let pagination = PaginationQuery::default();
+        let pagination = Pagination::default();
         let expected_filter = filter.clone();
 
         let mut repository = MockAuthorizationRepository::new();

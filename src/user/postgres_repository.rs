@@ -4,7 +4,7 @@ use tracing::{error, instrument};
 
 use crate::error::{Error, Result};
 use crate::identity::Identity;
-use crate::router::{Page, PaginationQuery};
+use crate::router::{Page, Pagination};
 
 use super::{User, UserId, repository::UserRepository};
 
@@ -75,7 +75,7 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn list(&self, pagination: PaginationQuery) -> Result<Page<User>> {
+    async fn list(&self, pagination: Pagination) -> Result<Page<User>> {
         let total = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users")
             .fetch_one(&self.pool)
             .await

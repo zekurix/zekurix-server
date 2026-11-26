@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::error::{Error, Result};
 use crate::identity::{Identity, Issuer, Subject};
-use crate::router::{Page, PaginationQuery};
+use crate::router::{Page, Pagination};
 use crate::settings::AuthenticationSettings;
 
 use super::{User, UserId, UserRepository};
@@ -43,7 +43,7 @@ impl UserService {
         self.repository.find(id).await
     }
 
-    pub async fn list(&self, pagination: PaginationQuery) -> Result<Page<User>> {
+    pub async fn list(&self, pagination: Pagination) -> Result<Page<User>> {
         self.repository.list(pagination).await
     }
 
@@ -188,7 +188,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_list_users() {
-        let pagination = PaginationQuery::default();
+        let pagination = Pagination::default();
         let expected_users = vec![User::new(), User::new()];
         let expected_ids = expected_users
             .iter()
@@ -213,7 +213,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_propagate_list_error() {
-        let pagination = PaginationQuery::default();
+        let pagination = Pagination::default();
 
         let mut repository = MockUserRepository::new();
         repository

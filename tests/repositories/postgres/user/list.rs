@@ -1,4 +1,4 @@
-use zekurix_server::{router::PaginationQuery, user::UserRepository};
+use zekurix_server::{router::Pagination, user::UserRepository};
 
 use crate::repositories::postgres::fixtures::user_with_identity;
 
@@ -33,7 +33,7 @@ async fn should_list_users_ordered_by_id() {
 
     let page = harness
         .repository
-        .list(PaginationQuery {
+        .list(Pagination {
             limit: 100,
             offset: 0,
         })
@@ -71,7 +71,7 @@ async fn should_apply_limit_and_offset_when_listing_users() {
 
     let page = harness
         .repository
-        .list(PaginationQuery {
+        .list(Pagination {
             limit: 2,
             offset: 1,
         })

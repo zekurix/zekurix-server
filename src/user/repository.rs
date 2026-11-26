@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use crate::error::Result;
 use crate::identity::Identity;
-use crate::router::{Page, PaginationQuery};
+use crate::router::{Page, Pagination};
 
 use super::{User, UserId};
 
@@ -11,6 +11,6 @@ use super::{User, UserId};
 pub trait UserRepository: Send + Sync {
     async fn create(&self, user: User, identity: Identity) -> Result<User>;
     async fn find(&self, id: UserId) -> Result<User>;
-    async fn list(&self, pagination: PaginationQuery) -> Result<Page<User>>;
+    async fn list(&self, pagination: Pagination) -> Result<Page<User>>;
     async fn delete(&self, id: UserId) -> Result<()>;
 }

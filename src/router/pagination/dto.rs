@@ -20,8 +20,8 @@ impl<T> From<Page<T>> for PageResponse<T> {
         Self {
             items: page.items,
             pagination: PaginationResponse {
-                limit: page.query.limit,
-                offset: page.query.offset,
+                limit: page.pagination.limit,
+                offset: page.pagination.offset,
                 total: page.total,
             },
         }

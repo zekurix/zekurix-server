@@ -1,6 +1,6 @@
 use zekurix_server::{
     authorization::{AuthorizationRepository, Permission, Role, RoleFilter, RoleName},
-    router::PaginationQuery,
+    router::Pagination,
 };
 
 use super::harness::TestHarness;
@@ -26,7 +26,7 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
 
     let mut expected = harness
         .repository
-        .list_roles(&RoleFilter::default(), PaginationQuery::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap()
         .items;
@@ -56,7 +56,7 @@ async fn should_list_roles_with_permissions_ordered_by_role_id() {
 
     let roles = harness
         .repository
-        .list_roles(&RoleFilter::default(), PaginationQuery::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap()
         .items;
@@ -75,7 +75,7 @@ async fn should_list_roles_without_permissions() {
 
     let mut expected = harness
         .repository
-        .list_roles(&RoleFilter::default(), PaginationQuery::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap()
         .items;
@@ -91,7 +91,7 @@ async fn should_list_roles_without_permissions() {
 
     let roles = harness
         .repository
-        .list_roles(&RoleFilter::default(), PaginationQuery::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap()
         .items;
@@ -107,7 +107,7 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
 
     let mut expected = harness
         .repository
-        .list_roles(&RoleFilter::default(), PaginationQuery::default())
+        .list_roles(&RoleFilter::default(), Pagination::default())
         .await
         .unwrap()
         .items;
@@ -133,7 +133,7 @@ async fn should_apply_limit_and_offset_when_listing_roles() {
         .repository
         .list_roles(
             &RoleFilter::default(),
-            PaginationQuery {
+            Pagination {
                 limit: 2,
                 offset: 1,
             },
@@ -173,7 +173,7 @@ async fn should_filter_roles_by_exact_name() {
 
     let roles = harness
         .repository
-        .list_roles(&filter, PaginationQuery::default())
+        .list_roles(&filter, Pagination::default())
         .await
         .unwrap()
         .items;
@@ -198,7 +198,7 @@ async fn should_return_empty_list_when_no_role_matches_name() {
 
     let roles = harness
         .repository
-        .list_roles(&filter, PaginationQuery::default())
+        .list_roles(&filter, Pagination::default())
         .await
         .unwrap()
         .items;

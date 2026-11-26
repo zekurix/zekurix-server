@@ -5,7 +5,7 @@ use tracing::{error, instrument};
 use crate::authorization::role::{RoleFilter, RoleSummary};
 use crate::database::postgres::UNIQUE_VIOLATION;
 use crate::error::{Error, Result};
-use crate::router::{Page, PaginationQuery};
+use crate::router::{Page, Pagination};
 use crate::user::UserId;
 
 use super::{Permission, Role, RoleId, RoleName, repository::AuthorizationRepository};
@@ -163,11 +163,7 @@ impl AuthorizationRepository for PostgresAuthorizationRepository {
     }
 
     #[instrument(skip(self), level = "info", ret, err(level = "info"))]
-    async fn list_roles(
-        &self,
-        filter: &RoleFilter,
-        pagination: PaginationQuery,
-    ) -> Result<Page<Role>> {
+    async fn list_roles(&self, filter: &RoleFilter, pagination: Pagination) -> Result<Page<Role>> {
         let total = sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM roles WHERE ($1::TEXT IS NULL OR name = $1)",
         )

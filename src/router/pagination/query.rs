@@ -4,8 +4,7 @@ use serde::Deserialize;
 use crate::error::Error;
 use crate::router::api_query::ApiQuery;
 
-const DEFAULT_PAGE_LIMIT: u32 = 50;
-const MAX_PAGE_LIMIT: u32 = 100;
+use super::model::{DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, MAX_PAGE_LIMIT};
 
 const fn default_page_limit() -> u32 {
     DEFAULT_PAGE_LIMIT
@@ -23,7 +22,7 @@ impl Default for PaginationQuery {
     fn default() -> Self {
         Self {
             limit: DEFAULT_PAGE_LIMIT,
-            offset: 0,
+            offset: DEFAULT_PAGE_OFFSET,
         }
     }
 }
@@ -73,7 +72,7 @@ mod tests {
         let pagination = PaginationQuery::default();
 
         assert_eq!(pagination.limit, DEFAULT_PAGE_LIMIT);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]
@@ -81,7 +80,7 @@ mod tests {
         let pagination = extract_pagination("/").await.unwrap();
 
         assert_eq!(pagination.limit, DEFAULT_PAGE_LIMIT);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]
@@ -97,7 +96,7 @@ mod tests {
         let pagination = extract_pagination("/?limit=25").await.unwrap();
 
         assert_eq!(pagination.limit, 25);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]
@@ -113,7 +112,7 @@ mod tests {
         let pagination = extract_pagination("/?limit=1").await.unwrap();
 
         assert_eq!(pagination.limit, 1);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]
@@ -121,7 +120,7 @@ mod tests {
         let pagination = extract_pagination("/?limit=100").await.unwrap();
 
         assert_eq!(pagination.limit, MAX_PAGE_LIMIT);
-        assert_eq!(pagination.offset, 0);
+        assert_eq!(pagination.offset, DEFAULT_PAGE_OFFSET);
     }
 
     #[tokio::test]

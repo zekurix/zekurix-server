@@ -1,17 +1,17 @@
-use super::query::PaginationQuery;
+use super::Pagination;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Page<T> {
     pub items: Vec<T>,
-    pub query: PaginationQuery,
+    pub pagination: Pagination,
     pub total: u64,
 }
 
 impl<T> Page<T> {
-    pub const fn new(items: Vec<T>, query: PaginationQuery, total: u64) -> Self {
+    pub const fn new(items: Vec<T>, pagination: Pagination, total: u64) -> Self {
         Self {
             items,
-            query,
+            pagination,
             total,
         }
     }

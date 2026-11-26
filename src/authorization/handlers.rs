@@ -74,7 +74,7 @@ pub async fn list_roles(
     let roles = application
         .services
         .authorization
-        .list_roles(&filter, pagination)
+        .list_roles(&filter, pagination.into())
         .await?;
 
     Ok(Json(roles.into()))
