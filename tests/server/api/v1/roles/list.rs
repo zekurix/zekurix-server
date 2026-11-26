@@ -54,7 +54,21 @@ async fn should_list_roles_with_default_pagination() {
 
     let response = list_roles(&harness, None, "admin").await;
 
-    assert_role_ids(response, &expected);
+    response.assert_status_ok();
+    assert_eq!(response.content_type(), "application/json");
+
+    let body: RolesResponse = response.json();
+
+    assert_eq!(
+        body.roles
+            .into_iter()
+            .map(|role| role.id)
+            .collect::<Vec<_>>(),
+        expected
+    );
+    assert_eq!(body.pagination.limit, 50);
+    assert_eq!(body.pagination.offset, 0);
+    assert_eq!(body.pagination.total, expected.len() as u64);
 }
 
 #[tokio::test]
@@ -116,7 +130,7 @@ async fn should_apply_limit_and_offset() {
 }
 
 #[tokio::test]
-async fn should_return_an_empty_page_when_offset_exceeds_role_count() {
+async fn should_return_empty_page_when_offset_exceeds_role_count() {
     let harness = TestHarness::new().await;
 
     let existing_roles = existing_role_ids(&harness).await;
